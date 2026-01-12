@@ -51,6 +51,16 @@ This is an **Abibuch (yearbook) management web application** for a German high s
 - No over-engineering - implement only requested features
 - Keep solutions simple and focused
 
+## Design System
+
+**ALL UI components must follow the design system documented in DESIGN.md:**
+- Minimalist and functional design
+- Mobile-first approach
+- Consistent colors, typography, and spacing
+- Touch-friendly (min 44px click targets)
+- Accessible (WCAG AA)
+- Refer to DESIGN.md for all design decisions, component styles, and patterns
+
 ## Version Control
 
 **Git workflow:**
