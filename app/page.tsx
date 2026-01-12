@@ -1,8 +1,17 @@
-export default function Home() {
-  return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-24">
-      <h1 className="text-4xl font-bold">Abibuch</h1>
-      <p className="mt-4 text-xl">Willkommen!</p>
-    </main>
-  );
+import { auth } from "@/lib/auth";
+import { redirect } from "next/navigation";
+
+export default async function Home() {
+  const session = await auth();
+
+  if (!session) {
+    redirect("/login");
+  }
+
+  // Redirect based on user role
+  if (session.user.role === "ADMIN") {
+    redirect("/admin/dashboard");
+  } else {
+    redirect("/dashboard");
+  }
 }
