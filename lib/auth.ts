@@ -29,6 +29,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           return null;
         }
 
+        // Check if user is active
+        if (!user.active) {
+          return null;
+        }
+
         // Verify password
         const passwordsMatch = await bcrypt.compare(password, user.password);
 
