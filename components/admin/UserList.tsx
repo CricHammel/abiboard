@@ -27,6 +27,7 @@ export function UserList({ users, onEdit, onToggleActive }: UserListProps) {
   const [statusFilter, setStatusFilter] = useState<"ALL" | "ACTIVE" | "INACTIVE">(
     "ALL"
   );
+  const [hideInactive, setHideInactive] = useState(false);
 
   // Filter and search users
   const filteredUsers = useMemo(() => {
@@ -47,9 +48,12 @@ export function UserList({ users, onEdit, onToggleActive }: UserListProps) {
         (statusFilter === "ACTIVE" && user.active) ||
         (statusFilter === "INACTIVE" && !user.active);
 
-      return matchesSearch && matchesRole && matchesStatus;
+      // Hide inactive filter
+      const matchesHideInactive = !hideInactive || user.active;
+
+      return matchesSearch && matchesRole && matchesStatus && matchesHideInactive;
     });
-  }, [users, searchTerm, roleFilter, statusFilter]);
+  }, [users, searchTerm, roleFilter, statusFilter, hideInactive]);
 
   const getRoleBadge = (role: Role) => {
     return role === "ADMIN" ? (
@@ -132,6 +136,20 @@ export function UserList({ users, onEdit, onToggleActive }: UserListProps) {
           <option value="ACTIVE">Aktiv</option>
           <option value="INACTIVE">Inaktiv</option>
         </select>
+      </div>
+
+      {/* Checkbox to hide inactive users */}
+      <div className="flex items-center gap-2">
+        <input
+          type="checkbox"
+          id="hideInactive"
+          checked={hideInactive}
+          onChange={(e) => setHideInactive(e.target.checked)}
+          className="w-4 h-4 text-primary border-gray-300 rounded focus:ring-2 focus:ring-primary-light"
+        />
+        <label htmlFor="hideInactive" className="text-sm text-gray-700 cursor-pointer">
+          Inaktive Benutzer ausblenden
+        </label>
       </div>
 
       {/* Results count */}
