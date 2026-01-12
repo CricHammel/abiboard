@@ -1,7 +1,7 @@
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { LogoutButton } from "@/components/auth/LogoutButton";
-import Link from "next/link";
+import { AdminNav } from "@/components/navigation/AdminNav";
 
 export default async function AdminLayout({
   children,
@@ -50,32 +50,7 @@ export default async function AdminLayout({
             </span>
           </div>
 
-          <nav className="px-4 space-y-1">
-            <Link
-              href="/admin/dashboard"
-              className="block px-4 py-3 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
-            >
-              Dashboard
-            </Link>
-            <Link
-              href="/admin/steckbriefe"
-              className="block px-4 py-3 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
-            >
-              Steckbriefe prüfen
-            </Link>
-            <Link
-              href="/admin/benutzer"
-              className="block px-4 py-3 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
-            >
-              Benutzer verwalten
-            </Link>
-            <Link
-              href="/admin/einstellungen"
-              className="block px-4 py-3 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
-            >
-              Einstellungen
-            </Link>
-          </nav>
+          <AdminNav />
 
           <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-200">
             <LogoutButton variant="secondary" className="w-full" />
@@ -90,68 +65,7 @@ export default async function AdminLayout({
         </main>
       </div>
 
-      {/* Mobile Bottom Navigation */}
-      <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200">
-        <div className="flex justify-around py-2">
-          <Link
-            href="/admin/dashboard"
-            className="flex flex-col items-center py-2 px-3 text-gray-600 hover:text-primary transition-colors"
-          >
-            <svg
-              className="w-6 h-6"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
-              />
-            </svg>
-            <span className="text-xs mt-1">Dashboard</span>
-          </Link>
-          <Link
-            href="/admin/steckbriefe"
-            className="flex flex-col items-center py-2 px-3 text-gray-600 hover:text-primary transition-colors"
-          >
-            <svg
-              className="w-6 h-6"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-              />
-            </svg>
-            <span className="text-xs mt-1">Prüfen</span>
-          </Link>
-          <Link
-            href="/admin/benutzer"
-            className="flex flex-col items-center py-2 px-3 text-gray-600 hover:text-primary transition-colors"
-          >
-            <svg
-              className="w-6 h-6"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
-              />
-            </svg>
-            <span className="text-xs mt-1">Benutzer</span>
-          </Link>
-        </div>
-      </nav>
+      <AdminNav />
     </div>
   );
 }
