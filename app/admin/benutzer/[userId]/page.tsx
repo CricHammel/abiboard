@@ -8,8 +8,9 @@ import { EditUserClient } from "./EditUserClient";
 export default async function EditUserPage({
   params,
 }: {
-  params: { userId: string };
+  params: Promise<{ userId: string }>;
 }) {
+  const { userId } = await params;
   const session = await auth();
 
   if (!session?.user || session.user.role !== "ADMIN") {
@@ -18,7 +19,7 @@ export default async function EditUserPage({
 
   // Fetch user data
   const user = await prisma.user.findUnique({
-    where: { id: params.userId },
+    where: { id: userId },
     select: {
       id: true,
       email: true,

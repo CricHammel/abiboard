@@ -5,9 +5,11 @@ import { updateUserSchema } from "@/lib/validation";
 
 export async function PATCH(
   request: Request,
-  { params }: { params: { userId: string } }
+  { params }: { params: Promise<{ userId: string }> }
 ) {
   try {
+    const { userId } = await params;
+
     // Check authentication and admin role
     const session = await auth();
 
@@ -24,8 +26,6 @@ export async function PATCH(
         { status: 403 }
       );
     }
-
-    const { userId } = params;
     const body = await request.json();
 
     // Validate request body

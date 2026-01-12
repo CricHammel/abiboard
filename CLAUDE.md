@@ -36,12 +36,14 @@ This is an **Abibuch (yearbook) management web application** for a German high s
 
 ### Planned Features (Implementation Order)
 1. ✓ Authentication & User Management
-2. ✓ Student Steckbrief (profile with text fields + image)
-3. ✓ Admin Dashboard (review & approval workflow)
-4. Kommentare (student comments about other students)
-5. Rankings (student & teacher rankings)
-6. Umfragen (surveys/polls)
-7. Data export for yearbook printing
+2. ✓ Admin User Management (create/edit users, soft delete with active field)
+3. ✓ Settings Pages (profile & password management for students and admins)
+4. Student Steckbrief (profile with text fields + image) - **IN PROGRESS**
+5. Admin Dashboard (review & approval workflow)
+6. Kommentare (student comments about other students)
+7. Rankings (student & teacher rankings)
+8. Umfragen (surveys/polls)
+9. Data export for yearbook printing
 
 ## Development Approach
 
@@ -72,31 +74,50 @@ This is an **Abibuch (yearbook) management web application** for a German high s
 ## Project Structure
 
 ```
-src/
-├── app/                    # Next.js App Router
-│   ├── (auth)/            # Auth routes (Login, Register)
-│   ├── (student)/         # Student-facing pages
-│   ├── (admin)/           # Admin dashboard
-│   └── api/               # API routes
-├── components/
-│   ├── ui/                # Base UI components
-│   ├── forms/             # Form components
-│   └── admin/             # Admin-specific components
-├── lib/
-│   ├── prisma.ts          # Prisma client singleton
-│   ├── auth.ts            # NextAuth configuration
-│   └── utils.ts           # Utility functions
-└── types/                 # TypeScript type definitions
+app/                        # Next.js App Router
+├── (auth)/                # Auth routes (Login, Register)
+├── (student)/             # Student-facing pages (Dashboard, Settings)
+├── admin/                 # Admin pages (Dashboard, User Management, Settings)
+│   ├── benutzer/          # User management pages
+│   ├── steckbriefe/       # Profile review pages
+│   └── einstellungen/     # Admin settings
+└── api/                   # API routes
+    ├── auth/              # NextAuth endpoints
+    ├── settings/          # Profile & password update endpoints
+    ├── admin/users/       # Admin user management endpoints
+    └── register/          # User registration endpoint
+
+components/
+├── ui/                    # Base UI components (Button, Card, Input, ErrorMessage)
+├── auth/                  # Auth components (LoginForm, RegisterForm, LogoutButton)
+├── settings/              # Settings forms (ProfileSettingsForm, PasswordChangeForm)
+├── admin/                 # Admin components (UserManagement, UserForm, UserList, ConfirmDialog)
+├── navigation/            # Navigation components (StudentNav, AdminNav)
+└── providers/             # React providers (SessionProvider)
+
+lib/
+├── prisma.ts              # Prisma client singleton
+├── auth.ts                # NextAuth configuration with session update handling
+├── auth.config.ts         # NextAuth config (middleware, callbacks)
+└── validation.ts          # Zod schemas for validation
+
+types/
+└── next-auth.d.ts         # NextAuth type extensions for User & Session
 
 prisma/
-├── schema.prisma          # Database schema
-└── seed.ts                # Seed data for development
+├── schema.prisma          # Database schema (User with active field, Profile with status)
+├── seed.ts                # Seed data for development
+└── migrations/            # Database migrations
 ```
 
 ## Key Schema Concepts
 
-- **User:** Authentication & role management
+- **User:** Authentication & role management (STUDENT, ADMIN)
+  - `active` field for soft delete (deactivated users can't log in)
+  - Stores firstName, lastName, email, password (bcrypt hashed)
 - **Profile/Steckbrief:** Student yearbook profile with multiple text fields + image
+  - One-to-one relationship with User
+  - Automatically created for STUDENT role users
 - **Status tracking:** DRAFT → SUBMITTED → APPROVED workflow
 - **Admin feedback:** Comments for rejected submissions
 
@@ -137,13 +158,57 @@ npm start
 
 ## Authentication Flow
 
-- Uses NextAuth with Credentials provider (no OAuth)
-- Email + password only
+- Uses NextAuth v5 with Credentials provider (no OAuth)
+- Email + password only (bcrypt with 10 rounds)
+- JWT strategy with session tokens
 - Role-based access control via middleware
 - Protected routes for student and admin areas
+- Session update handling:
+  - Profile changes update JWT token and session without re-login
+  - Use `useSession().update()` to trigger session updates
+  - JWT and session callbacks handle `trigger === "update"`
+- Inactive users (active: false) are blocked at login
 
 ## File Upload Handling
 
 - Profile images stored in `public/uploads/`
 - Implement file size and type validation
 - Generate unique filenames to prevent conflicts
+
+## Important Implementation Notes
+
+### Next.js 15+ Dynamic Routes
+In Next.js 15+, route parameters are now Promises and **must be awaited**:
+
+```typescript
+// API Routes
+export async function GET(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { id } = await params;  // Must await!
+  // ... use id
+}
+
+// Pages
+export default async function Page({
+  params
+}: {
+  params: Promise<{ id: string }>
+}) {
+  const { id } = await params;  // Must await!
+  // ... use id
+}
+```
+
+### Session Updates
+When updating user profile data (firstName, lastName, email):
+1. Update database via API
+2. Call `useSession().update({ ...newData })` in client component
+3. JWT and session callbacks handle the update automatically
+
+### Soft Delete Pattern
+- Never delete users from database
+- Set `active: false` instead
+- Middleware and auth checks verify `active` status
+- Inactive users cannot log in
