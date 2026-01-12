@@ -50,7 +50,7 @@ export default async function AdminLayout({
             </span>
           </div>
 
-          <AdminNav />
+          <AdminNav variant="desktop" />
 
           <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-200">
             <LogoutButton variant="secondary" className="w-full" />
@@ -65,7 +65,7 @@ export default async function AdminLayout({
         </main>
       </div>
 
-      <AdminNav />
+      <AdminNav variant="mobile" />
     </div>
   );
 }

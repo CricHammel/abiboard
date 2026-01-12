@@ -38,7 +38,7 @@ export default async function StudentLayout({
             </p>
           </div>
 
-          <StudentNav />
+          <StudentNav variant="desktop" />
 
           <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-200">
             <LogoutButton variant="secondary" className="w-full" />
@@ -53,7 +53,7 @@ export default async function StudentLayout({
         </main>
       </div>
 
-      <StudentNav />
+      <StudentNav variant="mobile" />
     </div>
   );
 }

@@ -94,31 +94,65 @@ const navItems: NavItem[] = [
   },
 ];
 
-export function AdminNav() {
+export function AdminNav({ variant = "both" }: { variant?: "desktop" | "mobile" | "both" }) {
   const pathname = usePathname();
 
   return (
     <>
       {/* Desktop Navigation */}
-      <nav className="px-4 space-y-1">
-        {navItems.map((item) => {
-          const isActive = pathname.startsWith(item.href) &&
-            (item.href === "/admin/dashboard" ? pathname === item.href : true);
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
-                isActive
-                  ? "bg-primary text-white"
-                  : "text-gray-700 hover:bg-gray-50"
-              }`}
-            >
-              {item.icon}
-              <span>{item.label}</span>
-            </Link>
-          );
-        })}
+      {(variant === "desktop" || variant === "both") && (
+        <nav className="px-4 space-y-1">
+          {navItems.map((item) => {
+            const isActive = pathname.startsWith(item.href) &&
+              (item.href === "/admin/dashboard" ? pathname === item.href : true);
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
+                  isActive
+                    ? "bg-primary text-white"
+                    : "text-gray-700 hover:bg-gray-50"
+                }`}
+              >
+                {item.icon}
+                <span>{item.label}</span>
+              </Link>
+            );
+          })}
+        </nav>
+      )}
+
+      {/* Mobile Bottom Navigation */}
+      {(variant === "mobile" || variant === "both") && (
+        <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-10">
+          <div className="flex justify-around py-2">
+            {navItems.slice(0, 3).map((item) => {
+              const isActive = pathname.startsWith(item.href) &&
+                (item.href === "/admin/dashboard" ? pathname === item.href : true);
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={`flex flex-col items-center py-2 px-3 transition-colors ${
+                    isActive ? "text-primary" : "text-gray-600"
+                  }`}
+                >
+                  {item.icon}
+                  <span className="text-xs mt-1">
+                    {item.label === "Steckbriefe prüfen"
+                      ? "Prüfen"
+                      : item.label.split(" ")[0]}
+                  </span>
+                </Link>
+              );
+            })}
+          </div>
+        </nav>
+      )}
+    </>
+  );
+}
       </nav>
 
       {/* Mobile Bottom Navigation */}
