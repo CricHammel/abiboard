@@ -17,9 +17,9 @@ interface ProfileSettingsFormProps {
 
 export function ProfileSettingsForm({ initialData }: ProfileSettingsFormProps) {
   const router = useRouter();
-  const [firstName, setFirstName] = useState(initialData.firstName);
-  const [lastName, setLastName] = useState(initialData.lastName);
-  const [email, setEmail] = useState(initialData.email);
+  const [firstName, setFirstName] = useState(initialData.firstName || "");
+  const [lastName, setLastName] = useState(initialData.lastName || "");
+  const [email, setEmail] = useState(initialData.email || "");
   const [errors, setErrors] = useState<{
     firstName?: string;
     lastName?: string;
