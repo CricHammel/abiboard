@@ -24,9 +24,10 @@ export const authConfig = {
         return isLoggedIn;
       }
 
-      // Protected admin routes (requires ADMIN role)
+      // Protected admin routes (requires authentication)
+      // Note: Role check happens in the admin layout
       if (pathname.startsWith("/admin")) {
-        return isLoggedIn && auth.user.role === "ADMIN";
+        return isLoggedIn;
       }
 
       return isLoggedIn;
