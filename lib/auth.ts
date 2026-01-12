@@ -53,24 +53,42 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     }),
   ],
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger, session }) {
       // Add user data to JWT token on sign in
       if (user) {
         token.id = user.id;
         token.role = user.role;
         token.firstName = user.firstName;
         token.lastName = user.lastName;
+        token.email = user.email;
       }
+
+      // Update token when session is updated from client
+      if (trigger === "update" && session) {
+        token.firstName = session.firstName;
+        token.lastName = session.lastName;
+        token.email = session.email;
+      }
+
       return token;
     },
-    async session({ session, token }) {
+    async session({ session, token, trigger, newSession }) {
       // Add user data from JWT to session
       if (token && session.user) {
         session.user.id = token.id as string;
         session.user.role = token.role as Role;
         session.user.firstName = token.firstName as string;
         session.user.lastName = token.lastName as string;
+        session.user.email = token.email as string;
       }
+
+      // Handle session updates from client
+      if (trigger === "update" && newSession) {
+        session.user.firstName = newSession.firstName;
+        session.user.lastName = newSession.lastName;
+        session.user.email = newSession.email;
+      }
+
       return session;
     },
   },

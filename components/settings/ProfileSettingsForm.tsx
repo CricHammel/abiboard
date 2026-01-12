@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { ErrorMessage } from "@/components/ui/ErrorMessage";
@@ -17,6 +18,7 @@ interface ProfileSettingsFormProps {
 
 export function ProfileSettingsForm({ initialData }: ProfileSettingsFormProps) {
   const router = useRouter();
+  const { update } = useSession();
   const [firstName, setFirstName] = useState(initialData.firstName || "");
   const [lastName, setLastName] = useState(initialData.lastName || "");
   const [email, setEmail] = useState(initialData.email || "");
@@ -94,7 +96,12 @@ export function ProfileSettingsForm({ initialData }: ProfileSettingsFormProps) {
         return;
       }
 
-      // Success
+      // Success - update session with new data
+      await update({
+        firstName: data.user.firstName,
+        lastName: data.user.lastName,
+        email: data.user.email,
+      });
       setSuccess("Profil erfolgreich aktualisiert.");
       router.refresh();
       setIsLoading(false);
