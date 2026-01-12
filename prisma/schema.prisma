@@ -1,0 +1,57 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  STUDENT
+  ADMIN
+}
+
+enum ProfileStatus {
+  DRAFT
+  SUBMITTED
+  APPROVED
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  firstName String
+  lastName  String
+  role      Role     @default(STUDENT)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  profile Profile?
+
+  @@map("users")
+}
+
+model Profile {
+  id         String        @id @default(cuid())
+  userId     String        @unique
+  user       User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Profile image
+  imageUrl   String?
+
+  // Steckbrief fields (example fields, can be adjusted)
+  quote      String?       @db.Text
+  plansAfter String?       @db.Text
+  memory     String?       @db.Text
+
+  // Status and workflow
+  status     ProfileStatus @default(DRAFT)
+  feedback   String?       @db.Text
+
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+
+  @@map("profiles")
+}

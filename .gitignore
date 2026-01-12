@@ -36,3 +36,5 @@ prisma/migrations/
 # Testing
 coverage/
 .nyc_output/
+
+/app/generated/prisma
