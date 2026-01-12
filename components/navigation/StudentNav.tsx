@@ -128,28 +128,3 @@ export function StudentNav({ variant = "both" }: { variant?: "desktop" | "mobile
     </>
   );
 }
-      </nav>
-
-      {/* Mobile Bottom Navigation */}
-      <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-10">
-        <div className="flex justify-around py-2">
-          {navItems.map((item) => {
-            const isActive = pathname === item.href;
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`flex flex-col items-center py-2 px-3 transition-colors ${
-                  isActive ? "text-primary" : "text-gray-600"
-                }`}
-              >
-                {item.icon}
-                <span className="text-xs mt-1">{item.label.split(" ")[0]}</span>
-              </Link>
-            );
-          })}
-        </div>
-      </nav>
-    </>
-  );
-}
