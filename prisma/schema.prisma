@@ -25,6 +25,7 @@ model User {
   firstName String
   lastName  String
   role      Role     @default(STUDENT)
+  active    Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

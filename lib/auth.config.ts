@@ -20,7 +20,11 @@ export const authConfig = {
       }
 
       // Protected student routes (requires authentication)
-      if (pathname.startsWith("/dashboard") || pathname.startsWith("/steckbrief")) {
+      if (
+        pathname.startsWith("/dashboard") ||
+        pathname.startsWith("/steckbrief") ||
+        pathname.startsWith("/einstellungen")
+      ) {
         return isLoggedIn;
       }
 
