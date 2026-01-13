@@ -198,6 +198,19 @@ export function SteckbriefForm({ initialData }: SteckbriefFormProps) {
           return;
         }
 
+        // Reset file states after successful save
+        setImageFile(null);
+        setNewMemoryImageFiles([]);
+        setNewPreviews([]);
+        // Update existing memory images from server response
+        if (data.profile?.memoryImages) {
+          setExistingMemoryImages(data.profile.memoryImages);
+        }
+        // Update image preview from server response
+        if (data.profile?.imageUrl !== undefined) {
+          setImagePreview(data.profile.imageUrl);
+        }
+
         setSuccessMessage('Steckbrief als Entwurf gespeichert.');
         setHasUnsavedChanges(false); // Reset unsaved changes
         router.refresh();
@@ -213,6 +226,21 @@ export function SteckbriefForm({ initialData }: SteckbriefFormProps) {
           setGeneralError(data.error || 'Ein Fehler ist aufgetreten.');
           setIsLoading(false);
           return;
+        }
+
+        const saveData = await saveResponse.json();
+
+        // Reset file states after successful save
+        setImageFile(null);
+        setNewMemoryImageFiles([]);
+        setNewPreviews([]);
+        // Update existing memory images from server response
+        if (saveData.profile?.memoryImages) {
+          setExistingMemoryImages(saveData.profile.memoryImages);
+        }
+        // Update image preview from server response
+        if (saveData.profile?.imageUrl !== undefined) {
+          setImagePreview(saveData.profile.imageUrl);
         }
 
         // Now submit for review
