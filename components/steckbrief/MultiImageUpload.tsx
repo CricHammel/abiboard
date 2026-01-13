@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { ErrorMessage } from '@/components/ui/ErrorMessage';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import Image from 'next/image';
@@ -27,6 +27,9 @@ export function MultiImageUpload({
   const [newFiles, setNewFiles] = useState<File[]>([]);
   const [newPreviews, setNewPreviews] = useState<string[]>([]);
 
+  // Track previous currentImages length to detect when images are saved
+  const prevCurrentImagesLength = useRef(currentImages.length);
+
   // State for confirmation dialogs
   const [removeDialog, setRemoveDialog] = useState<{
     isOpen: boolean;
@@ -36,6 +39,12 @@ export function MultiImageUpload({
 
   // Update existing images when props change
   useEffect(() => {
+    // If currentImages has grown (new images were saved), clear new files
+    if (currentImages.length > prevCurrentImagesLength.current) {
+      setNewFiles([]);
+      setNewPreviews([]);
+    }
+    prevCurrentImagesLength.current = currentImages.length;
     setExistingImages(currentImages);
   }, [currentImages]);
 
