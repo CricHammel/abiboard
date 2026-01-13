@@ -40,6 +40,15 @@ export function SteckbriefForm({ initialData }: SteckbriefFormProps) {
   const [existingMemoryImages, setExistingMemoryImages] = useState<string[]>(initialData.memoryImages || []);
   const [newMemoryImageFiles, setNewMemoryImageFiles] = useState<File[]>([]);
 
+  // Track last saved state for comparison
+  const [lastSavedData, setLastSavedData] = useState({
+    quote: initialData.quote || '',
+    plansAfter: initialData.plansAfter || '',
+    memory: initialData.memory || '',
+    imageUrl: initialData.imageUrl || null,
+    memoryImages: initialData.memoryImages || [],
+  });
+
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [generalError, setGeneralError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -55,17 +64,17 @@ export function SteckbriefForm({ initialData }: SteckbriefFormProps) {
   // Detect unsaved changes
   useEffect(() => {
     const hasTextChanges =
-      formData.quote !== (initialData.quote || '') ||
-      formData.plansAfter !== (initialData.plansAfter || '') ||
-      formData.memory !== (initialData.memory || '');
+      formData.quote !== lastSavedData.quote ||
+      formData.plansAfter !== lastSavedData.plansAfter ||
+      formData.memory !== lastSavedData.memory;
 
     const hasImageChanges = imageFile !== null;
     const hasMemoryImageChanges =
       newMemoryImageFiles.length > 0 ||
-      JSON.stringify(existingMemoryImages) !== JSON.stringify(initialData.memoryImages || []);
+      JSON.stringify(existingMemoryImages) !== JSON.stringify(lastSavedData.memoryImages);
 
     setHasUnsavedChanges(hasTextChanges || hasImageChanges || hasMemoryImageChanges);
-  }, [formData, imageFile, existingMemoryImages, newMemoryImageFiles, initialData]);
+  }, [formData, imageFile, existingMemoryImages, newMemoryImageFiles, lastSavedData]);
 
   // Warn before leaving page with unsaved changes
   useEffect(() => {
@@ -201,7 +210,6 @@ export function SteckbriefForm({ initialData }: SteckbriefFormProps) {
         // Reset file states after successful save
         setImageFile(null);
         setNewMemoryImageFiles([]);
-        setNewPreviews([]);
         // Update existing memory images from server response
         if (data.profile?.memoryImages) {
           setExistingMemoryImages(data.profile.memoryImages);
@@ -210,6 +218,15 @@ export function SteckbriefForm({ initialData }: SteckbriefFormProps) {
         if (data.profile?.imageUrl !== undefined) {
           setImagePreview(data.profile.imageUrl);
         }
+
+        // Update last saved data
+        setLastSavedData({
+          quote: formData.quote,
+          plansAfter: formData.plansAfter,
+          memory: formData.memory,
+          imageUrl: data.profile?.imageUrl || null,
+          memoryImages: data.profile?.memoryImages || [],
+        });
 
         setSuccessMessage('Steckbrief als Entwurf gespeichert.');
         setHasUnsavedChanges(false); // Reset unsaved changes
@@ -233,7 +250,6 @@ export function SteckbriefForm({ initialData }: SteckbriefFormProps) {
         // Reset file states after successful save
         setImageFile(null);
         setNewMemoryImageFiles([]);
-        setNewPreviews([]);
         // Update existing memory images from server response
         if (saveData.profile?.memoryImages) {
           setExistingMemoryImages(saveData.profile.memoryImages);
@@ -242,6 +258,15 @@ export function SteckbriefForm({ initialData }: SteckbriefFormProps) {
         if (saveData.profile?.imageUrl !== undefined) {
           setImagePreview(saveData.profile.imageUrl);
         }
+
+        // Update last saved data
+        setLastSavedData({
+          quote: formData.quote,
+          plansAfter: formData.plansAfter,
+          memory: formData.memory,
+          imageUrl: saveData.profile?.imageUrl || null,
+          memoryImages: saveData.profile?.memoryImages || [],
+        });
 
         // Now submit for review
         const submitResponse = await fetch('/api/steckbrief/submit', {
