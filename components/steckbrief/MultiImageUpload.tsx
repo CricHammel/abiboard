@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { ErrorMessage } from '@/components/ui/ErrorMessage';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import Image from 'next/image';
 
 interface MultiImageUploadProps {
@@ -25,6 +26,13 @@ export function MultiImageUpload({
   const [existingImages, setExistingImages] = useState<string[]>(currentImages);
   const [newFiles, setNewFiles] = useState<File[]>([]);
   const [newPreviews, setNewPreviews] = useState<string[]>([]);
+
+  // State for confirmation dialogs
+  const [removeDialog, setRemoveDialog] = useState<{
+    isOpen: boolean;
+    type: 'existing' | 'new';
+    index: number;
+  }>({ isOpen: false, type: 'existing', index: -1 });
 
   // Update existing images when props change
   useEffect(() => {
@@ -77,6 +85,7 @@ export function MultiImageUpload({
     const updated = existingImages.filter((_, i) => i !== index);
     setExistingImages(updated);
     onChange({ existing: updated, new: newFiles });
+    setRemoveDialog({ isOpen: false, type: 'existing', index: -1 });
   };
 
   const handleRemoveNew = (index: number) => {
@@ -85,6 +94,15 @@ export function MultiImageUpload({
     setNewFiles(updatedFiles);
     setNewPreviews(updatedPreviews);
     onChange({ existing: existingImages, new: updatedFiles });
+    setRemoveDialog({ isOpen: false, type: 'new', index: -1 });
+  };
+
+  const confirmRemove = () => {
+    if (removeDialog.type === 'existing') {
+      handleRemoveExisting(removeDialog.index);
+    } else {
+      handleRemoveNew(removeDialog.index);
+    }
   };
 
   const totalCount = existingImages.length + newFiles.length;
@@ -110,7 +128,7 @@ export function MultiImageUpload({
             />
             <button
               type="button"
-              onClick={() => handleRemoveExisting(index)}
+              onClick={() => setRemoveDialog({ isOpen: true, type: 'existing', index })}
               disabled={disabled}
               className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 disabled:opacity-50"
             >
@@ -136,7 +154,7 @@ export function MultiImageUpload({
             </div>
             <button
               type="button"
-              onClick={() => handleRemoveNew(index)}
+              onClick={() => setRemoveDialog({ isOpen: true, type: 'new', index })}
               disabled={disabled}
               className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 disabled:opacity-50"
             >
@@ -169,11 +187,21 @@ export function MultiImageUpload({
       {error && <ErrorMessage message={error} className="mt-2" />}
 
       <p className="mt-2 text-xs text-gray-500">
-        {remainingSlots > 0 
+        {remainingSlots > 0
           ? `Noch ${remainingSlots} von ${maxFiles} Bildern möglich`
           : `Maximum erreicht (${maxFiles} Bilder)`}
         {' • '}Max. 5 MB pro Bild • JPG, PNG oder WebP
       </p>
+
+      <ConfirmDialog
+        isOpen={removeDialog.isOpen}
+        title="Bild entfernen"
+        message="Möchtest du dieses Bild wirklich entfernen?"
+        confirmText="Entfernen"
+        variant="danger"
+        onConfirm={confirmRemove}
+        onCancel={() => setRemoveDialog({ isOpen: false, type: 'existing', index: -1 })}
+      />
     </div>
   );
 }

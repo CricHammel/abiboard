@@ -1,9 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/Button';
 import { ErrorMessage } from '@/components/ui/ErrorMessage';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { FieldRenderer } from './FieldRenderer';
 import { getSortedFields } from '@/lib/steckbrief-fields';
 import { steckbriefUpdateSchema } from '@/lib/steckbrief-validation';
@@ -43,6 +44,38 @@ export function SteckbriefForm({ initialData }: SteckbriefFormProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
+  // Track unsaved changes
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [showRetractDialog, setShowRetractDialog] = useState(false);
+
+  // Detect unsaved changes
+  useEffect(() => {
+    const hasTextChanges =
+      formData.quote !== (initialData.quote || '') ||
+      formData.plansAfter !== (initialData.plansAfter || '') ||
+      formData.memory !== (initialData.memory || '');
+
+    const hasImageChanges = imageFile !== null;
+    const hasMemoryImageChanges =
+      newMemoryImageFiles.length > 0 ||
+      JSON.stringify(existingMemoryImages) !== JSON.stringify(initialData.memoryImages || []);
+
+    setHasUnsavedChanges(hasTextChanges || hasImageChanges || hasMemoryImageChanges);
+  }, [formData, imageFile, existingMemoryImages, newMemoryImageFiles, initialData]);
+
+  // Warn before leaving page with unsaved changes
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (hasUnsavedChanges && !isLoading) {
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [hasUnsavedChanges, isLoading]);
+
   const handleFieldChange = (key: string, value: any) => {
     // Handle different field types
     if (key === 'imageUrl') {
@@ -70,10 +103,6 @@ export function SteckbriefForm({ initialData }: SteckbriefFormProps) {
   };
 
   const handleRetract = async () => {
-    if (!confirm('Möchtest du deine Einreichung wirklich zurückziehen? Du kannst den Steckbrief danach wieder bearbeiten.')) {
-      return;
-    }
-
     setIsLoading(true);
     setGeneralError(null);
     setSuccessMessage(null);
@@ -88,15 +117,18 @@ export function SteckbriefForm({ initialData }: SteckbriefFormProps) {
       if (!response.ok) {
         setGeneralError(data.error || 'Ein Fehler ist aufgetreten.');
         setIsLoading(false);
+        setShowRetractDialog(false);
         return;
       }
 
       setSuccessMessage('Einreichung erfolgreich zurückgezogen. Du kannst den Steckbrief jetzt bearbeiten.');
+      setShowRetractDialog(false);
       router.refresh();
       setIsLoading(false);
     } catch (error) {
       setGeneralError('Ein Fehler ist aufgetreten. Bitte versuche es erneut.');
       setIsLoading(false);
+      setShowRetractDialog(false);
     }
   };
 
@@ -163,6 +195,7 @@ export function SteckbriefForm({ initialData }: SteckbriefFormProps) {
         }
 
         setSuccessMessage('Steckbrief als Entwurf gespeichert.');
+        setHasUnsavedChanges(false); // Reset unsaved changes
         router.refresh();
       } else {
         // First save, then submit
@@ -192,6 +225,7 @@ export function SteckbriefForm({ initialData }: SteckbriefFormProps) {
         }
 
         setSuccessMessage('Steckbrief erfolgreich eingereicht!');
+        setHasUnsavedChanges(false); // Reset unsaved changes
         router.refresh();
       }
 
@@ -269,7 +303,7 @@ export function SteckbriefForm({ initialData }: SteckbriefFormProps) {
         <div className="pt-4">
           <Button
             type="button"
-            onClick={handleRetract}
+            onClick={() => setShowRetractDialog(true)}
             variant="secondary"
             loading={isLoading}
           >
@@ -277,6 +311,17 @@ export function SteckbriefForm({ initialData }: SteckbriefFormProps) {
           </Button>
         </div>
       )}
+
+      <ConfirmDialog
+        isOpen={showRetractDialog}
+        title="Einreichung zurückziehen"
+        message="Möchtest du deine Einreichung wirklich zurückziehen? Du kannst den Steckbrief danach wieder bearbeiten."
+        confirmText="Zurückziehen"
+        variant="warning"
+        onConfirm={handleRetract}
+        onCancel={() => setShowRetractDialog(false)}
+        isLoading={isLoading}
+      />
     </form>
   );
 }
