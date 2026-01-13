@@ -50,7 +50,7 @@ export function SteckbriefForm({ initialData }: SteckbriefFormProps) {
   const [showRetractDialog, setShowRetractDialog] = useState(false);
 
   // Hook for unsaved changes warning on navigation
-  const { UnsavedChangesDialog } = useUnsavedChangesWarning(hasUnsavedChanges && !isLoading);
+  useUnsavedChangesWarning(hasUnsavedChanges && !isLoading);
 
   // Detect unsaved changes
   useEffect(() => {
@@ -326,8 +326,6 @@ export function SteckbriefForm({ initialData }: SteckbriefFormProps) {
         onCancel={() => setShowRetractDialog(false)}
         isLoading={isLoading}
       />
-
-      <UnsavedChangesDialog />
     </form>
   );
 }

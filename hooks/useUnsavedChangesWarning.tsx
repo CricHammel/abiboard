@@ -1,20 +1,11 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
-import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 
-interface UseUnsavedChangesWarningResult {
-  UnsavedChangesDialog: () => JSX.Element;
-}
-
-export function useUnsavedChangesWarning(
-  hasUnsavedChanges: boolean
-): UseUnsavedChangesWarningResult {
+export function useUnsavedChangesWarning(hasUnsavedChanges: boolean): void {
   const router = useRouter();
   const pathname = usePathname();
-  const [showDialog, setShowDialog] = useState(false);
-  const [nextUrl, setNextUrl] = useState<string | null>(null);
 
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
@@ -36,9 +27,15 @@ export function useUnsavedChangesWarning(
       e.preventDefault();
       e.stopPropagation();
 
-      // Show confirmation dialog
-      setNextUrl(href);
-      setShowDialog(true);
+      // Show native browser confirm dialog
+      const shouldLeave = window.confirm(
+        'Du hast ungespeicherte Änderungen. Möchtest du die Seite wirklich verlassen? Alle Änderungen gehen verloren.'
+      );
+
+      if (shouldLeave) {
+        // Navigate to the URL
+        router.push(href);
+      }
     };
 
     // Add click listener to document
@@ -47,33 +44,5 @@ export function useUnsavedChangesWarning(
     return () => {
       document.removeEventListener('click', handleClick, true);
     };
-  }, [hasUnsavedChanges, pathname]);
-
-  const handleConfirm = () => {
-    if (nextUrl) {
-      setShowDialog(false);
-      // Navigate to the URL
-      router.push(nextUrl);
-    }
-  };
-
-  const handleCancel = () => {
-    setShowDialog(false);
-    setNextUrl(null);
-  };
-
-  const UnsavedChangesDialog = () => (
-    <ConfirmDialog
-      isOpen={showDialog}
-      title="Ungespeicherte Änderungen"
-      message="Du hast ungespeicherte Änderungen. Möchtest du die Seite wirklich verlassen? Alle Änderungen gehen verloren."
-      confirmText="Verlassen"
-      cancelText="Bleiben"
-      variant="danger"
-      onConfirm={handleConfirm}
-      onCancel={handleCancel}
-    />
-  );
-
-  return { UnsavedChangesDialog };
+  }, [hasUnsavedChanges, pathname, router]);
 }
