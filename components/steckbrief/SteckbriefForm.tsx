@@ -69,6 +69,37 @@ export function SteckbriefForm({ initialData }: SteckbriefFormProps) {
     await submitForm('submit');
   };
 
+  const handleRetract = async () => {
+    if (!confirm('Möchtest du deine Einreichung wirklich zurückziehen? Du kannst den Steckbrief danach wieder bearbeiten.')) {
+      return;
+    }
+
+    setIsLoading(true);
+    setGeneralError(null);
+    setSuccessMessage(null);
+
+    try {
+      const response = await fetch('/api/steckbrief/retract', {
+        method: 'POST',
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setGeneralError(data.error || 'Ein Fehler ist aufgetreten.');
+        setIsLoading(false);
+        return;
+      }
+
+      setSuccessMessage('Einreichung erfolgreich zurückgezogen. Du kannst den Steckbrief jetzt bearbeiten.');
+      router.refresh();
+      setIsLoading(false);
+    } catch (error) {
+      setGeneralError('Ein Fehler ist aufgetreten. Bitte versuche es erneut.');
+      setIsLoading(false);
+    }
+  };
+
   const submitForm = async (action: 'draft' | 'submit') => {
     setErrors({});
     setGeneralError(null);
@@ -230,6 +261,19 @@ export function SteckbriefForm({ initialData }: SteckbriefFormProps) {
             className="flex-1"
           >
             Zur Prüfung einreichen
+          </Button>
+        </div>
+      )}
+
+      {initialData.status === 'SUBMITTED' && (
+        <div className="pt-4">
+          <Button
+            type="button"
+            onClick={handleRetract}
+            variant="secondary"
+            loading={isLoading}
+          >
+            Einreichung zurückziehen
           </Button>
         </div>
       )}

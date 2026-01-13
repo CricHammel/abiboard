@@ -1,8 +1,8 @@
 import { auth } from "@/lib/auth";
 import { Card } from "@/components/ui/Card";
-import { Button } from "@/components/ui/Button";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
+import { SteckbriefStatusActions } from "@/components/steckbrief/SteckbriefStatusActions";
 
 export default async function StudentDashboard() {
   const session = await auth();
@@ -55,9 +55,7 @@ export default async function StudentDashboard() {
                 {statusLabels[profile.status]}
               </span>
             </div>
-            <Link href="/steckbrief">
-              <Button variant="primary">Steckbrief bearbeiten</Button>
-            </Link>
+            <SteckbriefStatusActions status={profile.status} />
           </div>
 
           {profile.status === "DRAFT" && (
