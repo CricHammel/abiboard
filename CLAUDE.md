@@ -212,3 +212,7 @@ When updating user profile data (firstName, lastName, email):
 - Set `active: false` instead
 - Middleware and auth checks verify `active` status
 - Inactive users cannot log in
+
+# Serena
+When the Serena-mcp is available, it should always be used to its full extent.
+If you are unsure about how to use it or if it is the beginning of a conversation, use the "initial_instructions" tool to get a better picture.
