@@ -8,6 +8,7 @@ import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { FieldRenderer } from './FieldRenderer';
 import { getSortedFields } from '@/lib/steckbrief-fields';
 import { steckbriefUpdateSchema } from '@/lib/steckbrief-validation';
+import { useUnsavedChangesWarning } from '@/hooks/useUnsavedChangesWarning';
 
 interface SteckbriefFormProps {
   initialData: {
@@ -47,6 +48,9 @@ export function SteckbriefForm({ initialData }: SteckbriefFormProps) {
   // Track unsaved changes
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [showRetractDialog, setShowRetractDialog] = useState(false);
+
+  // Hook for unsaved changes warning on navigation
+  const { UnsavedChangesDialog } = useUnsavedChangesWarning(hasUnsavedChanges && !isLoading);
 
   // Detect unsaved changes
   useEffect(() => {
@@ -322,6 +326,8 @@ export function SteckbriefForm({ initialData }: SteckbriefFormProps) {
         onCancel={() => setShowRetractDialog(false)}
         isLoading={isLoading}
       />
+
+      <UnsavedChangesDialog />
     </form>
   );
 }
