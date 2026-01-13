@@ -63,8 +63,8 @@ export default async function StudentDashboard() {
           {profile.status === "DRAFT" && (
             <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
               <p className="text-sm text-blue-800">
-                Dein Steckbrief ist noch im Entwurf. Vervollständige es und reiche
-                es zur Prüfung ein.
+                Dein Steckbrief ist noch im Entwurf. Vervollständige ihn und reiche
+                ihn zur Prüfung ein.
               </p>
             </div>
           )}
@@ -73,7 +73,7 @@ export default async function StudentDashboard() {
             <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
               <p className="text-sm text-yellow-800">
                 Dein Steckbrief wurde eingereicht und wird gerade geprüft. Du wirst
-                benachrichtigt, sobald es genehmigt wurde.
+                benachrichtigt, sobald er genehmigt wurde.
               </p>
             </div>
           )}
