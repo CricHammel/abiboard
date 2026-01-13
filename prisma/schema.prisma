@@ -40,12 +40,15 @@ model Profile {
   user       User          @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   // Profile image
-  imageUrl   String?
+  imageUrl      String?
+
+  // Memory images (multiple photos)
+  memoryImages  String[]  @default([])
 
   // Steckbrief fields (example fields, can be adjusted)
-  quote      String?       @db.Text
-  plansAfter String?       @db.Text
-  memory     String?       @db.Text
+  quote         String?   @db.Text
+  plansAfter    String?   @db.Text
+  memory        String?   @db.Text
 
   // Status and workflow
   status     ProfileStatus @default(DRAFT)
