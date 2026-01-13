@@ -35,14 +35,14 @@ export default async function StudentDashboard() {
           Willkommen, {session.user.firstName}!
         </h1>
         <p className="text-gray-600 mt-2">
-          Verwalte dein Abibuch-Profil und reiche es zur Prüfung ein.
+          Verwalte deinen Abibuch-Steckbrief und reiche ihn zur Prüfung ein.
         </p>
       </div>
 
       {profile && (
         <Card>
           <h2 className="text-xl font-semibold text-gray-900 mb-4">
-            Profil-Status
+            Steckbrief-Status
           </h2>
           <div className="flex items-center justify-between">
             <div>
@@ -56,14 +56,14 @@ export default async function StudentDashboard() {
               </span>
             </div>
             <Link href="/steckbrief">
-              <Button variant="primary">Profil bearbeiten</Button>
+              <Button variant="primary">Steckbrief bearbeiten</Button>
             </Link>
           </div>
 
           {profile.status === "DRAFT" && (
             <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
               <p className="text-sm text-blue-800">
-                Dein Profil ist noch im Entwurf. Vervollständige es und reiche
+                Dein Steckbrief ist noch im Entwurf. Vervollständige es und reiche
                 es zur Prüfung ein.
               </p>
             </div>
@@ -72,7 +72,7 @@ export default async function StudentDashboard() {
           {profile.status === "SUBMITTED" && (
             <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
               <p className="text-sm text-yellow-800">
-                Dein Profil wurde eingereicht und wird gerade geprüft. Du wirst
+                Dein Steckbrief wurde eingereicht und wird gerade geprüft. Du wirst
                 benachrichtigt, sobald es genehmigt wurde.
               </p>
             </div>
@@ -81,7 +81,7 @@ export default async function StudentDashboard() {
           {profile.status === "APPROVED" && (
             <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-lg">
               <p className="text-sm text-green-800">
-                Dein Profil wurde genehmigt! Es wird im Abibuch erscheinen.
+                Dein Steckbrief wurde genehmigt! Es wird im Abibuch erscheinen.
               </p>
             </div>
           )}
@@ -129,21 +129,21 @@ export default async function StudentDashboard() {
           <ul className="space-y-2 text-sm text-gray-600">
             {profile?.status === "DRAFT" && (
               <>
-                <li>✓ Profil vervollständigen</li>
+                <li>✓ Steckbrief vervollständigen</li>
                 <li>✓ Zur Prüfung einreichen</li>
                 <li>⏳ Auf Genehmigung warten</li>
               </>
             )}
             {profile?.status === "SUBMITTED" && (
               <>
-                <li className="line-through">Profil vervollständigen</li>
+                <li className="line-through">Steckbrief vervollständigen</li>
                 <li className="line-through">Zur Prüfung einreichen</li>
                 <li>⏳ Auf Genehmigung warten</li>
               </>
             )}
             {profile?.status === "APPROVED" && (
               <>
-                <li className="line-through">Profil vervollständigen</li>
+                <li className="line-through">Steckbrief vervollständigen</li>
                 <li className="line-through">Zur Prüfung einreichen</li>
                 <li className="line-through">Auf Genehmigung warten</li>
                 <li className="text-green-600">✓ Fertig!</li>
