@@ -65,6 +65,7 @@ export function SingleImageUpload({
               alt="Preview"
               fill
               className="object-cover"
+              unoptimized
             />
             <button
               type="button"

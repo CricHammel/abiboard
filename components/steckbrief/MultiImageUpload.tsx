@@ -106,6 +106,7 @@ export function MultiImageUpload({
               alt={`Bild ${index + 1}`}
               fill
               className="object-cover"
+              unoptimized
             />
             <button
               type="button"
@@ -128,6 +129,7 @@ export function MultiImageUpload({
               alt={`Neues Bild ${index + 1}`}
               fill
               className="object-cover"
+              unoptimized
             />
             <div className="absolute top-1 left-1 bg-blue-500 text-white text-xs px-1 rounded">
               Neu
