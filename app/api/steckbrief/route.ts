@@ -1,21 +1,25 @@
-import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
-import { auth } from '@/lib/auth';
-import { steckbriefUpdateSchema } from '@/lib/steckbrief-validation';
+import { NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
+import { auth } from "@/lib/auth";
+import { FieldType } from "@prisma/client";
 import {
   validateImageFile,
   saveImageFile,
   deleteImageFile,
-} from '@/lib/file-upload';
+} from "@/lib/file-upload";
+import {
+  createDynamicValidationSchema,
+  toFieldDefinition,
+} from "@/lib/steckbrief-validation-dynamic";
 
-// GET - Load own Steckbrief
-export async function GET(request: Request) {
+// GET - Load own Steckbrief with fields and values
+export async function GET() {
   try {
     const session = await auth();
 
     if (!session?.user?.id) {
       return NextResponse.json(
-        { error: 'Nicht authentifiziert.' },
+        { error: "Nicht authentifiziert." },
         { status: 401 }
       );
     }
@@ -23,6 +27,13 @@ export async function GET(request: Request) {
     // Get or create profile
     let profile = await prisma.profile.findUnique({
       where: { userId: session.user.id },
+      include: {
+        values: {
+          include: {
+            field: true,
+          },
+        },
+      },
     });
 
     if (!profile) {
@@ -31,14 +42,59 @@ export async function GET(request: Request) {
         data: {
           userId: session.user.id,
         },
+        include: {
+          values: {
+            include: {
+              field: true,
+            },
+          },
+        },
       });
     }
 
-    return NextResponse.json({ profile }, { status: 200 });
-  } catch (error) {
-    console.error('Steckbrief load error:', error);
+    // Get all active field definitions
+    const fields = await prisma.steckbriefField.findMany({
+      where: { active: true },
+      orderBy: { order: "asc" },
+    });
+
+    // Build values map from SteckbriefValue records
+    const values: Record<string, unknown> = {};
+    for (const value of profile.values) {
+      const field = value.field;
+      if (!field.active) continue;
+
+      switch (field.type) {
+        case FieldType.TEXT:
+        case FieldType.TEXTAREA:
+          values[field.key] = value.textValue || "";
+          break;
+        case FieldType.SINGLE_IMAGE:
+          values[field.key] = value.imageValue || null;
+          break;
+        case FieldType.MULTI_IMAGE:
+          values[field.key] = value.imagesValue || [];
+          break;
+      }
+    }
+
+    // Return profile info, field definitions, and values
     return NextResponse.json(
-      { error: 'Ein Fehler ist aufgetreten.' },
+      {
+        profile: {
+          id: profile.id,
+          status: profile.status,
+          feedback: profile.feedback,
+        },
+        fields: fields.map(toFieldDefinition),
+        values,
+      },
+      { status: 200 }
+    );
+  } catch (error) {
+    console.error("Steckbrief load error:", error);
+    return NextResponse.json(
+      { error: "Ein Fehler ist aufgetreten." },
       { status: 500 }
     );
   }
@@ -51,151 +107,273 @@ export async function PATCH(request: Request) {
 
     if (!session?.user?.id) {
       return NextResponse.json(
-        { error: 'Nicht authentifiziert.' },
+        { error: "Nicht authentifiziert." },
         { status: 401 }
       );
     }
 
-    // Get existing profile
+    // Get existing profile with values
     const existingProfile = await prisma.profile.findUnique({
       where: { userId: session.user.id },
+      include: {
+        values: {
+          include: {
+            field: true,
+          },
+        },
+      },
     });
 
     if (!existingProfile) {
       return NextResponse.json(
-        { error: 'Profil nicht gefunden.' },
+        { error: "Profil nicht gefunden." },
         { status: 404 }
       );
     }
 
     // Check if profile is not already submitted/approved
-    if (existingProfile.status !== 'DRAFT') {
+    if (existingProfile.status !== "DRAFT") {
       return NextResponse.json(
-        { error: 'Der Steckbrief kann nicht mehr bearbeitet werden.' },
+        { error: "Der Steckbrief kann nicht mehr bearbeitet werden." },
         { status: 403 }
       );
     }
 
+    // Get all active field definitions
+    const fields = await prisma.steckbriefField.findMany({
+      where: { active: true },
+      orderBy: { order: "asc" },
+    });
+
+    // Build map of existing values by field key
+    const existingValuesByKey = new Map(
+      existingProfile.values.map((v) => [v.field.key, v])
+    );
+
     // Parse FormData
     const formData = await request.formData();
 
-    // Extract text fields
-    const textData = {
-      quote: formData.get('quote') as string,
-      plansAfter: formData.get('plansAfter') as string,
-      memory: formData.get('memory') as string,
-    };
+    // Extract text field values and validate
+    const textData: Record<string, string> = {};
+    for (const field of fields) {
+      if (field.type === FieldType.TEXT || field.type === FieldType.TEXTAREA) {
+        const value = formData.get(field.key) as string;
+        textData[field.key] = value || "";
+      }
+    }
 
-    // Validate text fields
-    const validation = steckbriefUpdateSchema.safeParse(textData);
+    // Validate text fields dynamically
+    const validationSchema = createDynamicValidationSchema(fields);
+    const validation = validationSchema.safeParse(textData);
     if (!validation.success) {
-      return NextResponse.json(
-        { error: 'Ungültige Eingabedaten.' },
-        { status: 400 }
-      );
+      const errorMessage =
+        validation.error.issues[0]?.message || "Ungültige Eingabedaten.";
+      return NextResponse.json({ error: errorMessage }, { status: 400 });
     }
 
-    // Handle profile image upload
-    let newImageUrl = existingProfile.imageUrl;
-    const imageFile = formData.get('imageUrl') as File | null;
+    // Process each field and create/update SteckbriefValue records
+    const valueUpserts: Array<{
+      fieldId: string;
+      textValue?: string | null;
+      imageValue?: string | null;
+      imagesValue?: string[];
+    }> = [];
 
-    if (imageFile && imageFile.size > 0) {
-      const imageValidation = validateImageFile(imageFile);
-      if (!imageValidation.valid) {
-        return NextResponse.json(
-          { error: imageValidation.error },
-          { status: 400 }
-        );
-      }
+    for (const field of fields) {
+      const existingValue = existingValuesByKey.get(field.key);
 
-      // Delete old image if exists
-      if (existingProfile.imageUrl) {
-        await deleteImageFile(existingProfile.imageUrl);
-      }
-
-      // Save new image
-      newImageUrl = await saveImageFile(
-        imageFile,
-        session.user.id,
-        'profile'
-      );
-    }
-
-    // Handle memory images upload (incremental)
-    const existingMemoryImagesJson = formData.get('existingMemoryImages') as string;
-    const existingMemoryImagesList = existingMemoryImagesJson
-      ? JSON.parse(existingMemoryImagesJson) as string[]
-      : [];
-
-    // Determine which images to delete (old ones not in existingMemoryImagesList)
-    const imagesToDelete = existingProfile.memoryImages.filter(
-      img => !existingMemoryImagesList.includes(img)
-    );
-
-    // Delete removed images from filesystem
-    for (const imagePath of imagesToDelete) {
-      await deleteImageFile(imagePath);
-    }
-
-    // Get new memory image files
-    const newMemoryImagesFiles = formData.getAll('newMemoryImages') as File[];
-    const newImagePaths: string[] = [];
-
-    // Validate total count
-    const totalImages = existingMemoryImagesList.length + newMemoryImagesFiles.length;
-    if (totalImages > 3) {
-      return NextResponse.json(
-        { error: 'Maximal 3 Erinnerungsfotos erlaubt.' },
-        { status: 400 }
-      );
-    }
-
-    // Validate and save each new file
-    for (const file of newMemoryImagesFiles) {
-      if (file && file.size > 0) {
-        const validation = validateImageFile(file);
-        if (!validation.valid) {
-          return NextResponse.json(
-            { error: validation.error },
-            { status: 400 }
-          );
+      switch (field.type) {
+        case FieldType.TEXT:
+        case FieldType.TEXTAREA: {
+          const textValue = textData[field.key] || "";
+          valueUpserts.push({
+            fieldId: field.id,
+            textValue: textValue || null,
+          });
+          break;
         }
 
-        const imagePath = await saveImageFile(
-          file,
-          session.user.id,
-          'memory'
-        );
-        newImagePaths.push(imagePath);
+        case FieldType.SINGLE_IMAGE: {
+          const imageFile = formData.get(`image_${field.key}`) as File | null;
+          let newImageUrl = existingValue?.imageValue || null;
+
+          if (imageFile && imageFile.size > 0) {
+            const imageValidation = validateImageFile(imageFile);
+            if (!imageValidation.valid) {
+              return NextResponse.json(
+                { error: imageValidation.error },
+                { status: 400 }
+              );
+            }
+
+            // Delete old image if exists
+            if (existingValue?.imageValue) {
+              await deleteImageFile(existingValue.imageValue);
+            }
+
+            // Save new image
+            newImageUrl = await saveImageFile(
+              imageFile,
+              session.user.id,
+              field.key
+            );
+          }
+
+          valueUpserts.push({
+            fieldId: field.id,
+            imageValue: newImageUrl,
+          });
+          break;
+        }
+
+        case FieldType.MULTI_IMAGE: {
+          // Get existing images that should be kept
+          const existingImagesJson = formData.get(
+            `existing_${field.key}`
+          ) as string;
+          const existingImagesList = existingImagesJson
+            ? (JSON.parse(existingImagesJson) as string[])
+            : [];
+
+          // Determine which images to delete (old ones not in existingImagesList)
+          const currentImages = existingValue?.imagesValue || [];
+          const imagesToDelete = currentImages.filter(
+            (img) => !existingImagesList.includes(img)
+          );
+
+          // Delete removed images from filesystem
+          for (const imagePath of imagesToDelete) {
+            await deleteImageFile(imagePath);
+          }
+
+          // Get new image files
+          const newImageFiles = formData.getAll(
+            `new_${field.key}`
+          ) as File[];
+          const newImagePaths: string[] = [];
+
+          // Validate total count
+          const maxFiles = field.maxFiles || 3;
+          const totalImages = existingImagesList.length + newImageFiles.length;
+          if (totalImages > maxFiles) {
+            return NextResponse.json(
+              { error: `${field.label}: Maximal ${maxFiles} Bilder erlaubt.` },
+              { status: 400 }
+            );
+          }
+
+          // Validate and save each new file
+          for (const file of newImageFiles) {
+            if (file && file.size > 0) {
+              const fileValidation = validateImageFile(file);
+              if (!fileValidation.valid) {
+                return NextResponse.json(
+                  { error: fileValidation.error },
+                  { status: 400 }
+                );
+              }
+
+              const imagePath = await saveImageFile(
+                file,
+                session.user.id,
+                field.key
+              );
+              newImagePaths.push(imagePath);
+            }
+          }
+
+          // Combine existing + new images
+          const finalImages = [...existingImagesList, ...newImagePaths];
+
+          valueUpserts.push({
+            fieldId: field.id,
+            imagesValue: finalImages,
+          });
+          break;
+        }
       }
     }
 
-    // Combine existing + new memory images
-    const finalMemoryImages = [...existingMemoryImagesList, ...newImagePaths];
+    // Execute all value upserts in a transaction
+    await prisma.$transaction(
+      valueUpserts.map((upsert) =>
+        prisma.steckbriefValue.upsert({
+          where: {
+            profileId_fieldId: {
+              profileId: existingProfile.id,
+              fieldId: upsert.fieldId,
+            },
+          },
+          update: {
+            textValue: upsert.textValue,
+            imageValue: upsert.imageValue,
+            imagesValue: upsert.imagesValue,
+          },
+          create: {
+            profileId: existingProfile.id,
+            fieldId: upsert.fieldId,
+            textValue: upsert.textValue,
+            imageValue: upsert.imageValue,
+            imagesValue: upsert.imagesValue,
+          },
+        })
+      )
+    );
 
-    // Update profile
-    const updatedProfile = await prisma.profile.update({
-      where: { userId: session.user.id },
-      data: {
-        quote: validation.data.quote,
-        plansAfter: validation.data.plansAfter,
-        memory: validation.data.memory,
-        imageUrl: newImageUrl,
-        memoryImages: finalMemoryImages,
+    // Update profile timestamp
+    await prisma.profile.update({
+      where: { id: existingProfile.id },
+      data: { updatedAt: new Date() },
+    });
+
+    // Fetch updated values for response
+    const updatedProfile = await prisma.profile.findUnique({
+      where: { id: existingProfile.id },
+      include: {
+        values: {
+          include: {
+            field: true,
+          },
+        },
       },
     });
 
+    // Build updated values map
+    const updatedValues: Record<string, unknown> = {};
+    for (const value of updatedProfile!.values) {
+      const f = value.field;
+      if (!f.active) continue;
+
+      switch (f.type) {
+        case FieldType.TEXT:
+        case FieldType.TEXTAREA:
+          updatedValues[f.key] = value.textValue || "";
+          break;
+        case FieldType.SINGLE_IMAGE:
+          updatedValues[f.key] = value.imageValue || null;
+          break;
+        case FieldType.MULTI_IMAGE:
+          updatedValues[f.key] = value.imagesValue || [];
+          break;
+      }
+    }
+
     return NextResponse.json(
       {
-        message: 'Steckbrief gespeichert.',
-        profile: updatedProfile,
+        message: "Steckbrief gespeichert.",
+        profile: {
+          id: updatedProfile!.id,
+          status: updatedProfile!.status,
+          feedback: updatedProfile!.feedback,
+        },
+        values: updatedValues,
       },
       { status: 200 }
     );
   } catch (error) {
-    console.error('Steckbrief update error:', error);
+    console.error("Steckbrief update error:", error);
     return NextResponse.json(
-      { error: 'Ein Fehler ist aufgetreten. Bitte versuche es erneut.' },
+      { error: "Ein Fehler ist aufgetreten. Bitte versuche es erneut." },
       { status: 500 }
     );
   }

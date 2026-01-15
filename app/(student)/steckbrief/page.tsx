@@ -1,19 +1,28 @@
-import { auth } from '@/lib/auth';
-import { redirect } from 'next/navigation';
-import { prisma } from '@/lib/prisma';
-import { SteckbriefForm } from '@/components/steckbrief/SteckbriefForm';
-import { Card } from '@/components/ui/Card';
+import { auth } from "@/lib/auth";
+import { redirect } from "next/navigation";
+import { prisma } from "@/lib/prisma";
+import { FieldType } from "@prisma/client";
+import { SteckbriefForm } from "@/components/steckbrief/SteckbriefForm";
+import { Card } from "@/components/ui/Card";
+import { toFieldDefinition } from "@/lib/steckbrief-validation-dynamic";
 
 export default async function SteckbriefPage() {
   const session = await auth();
 
   if (!session?.user) {
-    redirect('/login');
+    redirect("/login");
   }
 
-  // Load profile
+  // Load profile with values
   let profile = await prisma.profile.findUnique({
     where: { userId: session.user.id },
+    include: {
+      values: {
+        include: {
+          field: true,
+        },
+      },
+    },
   });
 
   // Auto-create if doesn't exist
@@ -22,7 +31,40 @@ export default async function SteckbriefPage() {
       data: {
         userId: session.user.id,
       },
+      include: {
+        values: {
+          include: {
+            field: true,
+          },
+        },
+      },
     });
+  }
+
+  // Load active field definitions
+  const fields = await prisma.steckbriefField.findMany({
+    where: { active: true },
+    orderBy: { order: "asc" },
+  });
+
+  // Build values map from SteckbriefValue records
+  const values: Record<string, unknown> = {};
+  for (const value of profile.values) {
+    const field = value.field;
+    if (!field.active) continue;
+
+    switch (field.type) {
+      case FieldType.TEXT:
+      case FieldType.TEXTAREA:
+        values[field.key] = value.textValue || "";
+        break;
+      case FieldType.SINGLE_IMAGE:
+        values[field.key] = value.imageValue || null;
+        break;
+      case FieldType.MULTI_IMAGE:
+        values[field.key] = value.imagesValue || [];
+        break;
+    }
   }
 
   return (
@@ -37,14 +79,10 @@ export default async function SteckbriefPage() {
 
       <Card>
         <SteckbriefForm
-          initialData={{
-            imageUrl: profile.imageUrl,
-            quote: profile.quote,
-            plansAfter: profile.plansAfter,
-            memory: profile.memory,
-            memoryImages: profile.memoryImages,
-            status: profile.status,
-          }}
+          fields={fields.map(toFieldDefinition)}
+          initialValues={values}
+          status={profile.status}
+          feedback={profile.feedback}
         />
       </Card>
     </div>

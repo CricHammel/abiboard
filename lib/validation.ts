@@ -35,7 +35,7 @@ export const createUserSchema = z.object({
   firstName: z.string().min(1, "Bitte gib einen Vornamen ein."),
   lastName: z.string().min(1, "Bitte gib einen Nachnamen ein."),
   role: z.enum(["STUDENT", "ADMIN"], {
-    errorMap: () => ({ message: "Bitte wähle eine gültige Rolle." }),
+    message: "Bitte wähle eine gültige Rolle.",
   }),
 });
 

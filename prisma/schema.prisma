@@ -18,6 +18,13 @@ enum ProfileStatus {
   APPROVED
 }
 
+enum FieldType {
+  TEXT
+  TEXTAREA
+  SINGLE_IMAGE
+  MULTI_IMAGE
+}
+
 model User {
   id        String   @id @default(cuid())
   email     String   @unique
@@ -54,8 +61,50 @@ model Profile {
   status     ProfileStatus @default(DRAFT)
   feedback   String?       @db.Text
 
+  // Dynamic field values (new system)
+  values     SteckbriefValue[]
+
   createdAt  DateTime      @default(now())
   updatedAt  DateTime      @updatedAt
 
   @@map("profiles")
+}
+
+model SteckbriefField {
+  id          String    @id @default(cuid())
+  key         String    @unique
+  type        FieldType
+  label       String
+  placeholder String?
+  maxLength   Int?
+  maxFiles    Int?      @default(3)
+  rows        Int?      @default(4)
+  required    Boolean   @default(false)
+  order       Int
+  active      Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  values      SteckbriefValue[]
+
+  @@map("steckbrief_fields")
+}
+
+model SteckbriefValue {
+  id          String  @id @default(cuid())
+  profileId   String
+  fieldId     String
+
+  textValue   String?   @db.Text
+  imageValue  String?
+  imagesValue String[]  @default([])
+
+  profile     Profile         @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  field       SteckbriefField @relation(fields: [fieldId], references: [id], onDelete: Restrict)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([profileId, fieldId])
+  @@map("steckbrief_values")
 }

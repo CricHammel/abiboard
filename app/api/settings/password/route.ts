@@ -23,7 +23,7 @@ export async function PATCH(request: Request) {
 
     if (!validation.success) {
       return NextResponse.json(
-        { error: validation.error.errors[0]?.message || "Ungültige Eingabedaten." },
+        { error: validation.error.issues[0]?.message || "Ungültige Eingabedaten." },
         { status: 400 }
       );
     }

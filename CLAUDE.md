@@ -39,11 +39,12 @@ This is an **Abibuch (yearbook) management web application** for a German high s
 2. ✓ Admin User Management (create/edit users, soft delete with active field)
 3. ✓ Settings Pages (profile & password management for students and admins)
 4. ✓ Student Steckbrief (profile with text fields + images, draft/submit workflow, unsaved changes warnings)
-5. Admin Dashboard (review & approval workflow) - **NEXT**
-6. Kommentare (student comments about other students)
-7. Rankings (student & teacher rankings)
-8. Umfragen (surveys/polls)
-9. Data export for yearbook printing
+5. ✓ Dynamic Steckbrief Field Management (admin can add/edit/reorder/deactivate fields at runtime)
+6. Admin Dashboard (review & approval workflow) - **NEXT**
+7. Kommentare (student comments about other students)
+8. Rankings (student & teacher rankings)
+9. Umfragen (surveys/polls)
+10. Data export for yearbook printing
 
 ## Development Approach
 
@@ -96,12 +97,15 @@ app/                        # Next.js App Router
 │   └── einstellungen/     # Student settings
 ├── admin/                 # Admin pages (Dashboard, User Management, Settings)
 │   ├── benutzer/          # User management pages
+│   ├── steckbrief-felder/ # Dynamic field management
 │   ├── steckbriefe/       # Profile review pages (TODO)
 │   └── einstellungen/     # Admin settings
 └── api/                   # API routes
     ├── auth/              # NextAuth endpoints
     ├── settings/          # Profile & password update endpoints
-    ├── admin/users/       # Admin user management endpoints
+    ├── admin/
+    │   ├── users/         # Admin user management endpoints
+    │   └── steckbrief-fields/ # Dynamic field management endpoints
     ├── steckbrief/        # Steckbrief CRUD + submit/retract endpoints
     └── register/          # User registration endpoint
 
@@ -115,7 +119,9 @@ components/
 │   ├── SingleImageUpload.tsx        # Single image upload component
 │   ├── MultiImageUpload.tsx         # Multi-image upload with incremental logic
 │   └── SteckbriefStatusActions.tsx  # Dashboard status action buttons
-├── admin/                 # Admin components (UserManagement, UserForm, UserList)
+├── admin/                 # Admin components
+│   ├── UserManagement, UserForm, UserList
+│   └── steckbrief-fields/ # FieldManagement, FieldList, FieldForm
 ├── navigation/            # Navigation components (StudentNav, AdminNav)
 └── providers/             # React providers (SessionProvider)
 
@@ -123,13 +129,12 @@ hooks/
 └── useUnsavedChangesWarning.tsx  # Intercepts navigation with unsaved changes
 
 lib/
-├── prisma.ts                # Prisma client singleton
-├── auth.ts                  # NextAuth configuration with session update handling
-├── auth.config.ts           # NextAuth config (middleware, callbacks)
-├── validation.ts            # Zod schemas for validation
-├── steckbrief-fields.ts     # Centralized field configuration system
-├── steckbrief-validation.ts # Zod schemas for Steckbrief fields
-└── file-upload.ts           # File validation, save, and delete utilities
+├── prisma.ts                      # Prisma client singleton
+├── auth.ts                        # NextAuth configuration with session update handling
+├── auth.config.ts                 # NextAuth config (middleware, callbacks)
+├── validation.ts                  # Zod schemas for validation
+├── steckbrief-validation-dynamic.ts # Dynamic Zod schema generation from DB fields
+└── file-upload.ts                 # File validation, save, and delete utilities
 
 types/
 └── next-auth.d.ts         # NextAuth type extensions for User & Session
@@ -145,12 +150,20 @@ prisma/
 - **User:** Authentication & role management (STUDENT, ADMIN)
   - `active` field for soft delete (deactivated users can't log in)
   - Stores firstName, lastName, email, password (bcrypt hashed)
-- **Profile/Steckbrief:** Student yearbook profile with multiple text fields + images
+- **Profile/Steckbrief:** Student yearbook profile
   - One-to-one relationship with User (userId unique)
   - Automatically created for STUDENT role users
-  - Fields: imageUrl (String?), quote, plansAfter, memory (all String? @db.Text), memoryImages (String[])
   - Status: DRAFT | SUBMITTED | APPROVED (enum ProfileStatus)
   - Feedback: String? @db.Text (admin comments for rejected submissions)
+  - `values` relation to SteckbriefValue (dynamic field values)
+- **SteckbriefField:** Dynamic field definitions (admin-configurable)
+  - key: unique identifier (immutable after creation)
+  - type: TEXT | TEXTAREA | SINGLE_IMAGE | MULTI_IMAGE
+  - label, placeholder, maxLength, maxFiles, rows, required, order
+  - active: soft-delete flag (deactivated fields are hidden but data preserved)
+- **SteckbriefValue:** Field values per student
+  - profileId + fieldId unique constraint (one value per field per student)
+  - textValue, imageValue, imagesValue (depending on field type)
 - **Status tracking:** DRAFT → SUBMITTED → APPROVED workflow (with retract option)
 - **Admin feedback:** Comments for rejected submissions, cleared on retract
 
@@ -205,28 +218,30 @@ npm start
 ## Student Steckbrief Feature (Implemented)
 
 **Overview:**
-Students can create and edit their yearbook profiles with text fields and images. The feature uses a configuration-driven architecture for easy extensibility.
+Students can create and edit their yearbook profiles with text fields and images. The feature uses a **database-driven dynamic field system** that allows admins to configure fields at runtime.
 
 **Key Architecture:**
 
-### 1. Configuration-Based Field System
-- **Central config:** `lib/steckbrief-fields.ts` defines all fields
-- **Field types:** 'text', 'textarea', 'single-image', 'multi-image'
-- **Easy to extend:** Add new fields by updating config + schema + validation (3 files only)
-- **Type-safe:** TypeScript interfaces ensure consistency
+### 1. Dynamic Field System
+- **Database-driven:** Field definitions stored in `SteckbriefField` table
+- **Admin UI:** `/admin/steckbrief-felder` for CRUD operations
+- **Field types:** TEXT, TEXTAREA, SINGLE_IMAGE, MULTI_IMAGE
+- **Runtime configuration:** Add/edit/reorder/deactivate fields without code changes
+- **Soft-delete:** Deactivated fields are hidden, data preserved for reactivation
+- **Dynamic validation:** Zod schemas generated from field definitions
 
 ### 2. File Upload System
 - **Storage:** `public/uploads/profiles/{userId}/{filename}`
-- **Filename format:** `{fieldName}-{timestamp}-{random}.{ext}`
+- **Filename format:** `{fieldKey}-{timestamp}-{random}.{ext}`
 - **Validation:** Client + server side (max 5MB, JPG/PNG/WebP only)
 - **Utilities:** `lib/file-upload.ts` provides validateImageFile, saveImageFile, deleteImageFile
 
 ### 3. Multi-Image Upload
 - **Incremental uploads:** Distinguishes between existing (saved) URLs and new files
-- **State management:** Two separate lists - `existingImages: string[]` and `newFiles: File[]`
-- **API communication:** FormData sends `existingMemoryImages` (JSON) + `newMemoryImages` (Files)
+- **State management:** Two separate lists - `existing: string[]` and `new: File[]`
+- **API communication:** FormData sends `existing_{fieldKey}` (JSON) + `new_{fieldKey}` (Files)
 - **Individual deletion:** Each image (existing or new) can be removed independently
-- **Max 3 images:** Enforced client + server side
+- **Configurable limit:** maxFiles per field (default 3)
 
 ### 4. Workflow States
 - **DRAFT:** Student can edit freely
@@ -239,22 +254,31 @@ Students can create and edit their yearbook profiles with text fields and images
 - **Unsaved changes warning:**
   - Browser-native dialogs for all navigation attempts (consistent UX)
   - Intercepts link clicks with `useUnsavedChangesWarning` hook
-  - Tracks changes with `lastSavedData` state (not just `initialData`)
+  - Tracks changes with `lastSavedState` (not just initial)
 - **Visual feedback:** "Neu" label on unsaved images, removed after save without reload
 - **Auto-sync:** State updates immediately after save, no manual refresh needed
+- **Feedback display:** Shows admin feedback when profile was rejected
 
-### 6. Current Fields
-1. **Profilbild** (single-image) - Profile picture
-2. **Lieblingszitat** (textarea, max 500 chars) - Favorite quote
-3. **Pläne nach dem Abi** (textarea, max 1000 chars) - Plans after graduation
-4. **Schönste Erinnerung** (textarea, max 1000 chars) - Best memory
-5. **Erinnerungsfotos** (multi-image, max 3) - Memory photos
+### 6. Default Fields (Admin-Configurable)
+1. **Profilbild** (SINGLE_IMAGE) - Profile picture
+2. **Lieblingszitat** (TEXTAREA, max 500 chars) - Favorite quote
+3. **Pläne nach dem Abi** (TEXTAREA, max 1000 chars) - Plans after graduation
+4. **Schönste Erinnerung** (TEXTAREA, max 1000 chars) - Best memory
+5. **Erinnerungsfotos** (MULTI_IMAGE, max 3) - Memory photos
 
 ### 7. API Endpoints
-- `GET /api/steckbrief` - Load profile (auto-creates if missing)
-- `PATCH /api/steckbrief` - Update draft with text + images
+
+**Student Steckbrief:**
+- `GET /api/steckbrief` - Load profile with fields and values
+- `PATCH /api/steckbrief` - Update draft (dynamic field handling)
 - `POST /api/steckbrief/submit` - Submit for review (DRAFT → SUBMITTED)
 - `POST /api/steckbrief/retract` - Retract submission (SUBMITTED → DRAFT)
+
+**Admin Field Management:**
+- `GET /api/admin/steckbrief-fields` - List all fields (including inactive)
+- `POST /api/admin/steckbrief-fields` - Create new field
+- `PATCH /api/admin/steckbrief-fields/[fieldId]` - Update field
+- `PATCH /api/admin/steckbrief-fields/reorder` - Bulk reorder fields
 
 ### 8. Security Measures
 - File size limits (5MB)
@@ -264,6 +288,7 @@ Students can create and edit their yearbook profiles with text fields and images
 - User-specific directories (prevents path traversal)
 - Session-based auth (users can only edit their own Steckbrief)
 - Status checks (no editing after submission)
+- Admin-only field management
 
 ## File Upload Handling
 

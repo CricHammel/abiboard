@@ -3,7 +3,7 @@
 import { Input } from '@/components/ui/Input';
 import { SingleImageUpload } from './SingleImageUpload';
 import { MultiImageUpload } from './MultiImageUpload';
-import { FieldDefinition } from '@/lib/steckbrief-fields';
+import type { FieldDefinition } from '@/lib/steckbrief-validation-dynamic';
 
 interface FieldRendererProps {
   field: FieldDefinition;
@@ -28,10 +28,10 @@ export function FieldRenderer({
           type="text"
           value={value || ''}
           onChange={(e) => onChange(e.target.value)}
-          placeholder={field.placeholder}
+          placeholder={field.placeholder ?? undefined}
           error={error}
           disabled={disabled}
-          maxLength={field.maxLength}
+          maxLength={field.maxLength ?? undefined}
         />
       );
 
@@ -44,9 +44,9 @@ export function FieldRenderer({
           <textarea
             value={value || ''}
             onChange={(e) => onChange(e.target.value)}
-            placeholder={field.placeholder}
-            rows={field.rows || 4}
-            maxLength={field.maxLength}
+            placeholder={field.placeholder ?? undefined}
+            rows={field.rows ?? 4}
+            maxLength={field.maxLength ?? undefined}
             disabled={disabled}
             className={`
               w-full px-4 py-3
