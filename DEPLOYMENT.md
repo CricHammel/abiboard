@@ -7,13 +7,13 @@
 - No password required
 - `.env` example:
 ```bash
-DATABASE_URL="postgresql://your-mac-username@localhost:5432/abibuch"
+DATABASE_URL="postgresql://your-mac-username@localhost:5432/abiboard"
 NEXTAUTH_URL="http://localhost:3000"
 ```
 
 ### Setup Steps
 1. Install Postgres.app
-2. Create database: `createdb abibuch`
+2. Create database: `createdb abiboard`
 3. Copy `.env.example` to `.env` and adjust username
 4. Run migration: `npx prisma migrate dev`
 5. Start dev server: `npm run dev`
@@ -36,15 +36,15 @@ sudo apt install postgresql postgresql-contrib
 sudo -u postgres psql
 
 # In psql console:
-CREATE DATABASE abibuch;
-CREATE USER abibuch_user WITH PASSWORD 'secure-password-here';
-GRANT ALL PRIVILEGES ON DATABASE abibuch TO abibuch_user;
+CREATE DATABASE abiboard;
+CREATE USER abiboard_user WITH PASSWORD 'secure-password-here';
+GRANT ALL PRIVILEGES ON DATABASE abiboard TO abiboard_user;
 \q
 ```
 
 **3. Configure `.env` on Raspberry Pi:**
 ```bash
-DATABASE_URL="postgresql://abibuch_user:secure-password-here@localhost:5432/abibuch"
+DATABASE_URL="postgresql://abiboard_user:secure-password-here@localhost:5432/abiboard"
 NEXTAUTH_SECRET="generate-with-openssl-rand-base64-32"
 NEXTAUTH_URL="http://your-raspberry-pi-ip:3000"
 ```
@@ -53,7 +53,7 @@ NEXTAUTH_URL="http://your-raspberry-pi-ip:3000"
 ```bash
 # Clone repository
 git clone <your-repo-url>
-cd abibuch_tool
+cd abiboard
 
 # Install dependencies
 npm install

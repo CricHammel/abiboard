@@ -3,8 +3,8 @@ import "./globals.css";
 import { SessionProvider } from "@/components/providers/SessionProvider";
 
 export const metadata: Metadata = {
-  title: "Abibuch",
-  description: "Abibuch management application",
+  title: "AbiBoard",
+  description: "AbiBoard - Abibuch-Verwaltung für eure Abschlussklasse",
 };
 
 export default function RootLayout({

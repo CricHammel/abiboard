@@ -1,4 +1,4 @@
-# Design System - Abibuch App
+# Design System - AbiBoard
 
 ## Design-Philosophie
 

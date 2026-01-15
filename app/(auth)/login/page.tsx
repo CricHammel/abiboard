@@ -3,8 +3,8 @@ import { Card } from "@/components/ui/Card";
 import { LoginForm } from "@/components/auth/LoginForm";
 
 export const metadata: Metadata = {
-  title: "Anmelden - Abibuch",
-  description: "Melde dich an, um auf dein Abibuch zuzugreifen.",
+  title: "Anmelden - AbiBoard",
+  description: "Melde dich an, um auf AbiBoard zuzugreifen.",
 };
 
 export default function LoginPage() {

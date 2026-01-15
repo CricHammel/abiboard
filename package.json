@@ -1,7 +1,7 @@
 {
-  "name": "abibuch_tool",
+  "name": "abiboard",
   "version": "1.0.0",
-  "description": "Abibuch management web application",
+  "description": "AbiBoard - Abibuch management web application",
   "private": true,
   "scripts": {
     "dev": "next dev",

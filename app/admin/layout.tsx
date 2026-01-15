@@ -25,7 +25,7 @@ export default async function AdminLayout({
       <header className="lg:hidden bg-white border-b border-gray-200 sticky top-0 z-10">
         <div className="flex items-center justify-between px-4 py-3">
           <h1 className="text-xl font-bold text-gray-900">
-            Abibuch Admin
+            AbiBoard Admin
           </h1>
           <div className="flex items-center space-x-4">
             <span className="text-sm text-gray-600">
@@ -40,7 +40,7 @@ export default async function AdminLayout({
         <aside className="hidden lg:block w-64 bg-white border-r border-gray-200 min-h-screen fixed">
           <div className="p-6">
             <h1 className="text-2xl font-bold text-gray-900">
-              Abibuch
+              AbiBoard
             </h1>
             <p className="text-sm text-gray-600 mt-1">
               {session.user.firstName} {session.user.lastName}
