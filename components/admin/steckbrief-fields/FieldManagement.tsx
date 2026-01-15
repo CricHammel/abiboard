@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
 import { ErrorMessage } from "@/components/ui/ErrorMessage";
 import { FieldList } from "./FieldList";
@@ -13,7 +12,6 @@ interface FieldManagementProps {
 }
 
 export function FieldManagement({ initialFields }: FieldManagementProps) {
-  const router = useRouter();
   const [fields, setFields] = useState<FieldDefinition[]>(initialFields);
   const [editingField, setEditingField] = useState<FieldDefinition | null>(null);
   const [isCreating, setIsCreating] = useState(false);
@@ -43,9 +41,26 @@ export function FieldManagement({ initialFields }: FieldManagementProps) {
         return;
       }
 
+      // Add new field to local state
+      if (result.field) {
+        const newField: FieldDefinition = {
+          id: result.field.id,
+          key: result.field.key,
+          type: result.field.type.toLowerCase().replace("_", "-") as FieldDefinition["type"],
+          label: result.field.label,
+          placeholder: result.field.placeholder,
+          maxLength: result.field.maxLength,
+          maxFiles: result.field.maxFiles,
+          rows: result.field.rows,
+          required: result.field.required,
+          order: result.field.order,
+          active: result.field.active,
+        };
+        setFields((prev) => [...prev, newField]);
+      }
+
       setSuccessMessage("Feld erfolgreich erstellt.");
       setIsCreating(false);
-      router.refresh();
     } catch {
       setError("Ein Fehler ist aufgetreten.");
     } finally {
@@ -77,9 +92,29 @@ export function FieldManagement({ initialFields }: FieldManagementProps) {
         return;
       }
 
+      // Update field in local state
+      if (result.field) {
+        setFields((prev) =>
+          prev.map((f) =>
+            f.id === editingField.id
+              ? {
+                  ...f,
+                  label: result.field.label,
+                  placeholder: result.field.placeholder,
+                  maxLength: result.field.maxLength,
+                  maxFiles: result.field.maxFiles,
+                  rows: result.field.rows,
+                  required: result.field.required,
+                  order: result.field.order,
+                  active: result.field.active,
+                }
+              : f
+          )
+        );
+      }
+
       setSuccessMessage("Feld erfolgreich aktualisiert.");
       setEditingField(null);
-      router.refresh();
     } catch {
       setError("Ein Fehler ist aufgetreten.");
     } finally {

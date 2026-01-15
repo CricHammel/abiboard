@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/Button";
 import type { FieldDefinition } from "@/lib/steckbrief-validation-dynamic";
 
@@ -26,41 +26,60 @@ export function FieldList({
   onReorder,
   disabled,
 }: FieldListProps) {
+  // Local state for drag operations - only updates UI during drag
+  const [localFields, setLocalFields] = useState<FieldDefinition[]>(fields);
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+  const [orderChanged, setOrderChanged] = useState(false);
+
+  // Sync local state when fields prop changes (e.g., after save)
+  useEffect(() => {
+    setLocalFields(fields);
+  }, [fields]);
 
   const handleDragStart = (index: number) => {
     if (disabled) return;
     setDraggedIndex(index);
+    setOrderChanged(false);
   };
 
   const handleDragOver = (e: React.DragEvent, index: number) => {
     e.preventDefault();
     if (draggedIndex === null || draggedIndex === index || disabled) return;
 
-    const newFields = [...fields];
+    // Only update local state during drag - don't call onReorder yet
+    const newFields = [...localFields];
     const [draggedItem] = newFields.splice(draggedIndex, 1);
     newFields.splice(index, 0, draggedItem);
 
     setDraggedIndex(index);
-    onReorder(newFields);
+    setLocalFields(newFields);
+    setOrderChanged(true);
   };
 
   const handleDragEnd = () => {
+    // Only save when dropped and order actually changed
+    if (orderChanged && draggedIndex !== null) {
+      onReorder(localFields);
+    }
     setDraggedIndex(null);
+    setOrderChanged(false);
   };
 
   const moveField = (index: number, direction: "up" | "down") => {
     if (disabled) return;
     const newIndex = direction === "up" ? index - 1 : index + 1;
-    if (newIndex < 0 || newIndex >= fields.length) return;
+    if (newIndex < 0 || newIndex >= localFields.length) return;
 
-    const newFields = [...fields];
+    const newFields = [...localFields];
     const [item] = newFields.splice(index, 1);
     newFields.splice(newIndex, 0, item);
+
+    // For button clicks, save immediately
+    setLocalFields(newFields);
     onReorder(newFields);
   };
 
-  if (fields.length === 0) {
+  if (localFields.length === 0) {
     return (
       <div className="text-center py-8 text-gray-500">
         Keine Felder vorhanden. Erstelle ein neues Feld.
@@ -70,7 +89,7 @@ export function FieldList({
 
   return (
     <div className="space-y-2">
-      {fields.map((field, index) => (
+      {localFields.map((field, index) => (
         <div
           key={field.id}
           draggable={!disabled}
@@ -145,7 +164,7 @@ export function FieldList({
             </button>
             <button
               onClick={() => moveField(index, "down")}
-              disabled={disabled || index === fields.length - 1}
+              disabled={disabled || index === localFields.length - 1}
               className="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-30"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
