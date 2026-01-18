@@ -11,17 +11,51 @@ export async function POST(request: Request) {
     const validation = registerSchema.safeParse(body);
 
     if (!validation.success) {
+      const firstError = validation.error.issues[0];
       return NextResponse.json(
-        { error: "Ungültige Eingabedaten." },
+        { error: firstError?.message || "Ung\u00fcltige Eingabedaten." },
         { status: 400 }
       );
     }
 
-    const { email, password, firstName, lastName } = validation.data;
+    const { email, password } = validation.data;
+    const normalizedEmail = email.toLowerCase();
 
-    // Check if user already exists
+    // Look up student in whitelist
+    const student = await prisma.student.findUnique({
+      where: { email: normalizedEmail },
+    });
+
+    if (!student) {
+      return NextResponse.json(
+        {
+          error:
+            "Diese E-Mail-Adresse ist nicht in der Sch\u00fclerliste hinterlegt. Bitte wende dich an das Abi-Komitee.",
+        },
+        { status: 400 }
+      );
+    }
+
+    if (!student.active) {
+      return NextResponse.json(
+        {
+          error:
+            "Dein Account wurde deaktiviert. Bitte wende dich an das Abi-Komitee.",
+        },
+        { status: 400 }
+      );
+    }
+
+    if (student.userId) {
+      return NextResponse.json(
+        { error: "Mit dieser E-Mail-Adresse wurde bereits ein Account erstellt." },
+        { status: 400 }
+      );
+    }
+
+    // Check if user with this email already exists (shouldn't happen if whitelist is correct)
     const existingUser = await prisma.user.findUnique({
-      where: { email },
+      where: { email: normalizedEmail },
     });
 
     if (existingUser) {
@@ -34,13 +68,13 @@ export async function POST(request: Request) {
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Create user with profile
+    // Create user with profile and link to student
     const user = await prisma.user.create({
       data: {
-        email,
+        email: normalizedEmail,
         password: hashedPassword,
-        firstName,
-        lastName,
+        firstName: student.firstName,
+        lastName: student.lastName,
         role: "STUDENT",
         profile: {
           create: {
@@ -48,6 +82,12 @@ export async function POST(request: Request) {
           },
         },
       },
+    });
+
+    // Link student to user
+    await prisma.student.update({
+      where: { id: student.id },
+      data: { userId: user.id },
     });
 
     return NextResponse.json(

@@ -14,14 +14,10 @@ export function RegisterForm() {
   const [formData, setFormData] = useState({
     email: "",
     password: "",
-    firstName: "",
-    lastName: "",
   });
   const [errors, setErrors] = useState<{
     email?: string;
     password?: string;
-    firstName?: string;
-    lastName?: string;
     general?: string;
   }>({});
   const [isLoading, setIsLoading] = useState(false);
@@ -84,7 +80,7 @@ export function RegisterForm() {
       // Successful registration and login
       router.push("/");
       router.refresh();
-    } catch (error) {
+    } catch {
       setErrors({
         general: "Etwas ist schiefgelaufen. Bitte versuche es erneut.",
       });
@@ -98,27 +94,12 @@ export function RegisterForm() {
         <ErrorMessage message={errors.general} className="mb-4" />
       )}
 
-      <Input
-        label="Vorname"
-        type="text"
-        value={formData.firstName}
-        onChange={(e) => handleChange("firstName", e.target.value)}
-        error={errors.firstName}
-        autoComplete="given-name"
-        placeholder="Max"
-        disabled={isLoading}
-      />
-
-      <Input
-        label="Nachname"
-        type="text"
-        value={formData.lastName}
-        onChange={(e) => handleChange("lastName", e.target.value)}
-        error={errors.lastName}
-        autoComplete="family-name"
-        placeholder="Mustermann"
-        disabled={isLoading}
-      />
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
+        <p className="text-sm text-blue-800">
+          Verwende deine Schul-E-Mail-Adresse (@lessing-ffm.net). Dein Name wird
+          automatisch aus der Sch&uuml;lerliste &uuml;bernommen.
+        </p>
+      </div>
 
       <Input
         label="E-Mail"
@@ -127,7 +108,7 @@ export function RegisterForm() {
         onChange={(e) => handleChange("email", e.target.value)}
         error={errors.email}
         autoComplete="email"
-        placeholder="max@beispiel.de"
+        placeholder="vorname.nachname@lessing-ffm.net"
         disabled={isLoading}
       />
 

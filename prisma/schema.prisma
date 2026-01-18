@@ -37,8 +37,24 @@ model User {
   updatedAt DateTime @updatedAt
 
   profile Profile?
+  student Student?
 
   @@map("users")
+}
+
+model Student {
+  id        String   @id @default(cuid())
+  firstName String
+  lastName  String
+  email     String   @unique
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  userId    String?  @unique
+  user      User?    @relation(fields: [userId], references: [id])
+
+  @@map("students")
 }
 
 model Profile {
