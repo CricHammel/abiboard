@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { registerSchema } from "@/lib/validation";
+import { registerApiSchema } from "@/lib/validation";
 import bcrypt from "bcryptjs";
 
 export async function POST(request: Request) {
@@ -8,7 +8,7 @@ export async function POST(request: Request) {
     const body = await request.json();
 
     // Validate request body
-    const validation = registerSchema.safeParse(body);
+    const validation = registerApiSchema.safeParse(body);
 
     if (!validation.success) {
       const firstError = validation.error.issues[0];
