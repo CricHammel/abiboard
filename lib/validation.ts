@@ -10,19 +10,25 @@ export const loginSchema = z.object({
 
 const SCHOOL_EMAIL_DOMAIN = "@lessing-ffm.net";
 
-export const registerSchema = z.object({
-  email: z
-    .string()
-    .min(1, "Bitte gib deine E-Mail-Adresse ein.")
-    .email("Bitte gib eine gültige E-Mail-Adresse ein.")
-    .refine(
-      (email) => email.toLowerCase().endsWith(SCHOOL_EMAIL_DOMAIN),
-      `Bitte verwende deine Schul-E-Mail-Adresse (${SCHOOL_EMAIL_DOMAIN}).`
-    ),
-  password: z
-    .string()
-    .min(8, "Das Passwort muss mindestens 8 Zeichen lang sein."),
-});
+export const registerSchema = z
+  .object({
+    email: z
+      .string()
+      .min(1, "Bitte gib deine E-Mail-Adresse ein.")
+      .email("Bitte gib eine gültige E-Mail-Adresse ein.")
+      .refine(
+        (email) => email.toLowerCase().endsWith(SCHOOL_EMAIL_DOMAIN),
+        `Bitte verwende deine Schul-E-Mail-Adresse (${SCHOOL_EMAIL_DOMAIN}).`
+      ),
+    password: z
+      .string()
+      .min(8, "Das Passwort muss mindestens 8 Zeichen lang sein."),
+    confirmPassword: z.string().min(1, "Bitte bestätige dein Passwort."),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Die Passwörter stimmen nicht überein.",
+    path: ["confirmPassword"],
+  });
 
 export type LoginInput = z.infer<typeof loginSchema>;
 export type RegisterInput = z.infer<typeof registerSchema>;

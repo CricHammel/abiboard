@@ -36,8 +36,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ### Planned Features (Implementation Order)
 1. ✓ Authentication & User Management
-2. ✓ Admin User Management (create/edit users, soft delete with active field)
-3. ✓ Settings Pages (profile & password management for students and admins)
+2. ✓ Whitelist-based Registration (school email required, admin manages student list)
+3. ✓ Settings Pages (password management, read-only personal data)
 4. ✓ Student Steckbrief (profile with text fields + images, draft/submit workflow, unsaved changes warnings)
 5. ✓ Dynamic Steckbrief Field Management (admin can add/edit/reorder/deactivate fields at runtime)
 6. Admin Dashboard (review & approval workflow) - **NEXT**
@@ -95,19 +95,19 @@ app/                        # Next.js App Router
 │   ├── dashboard/         # Student dashboard with status overview
 │   ├── steckbrief/        # Steckbrief editor page
 │   └── einstellungen/     # Student settings
-├── admin/                 # Admin pages (Dashboard, User Management, Settings)
-│   ├── benutzer/          # User management pages
+├── admin/                 # Admin pages (Dashboard, Student Management, Settings)
+│   ├── schueler/          # Student whitelist management (list, detail, import)
 │   ├── steckbrief-felder/ # Dynamic field management
 │   ├── steckbriefe/       # Profile review pages (TODO)
 │   └── einstellungen/     # Admin settings
 └── api/                   # API routes
     ├── auth/              # NextAuth endpoints
-    ├── settings/          # Profile & password update endpoints
+    ├── settings/          # Password update endpoint
     ├── admin/
-    │   ├── users/         # Admin user management endpoints
+    │   ├── students/      # Student whitelist management endpoints
     │   └── steckbrief-fields/ # Dynamic field management endpoints
     ├── steckbrief/        # Steckbrief CRUD + submit/retract endpoints
-    └── register/          # User registration endpoint
+    └── register/          # Whitelist-validated registration endpoint
 
 components/
 ├── ui/                    # Base UI components (Button, Card, Input, ErrorMessage, ConfirmDialog)
@@ -120,7 +120,7 @@ components/
 │   ├── MultiImageUpload.tsx         # Multi-image upload with incremental logic
 │   └── SteckbriefStatusActions.tsx  # Dashboard status action buttons
 ├── admin/                 # Admin components
-│   ├── UserManagement, UserForm, UserList
+│   ├── StudentManagement, StudentList, StudentForm  # Student whitelist management
 │   └── steckbrief-fields/ # FieldManagement, FieldList, FieldForm
 ├── navigation/            # Navigation components (StudentNav, AdminNav)
 └── providers/             # React providers (SessionProvider)
@@ -147,9 +147,16 @@ prisma/
 
 ## Key Schema Concepts
 
+- **Student:** Whitelist entry for registration
+  - firstName, lastName, email (must be @lessing-ffm.net)
+  - `active` field for soft delete (deactivated students can't register)
+  - `userId` optional relation to User (set after registration)
+  - Admin manages via `/admin/schueler` (CRUD + CSV import)
 - **User:** Authentication & role management (STUDENT, ADMIN)
   - `active` field for soft delete (deactivated users can't log in)
   - Stores firstName, lastName, email, password (bcrypt hashed)
+  - Students: linked to Student entry, name/email are read-only
+  - Admins: created only via database seeding
 - **Profile/Steckbrief:** Student yearbook profile
   - One-to-one relationship with User (userId unique)
   - Automatically created for STUDENT role users
@@ -209,11 +216,44 @@ npm start
 - JWT strategy with session tokens
 - Role-based access control via middleware
 - Protected routes for student and admin areas
-- Session update handling:
-  - Profile changes update JWT token and session without re-login
-  - Use `useSession().update()` to trigger session updates
-  - JWT and session callbacks handle `trigger === "update"`
 - Inactive users (active: false) are blocked at login
+
+## Whitelist-based Registration
+
+**Overview:**
+Students can only register if their school email is in the whitelist (Student table). This ensures only authorized students can create accounts.
+
+**Registration Flow:**
+1. Student enters email (@lessing-ffm.net) and password (+ confirmation)
+2. API validates email against Student whitelist
+3. Checks: exists, active, not already registered
+4. Creates User with name from Student entry
+5. Links Student to User (sets userId)
+6. Auto-login after successful registration
+
+**Admin Student Management (`/admin/schueler`):**
+- List all students with registration status, Steckbrief status
+- Detail view with all student information
+- Manual CRUD operations
+- CSV import for bulk creation
+- Activate/deactivate students
+
+**API Endpoints:**
+- `GET /api/admin/students` - List all students
+- `POST /api/admin/students` - Create student
+- `GET /api/admin/students/[studentId]` - Get student details
+- `PATCH /api/admin/students/[studentId]` - Update student
+- `POST /api/admin/students/import` - CSV import
+
+**CSV Import Format:**
+- Required columns: `Vorname`, `Nachname`
+- Optional: `Email` (auto-generated if missing: vorname.nachname@lessing-ffm.net)
+- Supports `;` and `,` delimiters
+- Skips duplicates, reports errors
+
+**User Settings:**
+- Students can only change their password
+- Name and email are read-only (from whitelist)
 
 ## Student Steckbrief Feature (Implemented)
 
@@ -323,12 +363,6 @@ export default async function Page({
   // ... use id
 }
 ```
-
-### Session Updates
-When updating user profile data (firstName, lastName, email):
-1. Update database via API
-2. Call `useSession().update({ ...newData })` in client component
-3. JWT and session callbacks handle the update automatically
 
 ### Soft Delete Pattern
 - Never delete users from database

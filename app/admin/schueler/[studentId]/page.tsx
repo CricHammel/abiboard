@@ -3,9 +3,9 @@ import { prisma } from "@/lib/prisma";
 import { Card } from "@/components/ui/Card";
 import Link from "next/link";
 import { redirect, notFound } from "next/navigation";
-import { EditStudentClient } from "./EditStudentClient";
+import { StudentDetailClient } from "./StudentDetailClient";
 
-export default async function EditStudentPage({
+export default async function StudentDetailPage({
   params,
 }: {
   params: Promise<{ studentId: string }>;
@@ -19,13 +19,23 @@ export default async function EditStudentPage({
 
   const student = await prisma.student.findUnique({
     where: { id: studentId },
-    select: {
-      id: true,
-      email: true,
-      firstName: true,
-      lastName: true,
-      active: true,
-      userId: true,
+    include: {
+      user: {
+        select: {
+          id: true,
+          email: true,
+          firstName: true,
+          lastName: true,
+          active: true,
+          createdAt: true,
+          profile: {
+            select: {
+              status: true,
+              updatedAt: true,
+            },
+          },
+        },
+      },
     },
   });
 
@@ -40,17 +50,15 @@ export default async function EditStudentPage({
           href="/admin/schueler"
           className="text-primary hover:underline text-sm mb-2 inline-block"
         >
-          &larr; Zur&uuml;ck zur Sch&uuml;lerliste
+          ← Zurück zur Schülerverwaltung
         </Link>
-        <h1 className="text-3xl font-bold text-gray-900">Sch&uuml;ler bearbeiten</h1>
-        <p className="text-gray-600 mt-2">
-          Bearbeite die Daten von {student.firstName} {student.lastName}.
-        </p>
+        <h1 className="text-3xl font-bold text-gray-900">
+          {student.firstName} {student.lastName}
+        </h1>
+        <p className="text-gray-600 mt-2">{student.email}</p>
       </div>
 
-      <Card>
-        <EditStudentClient student={student} />
-      </Card>
+      <StudentDetailClient student={student} />
     </div>
   );
 }

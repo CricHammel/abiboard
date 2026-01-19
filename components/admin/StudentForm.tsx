@@ -204,7 +204,7 @@ export function StudentForm({ mode, initialData, onSuccess }: StudentFormProps) 
           {initialData?.userId && (
             <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
               <p className="text-sm text-blue-800">
-                Dieser Sch&uuml;ler hat sich bereits registriert.
+                Dieser Schüler hat sich bereits registriert.
               </p>
             </div>
           )}

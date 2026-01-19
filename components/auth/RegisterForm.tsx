@@ -14,10 +14,12 @@ export function RegisterForm() {
   const [formData, setFormData] = useState({
     email: "",
     password: "",
+    confirmPassword: "",
   });
   const [errors, setErrors] = useState<{
     email?: string;
     password?: string;
+    confirmPassword?: string;
     general?: string;
   }>({});
   const [isLoading, setIsLoading] = useState(false);
@@ -46,11 +48,14 @@ export function RegisterForm() {
     }
 
     try {
-      // Call server action to create user
+      // Call server action to create user (only send email and password)
       const response = await fetch("/api/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          email: formData.email,
+          password: formData.password,
+        }),
       });
 
       const data = await response.json();
@@ -97,7 +102,7 @@ export function RegisterForm() {
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
         <p className="text-sm text-blue-800">
           Verwende deine Schul-E-Mail-Adresse (@lessing-ffm.net). Dein Name wird
-          automatisch aus der Sch&uuml;lerliste &uuml;bernommen.
+          automatisch aus der Schülerliste übernommen.
         </p>
       </div>
 
@@ -120,6 +125,17 @@ export function RegisterForm() {
         error={errors.password}
         autoComplete="new-password"
         placeholder="Mindestens 8 Zeichen"
+        disabled={isLoading}
+      />
+
+      <Input
+        label="Passwort bestätigen"
+        type="password"
+        value={formData.confirmPassword}
+        onChange={(e) => handleChange("confirmPassword", e.target.value)}
+        error={errors.confirmPassword}
+        autoComplete="new-password"
+        placeholder="Passwort wiederholen"
         disabled={isLoading}
       />
 

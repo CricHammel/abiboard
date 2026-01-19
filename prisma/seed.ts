@@ -181,10 +181,10 @@ async function main() {
   // Migrate existing profile data to new system
   await migrateProfileData();
 
-  // Hash password for demo users
+  // Hash password for admin
   const hashedPassword = await bcrypt.hash("password123", 10);
 
-  // Create admin user
+  // Create admin user only
   const admin = await prisma.user.upsert({
     where: { email: "admin@abibuch.de" },
     update: {},
@@ -197,31 +197,7 @@ async function main() {
     },
   });
 
-  // Create student user
-  const student = await prisma.user.upsert({
-    where: { email: "student@abibuch.de" },
-    update: {},
-    create: {
-      email: "student@abibuch.de",
-      password: hashedPassword,
-      firstName: "Max",
-      lastName: "Mustermann",
-      role: "STUDENT",
-      profile: {
-        create: {
-          quote: "Das war eine geile Zeit!",
-          plansAfter: "Studium in München",
-          memory: "Die Abifahrt nach Barcelona",
-          status: "DRAFT",
-        },
-      },
-    },
-  });
-
-  // Migrate demo student data if just created
-  await migrateProfileData();
-
-  console.log({ admin, student });
+  console.log({ admin });
 }
 
 main()

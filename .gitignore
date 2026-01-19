@@ -37,3 +37,6 @@ prisma/migrations/
 # Testing
 coverage/
 .nyc_output/
+
+# Planning docs (internal)
+docs/

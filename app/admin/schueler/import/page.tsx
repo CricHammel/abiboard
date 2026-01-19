@@ -87,11 +87,11 @@ export default function ImportStudentsPage() {
           href="/admin/schueler"
           className="text-primary hover:underline text-sm mb-2 inline-block"
         >
-          &larr; Zur&uuml;ck zur Sch&uuml;lerliste
+          ← Zurück zur Schülerliste
         </Link>
         <h1 className="text-3xl font-bold text-gray-900">CSV Import</h1>
         <p className="text-gray-600 mt-2">
-          Importiere mehrere Sch&uuml;ler aus einer CSV-Datei.
+          Importiere mehrere Schüler aus einer CSV-Datei.
         </p>
       </div>
 
@@ -139,11 +139,11 @@ export default function ImportStudentsPage() {
               </h3>
               <ul className="text-sm space-y-1">
                 <li className="text-green-700">
-                  {result.success} Sch&uuml;ler hinzugef&uuml;gt
+                  {result.success} Schüler hinzugefügt
                 </li>
                 {result.skipped > 0 && (
                   <li className="text-gray-600">
-                    {result.skipped} &uuml;bersprungen (bereits vorhanden)
+                    {result.skipped} übersprungen (bereits vorhanden)
                   </li>
                 )}
               </ul>
@@ -169,7 +169,7 @@ export default function ImportStudentsPage() {
                 htmlFor="csv-file"
                 className="block text-sm font-medium text-gray-700 mb-1"
               >
-                CSV-Datei ausw&auml;hlen
+                CSV-Datei auswählen
               </label>
               <input
                 type="file"
@@ -181,7 +181,7 @@ export default function ImportStudentsPage() {
               />
               {file && (
                 <p className="text-sm text-gray-600 mt-2">
-                  Ausgew&auml;hlt: {file.name}
+                  Ausgewählt: {file.name}
                 </p>
               )}
             </div>

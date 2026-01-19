@@ -1,6 +1,5 @@
 import { auth } from "@/lib/auth";
 import { Card } from "@/components/ui/Card";
-import { ProfileSettingsForm } from "@/components/settings/ProfileSettingsForm";
 import { PasswordChangeForm } from "@/components/settings/PasswordChangeForm";
 import { redirect } from "next/navigation";
 
@@ -16,7 +15,7 @@ export default async function SettingsPage() {
       <div>
         <h1 className="text-3xl font-bold text-gray-900">Einstellungen</h1>
         <p className="text-gray-600 mt-2">
-          Verwalte deine persönlichen Daten und Sicherheitseinstellungen.
+          Verwalte deine Sicherheitseinstellungen.
         </p>
       </div>
 
@@ -24,13 +23,19 @@ export default async function SettingsPage() {
         <h2 className="text-xl font-semibold text-gray-900 mb-4">
           Persönliche Daten
         </h2>
-        <ProfileSettingsForm
-          initialData={{
-            firstName: session.user.firstName,
-            lastName: session.user.lastName,
-            email: session.user.email,
-          }}
-        />
+        <div className="space-y-3">
+          <div>
+            <p className="text-sm text-gray-500">Name</p>
+            <p className="text-gray-900">{session.user.firstName} {session.user.lastName}</p>
+          </div>
+          <div>
+            <p className="text-sm text-gray-500">E-Mail</p>
+            <p className="text-gray-900">{session.user.email}</p>
+          </div>
+          <p className="text-sm text-gray-500 mt-4">
+            Name und E-Mail werden aus der Schülerliste übernommen und können nicht geändert werden.
+          </p>
+        </div>
       </Card>
 
       <Card>

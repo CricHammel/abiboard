@@ -23,6 +23,11 @@ export default async function StudentsPage() {
           firstName: true,
           lastName: true,
           active: true,
+          profile: {
+            select: {
+              status: true,
+            },
+          },
         },
       },
     },
@@ -32,9 +37,9 @@ export default async function StudentsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Sch&uuml;lerliste</h1>
+          <h1 className="text-3xl font-bold text-gray-900">Schülerverwaltung</h1>
           <p className="text-gray-600 mt-2">
-            Verwalte die Whitelist f&uuml;r die Registrierung.
+            Verwalte alle Schüler und deren Registrierungen.
           </p>
         </div>
         <div className="flex gap-2">
@@ -42,7 +47,7 @@ export default async function StudentsPage() {
             <Button variant="secondary">CSV Import</Button>
           </Link>
           <Link href="/admin/schueler/neu">
-            <Button variant="primary">Neuer Sch&uuml;ler</Button>
+            <Button variant="primary">Neuer Schüler</Button>
           </Link>
         </div>
       </div>

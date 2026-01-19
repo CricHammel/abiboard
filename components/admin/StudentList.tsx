@@ -17,6 +17,9 @@ interface Student {
     firstName: string;
     lastName: string;
     active: boolean;
+    profile?: {
+      status: "DRAFT" | "SUBMITTED" | "APPROVED";
+    } | null;
   } | null;
 }
 
@@ -87,6 +90,23 @@ export function StudentList({
     );
   };
 
+  const getProfileStatusBadge = (status?: "DRAFT" | "SUBMITTED" | "APPROVED") => {
+    if (!status) return null;
+
+    const config = {
+      DRAFT: { label: "Entwurf", className: "bg-gray-100 text-gray-700" },
+      SUBMITTED: { label: "Eingereicht", className: "bg-yellow-100 text-yellow-700" },
+      APPROVED: { label: "Genehmigt", className: "bg-green-100 text-green-700" },
+    };
+
+    const { label, className } = config[status];
+    return (
+      <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${className}`}>
+        {label}
+      </span>
+    );
+  };
+
   return (
     <div className="space-y-4">
       {/* Search and Filters */}
@@ -127,14 +147,14 @@ export function StudentList({
           htmlFor="hideInactive"
           className="text-sm text-gray-700 cursor-pointer"
         >
-          Inaktive Eintr&auml;ge ausblenden
+          Inaktive Einträge ausblenden
         </label>
       </div>
 
       {/* Results count */}
       <p className="text-sm text-gray-600">
         {filteredStudents.length}{" "}
-        {filteredStudents.length === 1 ? "Sch&uuml;ler" : "Sch&uuml;ler"} gefunden
+        {filteredStudents.length === 1 ? "Schüler" : "Schüler"} gefunden
       </p>
 
       {/* Desktop Table */}
@@ -150,6 +170,9 @@ export function StudentList({
               </th>
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Registrierung
+              </th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Steckbrief
               </th>
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Status
@@ -174,6 +197,11 @@ export function StudentList({
                   {getRegistrationBadge(student)}
                 </td>
                 <td className="px-4 py-4 whitespace-nowrap">
+                  {student.user?.profile
+                    ? getProfileStatusBadge(student.user.profile.status)
+                    : <span className="text-gray-400">—</span>}
+                </td>
+                <td className="px-4 py-4 whitespace-nowrap">
                   {getStatusBadge(student.active)}
                 </td>
                 <td className="px-4 py-4 whitespace-nowrap text-right text-sm space-x-2">
@@ -181,7 +209,7 @@ export function StudentList({
                     onClick={() => onEdit(student.id)}
                     className="text-primary hover:underline"
                   >
-                    Bearbeiten
+                    Details
                   </button>
                   <button
                     onClick={() =>
@@ -222,6 +250,7 @@ export function StudentList({
 
             <div className="flex flex-wrap gap-2">
               {getRegistrationBadge(student)}
+              {student.user?.profile && getProfileStatusBadge(student.user.profile.status)}
               {getStatusBadge(student.active)}
             </div>
 
@@ -231,7 +260,7 @@ export function StudentList({
                 onClick={() => onEdit(student.id)}
                 className="flex-1 !py-2 text-sm"
               >
-                Bearbeiten
+                Details
               </Button>
               <Button
                 variant={student.active ? "danger" : "primary"}
@@ -254,7 +283,7 @@ export function StudentList({
       {/* Empty state */}
       {filteredStudents.length === 0 && (
         <div className="text-center py-12 text-gray-500">
-          Keine Sch&uuml;ler gefunden.
+          Keine Schüler gefunden.
         </div>
       )}
     </div>

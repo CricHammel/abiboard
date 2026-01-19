@@ -19,11 +19,11 @@ export default function NewStudentPage() {
           href="/admin/schueler"
           className="text-primary hover:underline text-sm mb-2 inline-block"
         >
-          &larr; Zur&uuml;ck zur Sch&uuml;lerliste
+          ← Zurück zur Schülerliste
         </Link>
-        <h1 className="text-3xl font-bold text-gray-900">Neuer Sch&uuml;ler</h1>
+        <h1 className="text-3xl font-bold text-gray-900">Neuer Schüler</h1>
         <p className="text-gray-600 mt-2">
-          F&uuml;ge einen Sch&uuml;ler zur Whitelist hinzu.
+          Füge einen Schüler zur Whitelist hinzu.
         </p>
       </div>
 
