@@ -32,7 +32,7 @@ public/uploads/
 Thumbs.db
 
 # Prisma
-prisma/migrations/
+# Migrations should be tracked in git!
 
 # Testing
 coverage/
