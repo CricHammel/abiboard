@@ -1,6 +1,7 @@
 "use client";
 
 import { signOut } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
 
 interface LogoutButtonProps {
@@ -12,8 +13,11 @@ export function LogoutButton({
   variant = "text",
   className = "",
 }: LogoutButtonProps) {
+  const router = useRouter();
+
   const handleLogout = async () => {
-    await signOut({ callbackUrl: "/login" });
+    await signOut({ redirect: false });
+    router.push("/login");
   };
 
   return (
