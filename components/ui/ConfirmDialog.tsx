@@ -61,11 +61,12 @@ export function ConfirmDialog({
       <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6 space-y-4">
         <h2 className="text-xl font-bold text-gray-900">{title}</h2>
         <p className="text-gray-600">{message}</p>
-        <div className="flex gap-3 justify-end">
+        <div className="flex flex-col-reverse sm:flex-row gap-3 sm:justify-end">
           <Button
             variant="secondary"
             onClick={onCancel}
             disabled={isLoading}
+            className="w-full sm:w-auto"
           >
             {cancelText}
           </Button>
@@ -74,6 +75,7 @@ export function ConfirmDialog({
             onClick={onConfirm}
             loading={isLoading}
             disabled={isLoading}
+            className="w-full sm:w-auto"
           >
             {confirmText}
           </Button>

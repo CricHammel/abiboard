@@ -35,7 +35,7 @@ export default async function StudentsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Schülerverwaltung</h1>
           <p className="text-gray-600 mt-2">
@@ -44,10 +44,10 @@ export default async function StudentsPage() {
         </div>
         <div className="flex gap-2">
           <Link href="/admin/schueler/import">
-            <Button variant="secondary">CSV Import</Button>
+            <Button variant="secondary" className="!w-auto">CSV Import</Button>
           </Link>
           <Link href="/admin/schueler/neu">
-            <Button variant="primary">Neuer Schüler</Button>
+            <Button variant="primary" className="!w-auto">Neuer Schüler</Button>
           </Link>
         </div>
       </div>

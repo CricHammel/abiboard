@@ -213,6 +213,7 @@ export function FieldManagement({ initialFields }: FieldManagementProps) {
           }}
           variant="primary"
           disabled={isLoading || isCreating}
+          className="!w-auto"
         >
           Neues Feld
         </Button>

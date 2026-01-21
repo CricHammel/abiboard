@@ -49,7 +49,9 @@ export function SteckbriefStatusActions({ status }: SteckbriefStatusActionsProps
       <div>
         {status === 'DRAFT' && (
           <Link href="/steckbrief">
-            <Button variant="primary">Steckbrief bearbeiten</Button>
+            <Button variant="primary" className="!w-auto !py-2 !px-4 !text-sm">
+              Steckbrief bearbeiten
+            </Button>
           </Link>
         )}
 
@@ -58,6 +60,7 @@ export function SteckbriefStatusActions({ status }: SteckbriefStatusActionsProps
             variant="secondary"
             onClick={() => setShowRetractDialog(true)}
             loading={isLoading}
+            className="!w-auto !py-2 !px-4 !text-sm"
           >
             Einreichung zurückziehen
           </Button>
@@ -65,7 +68,9 @@ export function SteckbriefStatusActions({ status }: SteckbriefStatusActionsProps
 
         {status === 'APPROVED' && (
           <Link href="/steckbrief">
-            <Button variant="secondary">Steckbrief ansehen</Button>
+            <Button variant="secondary" className="!w-auto !py-2 !px-4 !text-sm">
+              Steckbrief ansehen
+            </Button>
           </Link>
         )}
 
