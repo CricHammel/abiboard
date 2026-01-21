@@ -77,6 +77,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Use descriptive commit messages in English
 - Create commits regularly to track progress
 - `.gitignore` should exclude: `node_modules/`, `.env*`, `.next/`, `uploads/` (user-generated content)
+- Use git commands without changing directory first. You can act on the assumption that you are always in the root directory
 
 **Fixing mistakes:**
 - If you discover errors in previous commits or a bugfix didn't work, use `git reset` to undo commits
