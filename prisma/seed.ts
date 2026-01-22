@@ -186,10 +186,10 @@ async function main() {
 
   // Create admin user only
   const admin = await prisma.user.upsert({
-    where: { email: "admin@abibuch.de" },
+    where: { email: "admin@abiboard.de" },
     update: {},
     create: {
-      email: "admin@abibuch.de",
+      email: "admin@abiboard.de",
       password: hashedPassword,
       firstName: "Admin",
       lastName: "User",
