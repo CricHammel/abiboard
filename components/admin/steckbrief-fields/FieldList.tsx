@@ -153,6 +153,28 @@ export function FieldList({
               </div>
             </div>
 
+            {/* Move Buttons (Tablet only, since drag doesn't work on touch) */}
+            <div className="flex flex-col gap-1 lg:hidden flex-shrink-0">
+              <button
+                onClick={() => moveField(index, "up")}
+                disabled={disabled || index === 0}
+                className="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-30"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                </svg>
+              </button>
+              <button
+                onClick={() => moveField(index, "down")}
+                disabled={disabled || index === localFields.length - 1}
+                className="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-30"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+            </div>
+
             {/* Actions */}
             <div className="flex items-center gap-2 flex-shrink-0">
               <Button

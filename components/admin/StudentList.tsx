@@ -158,7 +158,7 @@ export function StudentList({
       </p>
 
       {/* Desktop Table */}
-      <div className="hidden sm:block overflow-x-auto">
+      <div className="hidden lg:block overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
@@ -234,8 +234,8 @@ export function StudentList({
         </table>
       </div>
 
-      {/* Mobile Cards */}
-      <div className="sm:hidden space-y-4">
+      {/* Mobile/Tablet Cards */}
+      <div className="lg:hidden space-y-4">
         {filteredStudents.map((student) => (
           <div
             key={student.id}
