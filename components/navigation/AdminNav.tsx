@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { signOut } from "next-auth/react";
 
 interface NavItem {
@@ -126,6 +126,7 @@ const mobileMoreItems = navItems.slice(3);
 
 export function AdminNav({ variant = "both" }: { variant?: "desktop" | "mobile" | "both" }) {
   const pathname = usePathname();
+  const router = useRouter();
   const [moreMenuOpen, setMoreMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -252,7 +253,7 @@ export function AdminNav({ variant = "both" }: { variant?: "desktop" | "mobile" 
                   {/* Logout Button */}
                   <div className="border-t border-gray-200 mt-2 pt-2">
                     <button
-                      onClick={() => signOut({ callbackUrl: "/login" })}
+                      onClick={async () => { await signOut({ redirect: false }); router.push("/login"); }}
                       className="flex items-center gap-3 px-4 py-3 w-full text-left text-gray-700 hover:bg-gray-50 transition-colors"
                     >
                       <svg
