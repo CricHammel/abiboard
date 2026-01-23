@@ -10,6 +10,7 @@ interface Student {
   firstName: string;
   lastName: string;
   email: string;
+  gender: "MALE" | "FEMALE" | null;
   active: boolean;
   createdAt: Date;
   userId: string | null;

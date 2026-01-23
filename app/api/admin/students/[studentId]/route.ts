@@ -93,7 +93,7 @@ export async function PATCH(
       );
     }
 
-    const { firstName, lastName, email, active } = validation.data;
+    const { firstName, lastName, email, gender, active } = validation.data;
 
     // Check if student exists
     const existingStudent = await prisma.student.findUnique({
@@ -128,6 +128,7 @@ export async function PATCH(
         ...(firstName && { firstName }),
         ...(lastName && { lastName }),
         ...(email && { email: email.toLowerCase() }),
+        ...(gender !== undefined && { gender: gender ?? null }),
         ...(active !== undefined && { active }),
       },
       include: {

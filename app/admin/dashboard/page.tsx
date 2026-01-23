@@ -14,7 +14,7 @@ export default async function AdminDashboard() {
   // Fetch statistics
   const [totalStudents, totalProfiles, pendingProfiles, approvedProfiles] =
     await Promise.all([
-      prisma.user.count({ where: { role: "STUDENT" } }),
+      prisma.user.count({ where: { role: "STUDENT", student: { isNot: null } } }),
       prisma.profile.count(),
       prisma.profile.count({ where: { status: "SUBMITTED" } }),
       prisma.profile.count({ where: { status: "APPROVED" } }),

@@ -25,6 +25,32 @@ enum FieldType {
   MULTI_IMAGE
 }
 
+enum Gender {
+  MALE
+  FEMALE
+}
+
+enum Salutation {
+  HERR
+  FRAU
+}
+
+enum GenderTarget {
+  MALE
+  FEMALE
+  ALL
+}
+
+enum RankingQuestionType {
+  STUDENT
+  TEACHER
+}
+
+enum RankingStatus {
+  DRAFT
+  SUBMITTED
+}
+
 model User {
   id        String   @id @default(cuid())
   email     String   @unique
@@ -39,6 +65,9 @@ model User {
   profile Profile?
   student Student?
 
+  rankingVotes      RankingVote[]
+  rankingSubmission RankingSubmission?
+
   @@map("users")
 }
 
@@ -47,12 +76,15 @@ model Student {
   firstName String
   lastName  String
   email     String   @unique
+  gender    Gender?
   active    Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   userId    String?  @unique
   user      User?    @relation(fields: [userId], references: [id])
+
+  rankingVotes RankingVote[]
 
   @@map("students")
 }
@@ -123,4 +155,66 @@ model SteckbriefValue {
 
   @@unique([profileId, fieldId])
   @@map("steckbrief_values")
+}
+
+model Teacher {
+  id         String     @id @default(cuid())
+  salutation Salutation
+  firstName  String?
+  lastName   String
+  subject    String?
+  active     Boolean    @default(true)
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+
+  rankingVotes RankingVote[]
+
+  @@map("teachers")
+}
+
+model RankingQuestion {
+  id             String              @id @default(cuid())
+  text           String
+  type           RankingQuestionType
+  genderSpecific Boolean             @default(false)
+  order          Int
+  active         Boolean             @default(true)
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
+
+  votes RankingVote[]
+
+  @@map("ranking_questions")
+}
+
+model RankingVote {
+  id           String       @id @default(cuid())
+  voterId      String
+  questionId   String
+  genderTarget GenderTarget @default(ALL)
+  studentId    String?
+  teacherId    String?
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  voter    User            @relation(fields: [voterId], references: [id])
+  question RankingQuestion @relation(fields: [questionId], references: [id])
+  student  Student?        @relation(fields: [studentId], references: [id])
+  teacher  Teacher?        @relation(fields: [teacherId], references: [id])
+
+  @@unique([voterId, questionId, genderTarget])
+  @@map("ranking_votes")
+}
+
+model RankingSubmission {
+  id          String        @id @default(cuid())
+  userId      String        @unique
+  status      RankingStatus @default(DRAFT)
+  submittedAt DateTime?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("ranking_submissions")
 }

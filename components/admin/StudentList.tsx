@@ -8,6 +8,7 @@ interface Student {
   firstName: string;
   lastName: string;
   email: string;
+  gender: "MALE" | "FEMALE" | null;
   active: boolean;
   createdAt: Date;
   userId: string | null;
@@ -62,6 +63,19 @@ export function StudentList({
       return matchesSearch && matchesRegistration && matchesHideInactive;
     });
   }, [students, searchTerm, registrationFilter, hideInactive]);
+
+  const getGenderBadge = (gender: "MALE" | "FEMALE" | null) => {
+    if (!gender) return null;
+    return gender === "MALE" ? (
+      <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-700">
+        M
+      </span>
+    ) : (
+      <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-pink-100 text-pink-700">
+        W
+      </span>
+    );
+  };
 
   const getRegistrationBadge = (student: Student) => {
     if (student.userId) {
@@ -186,8 +200,9 @@ export function StudentList({
             {filteredStudents.map((student) => (
               <tr key={student.id} className="hover:bg-gray-50">
                 <td className="px-4 py-4 whitespace-nowrap">
-                  <div className="text-sm font-medium text-gray-900">
+                  <div className="text-sm font-medium text-gray-900 flex items-center gap-2">
                     {student.firstName} {student.lastName}
+                    {getGenderBadge(student.gender)}
                   </div>
                 </td>
                 <td className="px-4 py-4 whitespace-nowrap">
@@ -242,8 +257,9 @@ export function StudentList({
             className="bg-white border border-gray-200 rounded-lg p-4 space-y-3"
           >
             <div>
-              <h3 className="font-semibold text-gray-900">
+              <h3 className="font-semibold text-gray-900 flex items-center gap-2">
                 {student.firstName} {student.lastName}
+                {getGenderBadge(student.gender)}
               </h3>
               <p className="text-sm text-gray-600">{student.email}</p>
             </div>

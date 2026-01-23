@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
-import { createStudentSchema } from "@/lib/validation";
+import { createTeacherSchema } from "@/lib/validation";
 
 export async function GET() {
   try {
@@ -21,24 +21,13 @@ export async function GET() {
       );
     }
 
-    const students = await prisma.student.findMany({
+    const teachers = await prisma.teacher.findMany({
       orderBy: [{ lastName: "asc" }, { firstName: "asc" }],
-      include: {
-        user: {
-          select: {
-            id: true,
-            email: true,
-            firstName: true,
-            lastName: true,
-            active: true,
-          },
-        },
-      },
     });
 
-    return NextResponse.json({ students }, { status: 200 });
+    return NextResponse.json({ teachers }, { status: 200 });
   } catch (error) {
-    console.error("Students fetch error:", error);
+    console.error("Teachers fetch error:", error);
     return NextResponse.json(
       { error: "Ein Fehler ist aufgetreten. Bitte versuche es erneut." },
       { status: 500 }
@@ -65,8 +54,7 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-
-    const validation = createStudentSchema.safeParse(body);
+    const validation = createTeacherSchema.safeParse(body);
 
     if (!validation.success) {
       const firstError = validation.error.issues[0];
@@ -76,40 +64,23 @@ export async function POST(request: Request) {
       );
     }
 
-    const { firstName, lastName, email, gender } = validation.data;
-    const normalizedEmail = email.toLowerCase();
+    const { salutation, lastName, firstName, subject } = validation.data;
 
-    // Check if student with this email already exists
-    const existingStudent = await prisma.student.findUnique({
-      where: { email: normalizedEmail },
-    });
-
-    if (existingStudent) {
-      return NextResponse.json(
-        { error: "Ein Schüler mit dieser E-Mail-Adresse existiert bereits." },
-        { status: 400 }
-      );
-    }
-
-    const student = await prisma.student.create({
+    const teacher = await prisma.teacher.create({
       data: {
-        firstName,
+        salutation,
         lastName,
-        email: normalizedEmail,
-        gender: gender ?? undefined,
-        active: true,
+        firstName: firstName ?? undefined,
+        subject: subject ?? undefined,
       },
     });
 
     return NextResponse.json(
-      {
-        message: "Schüler erfolgreich hinzugefügt.",
-        student,
-      },
+      { message: "Lehrer erfolgreich hinzugefügt.", teacher },
       { status: 201 }
     );
   } catch (error) {
-    console.error("Student creation error:", error);
+    console.error("Teacher creation error:", error);
     return NextResponse.json(
       { error: "Ein Fehler ist aufgetreten. Bitte versuche es erneut." },
       { status: 500 }

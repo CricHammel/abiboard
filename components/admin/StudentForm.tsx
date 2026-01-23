@@ -14,6 +14,7 @@ interface StudentFormProps {
     email: string;
     firstName: string;
     lastName: string;
+    gender: "MALE" | "FEMALE" | null;
     active: boolean;
     userId: string | null;
   };
@@ -25,6 +26,7 @@ export function StudentForm({ mode, initialData, onSuccess }: StudentFormProps) 
   const [firstName, setFirstName] = useState(initialData?.firstName || "");
   const [lastName, setLastName] = useState(initialData?.lastName || "");
   const [email, setEmail] = useState(initialData?.email || "");
+  const [gender, setGender] = useState<"MALE" | "FEMALE" | "">(initialData?.gender || "");
   const [active, setActive] = useState(initialData?.active ?? true);
   const [errors, setErrors] = useState<{
     firstName?: string;
@@ -45,6 +47,7 @@ export function StudentForm({ mode, initialData, onSuccess }: StudentFormProps) 
           firstName,
           lastName,
           email,
+          gender: gender || undefined,
         });
 
         if (!validation.success) {
@@ -67,6 +70,7 @@ export function StudentForm({ mode, initialData, onSuccess }: StudentFormProps) 
             firstName,
             lastName,
             email,
+            gender: gender || null,
           }),
         });
 
@@ -87,6 +91,8 @@ export function StudentForm({ mode, initialData, onSuccess }: StudentFormProps) 
         if (firstName !== initialData?.firstName) updateData.firstName = firstName;
         if (lastName !== initialData?.lastName) updateData.lastName = lastName;
         if (email !== initialData?.email) updateData.email = email;
+        const currentGender = gender || null;
+        if (currentGender !== (initialData?.gender ?? null)) updateData.gender = currentGender;
         if (active !== initialData?.active) updateData.active = active;
 
         const validation = updateStudentSchema.safeParse(updateData);
@@ -184,6 +190,23 @@ export function StudentForm({ mode, initialData, onSuccess }: StudentFormProps) 
         disabled={isLoading}
         required
       />
+
+      <div>
+        <label htmlFor="gender" className="block text-sm font-medium text-gray-700 mb-1">
+          Geschlecht
+        </label>
+        <select
+          id="gender"
+          value={gender}
+          onChange={(e) => setGender(e.target.value as "MALE" | "FEMALE" | "")}
+          className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-light min-h-[44px] text-base"
+          disabled={isLoading}
+        >
+          <option value="">— Nicht angegeben</option>
+          <option value="MALE">Männlich</option>
+          <option value="FEMALE">Weiblich</option>
+        </select>
+      </div>
 
       {mode === "edit" && (
         <>

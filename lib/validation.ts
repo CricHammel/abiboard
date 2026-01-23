@@ -112,6 +112,7 @@ export const createStudentSchema = z.object({
       (email) => email.toLowerCase().endsWith(SCHOOL_EMAIL_DOMAIN),
       `Die E-Mail-Adresse muss auf ${SCHOOL_EMAIL_DOMAIN} enden.`
     ),
+  gender: z.enum(["MALE", "FEMALE"]).optional().nullable(),
 });
 
 export const updateStudentSchema = z
@@ -126,6 +127,49 @@ export const updateStudentSchema = z
         `Die E-Mail-Adresse muss auf ${SCHOOL_EMAIL_DOMAIN} enden.`
       )
       .optional(),
+    gender: z.enum(["MALE", "FEMALE"]).optional().nullable(),
+    active: z.boolean().optional(),
+  })
+  .refine((data) => Object.keys(data).length > 0, {
+    message: "Bitte gib mindestens ein Feld zum Aktualisieren an.",
+  });
+
+// Teacher Management Schemas
+export const createTeacherSchema = z.object({
+  salutation: z.enum(["HERR", "FRAU"], {
+    message: "Bitte wähle eine Anrede aus.",
+  }),
+  lastName: z.string().min(1, "Bitte gib einen Nachnamen ein."),
+  firstName: z.string().optional().nullable(),
+  subject: z.string().optional().nullable(),
+});
+
+export const updateTeacherSchema = z
+  .object({
+    salutation: z.enum(["HERR", "FRAU"]).optional(),
+    lastName: z.string().min(1, "Bitte gib einen Nachnamen ein.").optional(),
+    firstName: z.string().optional().nullable(),
+    subject: z.string().optional().nullable(),
+    active: z.boolean().optional(),
+  })
+  .refine((data) => Object.keys(data).length > 0, {
+    message: "Bitte gib mindestens ein Feld zum Aktualisieren an.",
+  });
+
+// Ranking Question Schemas
+export const createQuestionSchema = z.object({
+  text: z.string().min(1, "Bitte gib einen Fragetext ein."),
+  type: z.enum(["STUDENT", "TEACHER"], {
+    message: "Bitte wähle einen Typ aus.",
+  }),
+  genderSpecific: z.boolean().optional(),
+});
+
+export const updateQuestionSchema = z
+  .object({
+    text: z.string().min(1, "Bitte gib einen Fragetext ein.").optional(),
+    type: z.enum(["STUDENT", "TEACHER"]).optional(),
+    genderSpecific: z.boolean().optional(),
     active: z.boolean().optional(),
   })
   .refine((data) => Object.keys(data).length > 0, {
@@ -139,3 +183,7 @@ export type UpdateProfileInput = z.infer<typeof updateProfileSchema>;
 export type ChangePasswordInput = z.infer<typeof changePasswordSchema>;
 export type CreateStudentInput = z.infer<typeof createStudentSchema>;
 export type UpdateStudentInput = z.infer<typeof updateStudentSchema>;
+export type CreateTeacherInput = z.infer<typeof createTeacherSchema>;
+export type UpdateTeacherInput = z.infer<typeof updateTeacherSchema>;
+export type CreateQuestionInput = z.infer<typeof createQuestionSchema>;
+export type UpdateQuestionInput = z.infer<typeof updateQuestionSchema>;

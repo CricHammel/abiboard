@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
-import { createStudentSchema } from "@/lib/validation";
+import { createQuestionSchema } from "@/lib/validation";
 
 export async function GET() {
   try {
@@ -21,24 +21,13 @@ export async function GET() {
       );
     }
 
-    const students = await prisma.student.findMany({
-      orderBy: [{ lastName: "asc" }, { firstName: "asc" }],
-      include: {
-        user: {
-          select: {
-            id: true,
-            email: true,
-            firstName: true,
-            lastName: true,
-            active: true,
-          },
-        },
-      },
+    const questions = await prisma.rankingQuestion.findMany({
+      orderBy: { order: "asc" },
     });
 
-    return NextResponse.json({ students }, { status: 200 });
+    return NextResponse.json({ questions }, { status: 200 });
   } catch (error) {
-    console.error("Students fetch error:", error);
+    console.error("Questions fetch error:", error);
     return NextResponse.json(
       { error: "Ein Fehler ist aufgetreten. Bitte versuche es erneut." },
       { status: 500 }
@@ -65,8 +54,7 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-
-    const validation = createStudentSchema.safeParse(body);
+    const validation = createQuestionSchema.safeParse(body);
 
     if (!validation.success) {
       const firstError = validation.error.issues[0];
@@ -76,40 +64,30 @@ export async function POST(request: Request) {
       );
     }
 
-    const { firstName, lastName, email, gender } = validation.data;
-    const normalizedEmail = email.toLowerCase();
+    const { text, type, genderSpecific } = validation.data;
 
-    // Check if student with this email already exists
-    const existingStudent = await prisma.student.findUnique({
-      where: { email: normalizedEmail },
+    // Auto-assign order (last + 1)
+    const lastQuestion = await prisma.rankingQuestion.findFirst({
+      orderBy: { order: "desc" },
+      select: { order: true },
     });
+    const nextOrder = (lastQuestion?.order ?? 0) + 1;
 
-    if (existingStudent) {
-      return NextResponse.json(
-        { error: "Ein Schüler mit dieser E-Mail-Adresse existiert bereits." },
-        { status: 400 }
-      );
-    }
-
-    const student = await prisma.student.create({
+    const question = await prisma.rankingQuestion.create({
       data: {
-        firstName,
-        lastName,
-        email: normalizedEmail,
-        gender: gender ?? undefined,
-        active: true,
+        text,
+        type,
+        genderSpecific: genderSpecific ?? false,
+        order: nextOrder,
       },
     });
 
     return NextResponse.json(
-      {
-        message: "Schüler erfolgreich hinzugefügt.",
-        student,
-      },
+      { message: "Frage erfolgreich erstellt.", question },
       { status: 201 }
     );
   } catch (error) {
-    console.error("Student creation error:", error);
+    console.error("Question creation error:", error);
     return NextResponse.json(
       { error: "Ein Fehler ist aufgetreten. Bitte versuche es erneut." },
       { status: 500 }

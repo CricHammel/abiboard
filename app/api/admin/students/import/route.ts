@@ -86,6 +86,9 @@ export async function POST(request: Request) {
       (h) => h === "nachname" || h === "lastname" || h === "last_name"
     );
     const emailIdx = header.findIndex((h) => h === "email" || h === "e-mail");
+    const genderIdx = header.findIndex(
+      (h) => h === "geschlecht" || h === "gender"
+    );
 
     if (firstNameIdx === -1 || lastNameIdx === -1) {
       return NextResponse.json(
@@ -113,6 +116,7 @@ export async function POST(request: Request) {
       firstName: string;
       lastName: string;
       email: string;
+      gender?: "MALE" | "FEMALE";
     }[] = [];
 
     // Process data rows
@@ -174,7 +178,18 @@ export async function POST(request: Request) {
         continue;
       }
 
-      studentsToCreate.push({ firstName, lastName, email });
+      // Parse gender if column exists
+      let gender: "MALE" | "FEMALE" | undefined;
+      if (genderIdx !== -1) {
+        const genderValue = values[genderIdx]?.trim().toLowerCase();
+        if (genderValue === "m" || genderValue === "männlich" || genderValue === "male") {
+          gender = "MALE";
+        } else if (genderValue === "w" || genderValue === "weiblich" || genderValue === "female") {
+          gender = "FEMALE";
+        }
+      }
+
+      studentsToCreate.push({ firstName, lastName, email, gender });
       existingEmails.add(email); // Track for duplicates within batch
     }
 

@@ -1,0 +1,276 @@
+"use client";
+
+import { useState } from "react";
+
+interface Question {
+  id: string;
+  text: string;
+  type: "STUDENT" | "TEACHER";
+  genderSpecific: boolean;
+  order: number;
+}
+
+interface StudentUser {
+  id: string;
+  firstName: string;
+  lastName: string;
+}
+
+interface ResultEntry {
+  personId: string;
+  personType: "student" | "teacher";
+  name: string;
+  genderTarget: string;
+  count: number;
+}
+
+interface QuestionResults {
+  question: Question;
+  genderSpecific: boolean;
+  results: ResultEntry[] | { male: ResultEntry[]; female: ResultEntry[] };
+  totalVoters: number;
+}
+
+interface RankingStatsProps {
+  initialData: {
+    totalStudents: number;
+    submittedCount: number;
+    notSubmitted: StudentUser[];
+    questions: Question[];
+  };
+}
+
+export function RankingStats({ initialData }: RankingStatsProps) {
+  const { totalStudents, submittedCount, notSubmitted, questions } = initialData;
+  const [showNotSubmitted, setShowNotSubmitted] = useState(false);
+  const [expandedQuestion, setExpandedQuestion] = useState<string | null>(null);
+  const [questionResults, setQuestionResults] = useState<Record<string, QuestionResults>>({});
+  const [loadingQuestion, setLoadingQuestion] = useState<string | null>(null);
+
+  const toggleQuestion = async (questionId: string) => {
+    if (expandedQuestion === questionId) {
+      setExpandedQuestion(null);
+      return;
+    }
+
+    setExpandedQuestion(questionId);
+
+    if (!questionResults[questionId]) {
+      setLoadingQuestion(questionId);
+      try {
+        const response = await fetch(`/api/admin/rankings/stats/${questionId}`);
+        const data = await response.json();
+        setQuestionResults((prev) => ({ ...prev, [questionId]: data }));
+      } catch {
+        // Silently fail, user can retry
+      } finally {
+        setLoadingQuestion(null);
+      }
+    }
+  };
+
+  const participationRate = totalStudents > 0
+    ? Math.round((submittedCount / totalStudents) * 100)
+    : 0;
+
+  return (
+    <div className="space-y-6">
+      {/* Overview cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="border border-gray-200 rounded-lg p-4 text-center">
+          <p className="text-3xl font-bold text-gray-900">{totalStudents}</p>
+          <p className="text-sm text-gray-600 mt-1">Schüler gesamt</p>
+        </div>
+        <div className="border border-gray-200 rounded-lg p-4 text-center">
+          <p className="text-3xl font-bold text-green-600">{submittedCount}</p>
+          <p className="text-sm text-gray-600 mt-1">Abgeschickt</p>
+        </div>
+        <div className="border border-gray-200 rounded-lg p-4 text-center">
+          <p className="text-3xl font-bold text-amber-600">{notSubmitted.length}</p>
+          <p className="text-sm text-gray-600 mt-1">Noch offen</p>
+        </div>
+      </div>
+
+      {/* Progress bar */}
+      <div>
+        <div className="flex justify-between text-sm text-gray-600 mb-1">
+          <span>Teilnahme</span>
+          <span>{participationRate}%</span>
+        </div>
+        <div className="w-full bg-gray-200 rounded-full h-2">
+          <div
+            className="bg-green-500 h-2 rounded-full transition-all"
+            style={{ width: `${participationRate}%` }}
+          />
+        </div>
+      </div>
+
+      {/* Not submitted list */}
+      {notSubmitted.length > 0 && (
+        <div className="border border-gray-200 rounded-lg overflow-hidden">
+          <button
+            onClick={() => setShowNotSubmitted(!showNotSubmitted)}
+            className="w-full flex items-center justify-between px-4 py-3 bg-gray-50 hover:bg-gray-100 transition-colors min-h-[44px]"
+          >
+            <span className="text-sm font-medium text-gray-700">
+              Noch nicht abgeschickt ({notSubmitted.length})
+            </span>
+            <svg
+              className={`w-5 h-5 text-gray-500 transition-transform ${showNotSubmitted ? "rotate-180" : ""}`}
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+          {showNotSubmitted && (
+            <div className="p-4">
+              <div className="flex flex-wrap gap-2">
+                {notSubmitted.map((student) => (
+                  <span
+                    key={student.id}
+                    className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-amber-50 text-amber-700"
+                  >
+                    {student.firstName} {student.lastName}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Question results */}
+      {questions.length > 0 && (
+        <div className="space-y-3">
+          <h2 className="text-xl font-semibold text-gray-900">Ergebnisse pro Frage</h2>
+          {questions.map((question) => (
+            <div key={question.id} className="border border-gray-200 rounded-lg overflow-hidden">
+              <button
+                onClick={() => toggleQuestion(question.id)}
+                className="w-full flex items-center justify-between px-4 py-3 hover:bg-gray-50 transition-colors min-h-[44px]"
+              >
+                <div className="flex items-center gap-2 text-left">
+                  <span className="text-sm font-medium text-gray-900">{question.text}</span>
+                  <span className={`text-xs px-1.5 py-0.5 rounded ${
+                    question.type === "STUDENT"
+                      ? "bg-blue-50 text-blue-600"
+                      : "bg-purple-50 text-purple-600"
+                  }`}>
+                    {question.type === "STUDENT" ? "Schüler" : "Lehrer"}
+                  </span>
+                  {question.genderSpecific && (
+                    <span className="text-xs px-1.5 py-0.5 rounded bg-pink-50 text-pink-600">
+                      m/w
+                    </span>
+                  )}
+                </div>
+                <svg
+                  className={`w-5 h-5 text-gray-500 transition-transform flex-shrink-0 ${
+                    expandedQuestion === question.id ? "rotate-180" : ""
+                  }`}
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+
+              {expandedQuestion === question.id && (
+                <div className="px-4 pb-4">
+                  {loadingQuestion === question.id ? (
+                    <p className="text-sm text-gray-500 py-2">Laden...</p>
+                  ) : questionResults[question.id] ? (
+                    <QuestionResultsView data={questionResults[question.id]} />
+                  ) : (
+                    <p className="text-sm text-gray-500 py-2">Keine Daten verfügbar.</p>
+                  )}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {questions.length === 0 && (
+        <div className="text-center py-8 text-gray-500">
+          Es sind noch keine Ranking-Fragen vorhanden.
+        </div>
+      )}
+    </div>
+  );
+}
+
+function QuestionResultsView({ data }: { data: QuestionResults }) {
+  const { genderSpecific, results, totalVoters } = data;
+
+  if (genderSpecific && !Array.isArray(results)) {
+    return (
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
+            Männlich
+          </h4>
+          <ResultList entries={results.male} totalVoters={totalVoters} />
+        </div>
+        <div>
+          <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
+            Weiblich
+          </h4>
+          <ResultList entries={results.female} totalVoters={totalVoters} />
+        </div>
+      </div>
+    );
+  }
+
+  const entries = Array.isArray(results) ? results : [];
+  return <ResultList entries={entries} totalVoters={totalVoters} />;
+}
+
+function ResultList({ entries, totalVoters }: { entries: ResultEntry[]; totalVoters: number }) {
+  if (entries.length === 0) {
+    return <p className="text-sm text-gray-500">Noch keine Stimmen.</p>;
+  }
+
+  const maxCount = entries[0]?.count || 1;
+
+  return (
+    <div className="space-y-2">
+      {entries.slice(0, 10).map((entry, index) => {
+        const percentage = totalVoters > 0
+          ? Math.round((entry.count / totalVoters) * 100)
+          : 0;
+        const barWidth = maxCount > 0
+          ? Math.round((entry.count / maxCount) * 100)
+          : 0;
+
+        return (
+          <div key={`${entry.personId}-${entry.genderTarget}`} className="flex items-center gap-3">
+            <span className="text-xs text-gray-400 w-5 text-right">{index + 1}.</span>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center justify-between mb-0.5">
+                <span className="text-sm text-gray-900 truncate">{entry.name}</span>
+                <span className="text-xs text-gray-500 ml-2 flex-shrink-0">
+                  {entry.count} ({percentage}%)
+                </span>
+              </div>
+              <div className="w-full bg-gray-100 rounded-full h-1.5">
+                <div
+                  className="bg-primary h-1.5 rounded-full transition-all"
+                  style={{ width: `${barWidth}%` }}
+                />
+              </div>
+            </div>
+          </div>
+        );
+      })}
+      {entries.length > 10 && (
+        <p className="text-xs text-gray-500 mt-1">
+          +{entries.length - 10} weitere
+        </p>
+      )}
+    </div>
+  );
+}
