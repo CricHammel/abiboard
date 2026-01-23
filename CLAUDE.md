@@ -40,9 +40,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 3. ✓ Settings Pages (password management, read-only personal data)
 4. ✓ Student Steckbrief (profile with text fields + images, draft/submit workflow, unsaved changes warnings)
 5. ✓ Dynamic Steckbrief Field Management (admin can add/edit/reorder/deactivate fields at runtime)
-6. Admin Dashboard (review & approval workflow) - **NEXT**
-7. Kommentare (student comments about other students)
-8. Rankings (student & teacher rankings)
+6. ✓ Rankings (student & teacher rankings with gender-specific questions)
+7. Admin Dashboard (review & approval workflow) - **NEXT**
+8. Kommentare (student comments about other students)
 9. Umfragen (surveys/polls)
 10. Data export for yearbook printing
 
@@ -78,6 +78,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Create commits regularly to track progress
 - `.gitignore` should exclude: `node_modules/`, `.env*`, `.next/`, `uploads/` (user-generated content)
 - Use git commands without changing directory first. You can act on the assumption that you are always in the root directory
+- Generally, you should not need to use the "cd" command in any way
 
 **Fixing mistakes:**
 - If you discover errors in previous commits or a bugfix didn't work, use `git reset` to undo commits
@@ -92,22 +93,30 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ```
 app/                        # Next.js App Router
 ├── (auth)/                # Auth routes (Login, Register)
-├── (student)/             # Student-facing pages (Dashboard, Steckbrief, Settings)
+├── (student)/             # Student-facing pages
 │   ├── dashboard/         # Student dashboard with status overview
 │   ├── steckbrief/        # Steckbrief editor page
+│   ├── rankings/          # Rankings voting page
 │   └── einstellungen/     # Student settings
-├── admin/                 # Admin pages (Dashboard, Student Management, Settings)
+├── admin/                 # Admin pages
 │   ├── schueler/          # Student whitelist management (list, detail, import)
+│   ├── lehrer/            # Teacher management (list, import)
 │   ├── steckbrief-felder/ # Dynamic field management
 │   ├── steckbriefe/       # Profile review pages (TODO)
+│   ├── ranking-fragen/    # Ranking question management (list, import)
+│   ├── rankings/          # Ranking statistics
 │   └── einstellungen/     # Admin settings
 └── api/                   # API routes
     ├── auth/              # NextAuth endpoints
     ├── settings/          # Password update endpoint
     ├── admin/
     │   ├── students/      # Student whitelist management endpoints
-    │   └── steckbrief-fields/ # Dynamic field management endpoints
+    │   ├── teachers/      # Teacher CRUD + CSV import
+    │   ├── steckbrief-fields/ # Dynamic field management endpoints
+    │   ├── ranking-questions/ # Question CRUD + reorder + CSV import
+    │   └── rankings/stats/   # Admin statistics endpoints
     ├── steckbrief/        # Steckbrief CRUD + submit/retract endpoints
+    ├── rankings/          # Student ranking vote/submit/retract + search endpoints
     └── register/          # Whitelist-validated registration endpoint
 
 components/
@@ -120,9 +129,17 @@ components/
 │   ├── SingleImageUpload.tsx        # Single image upload component
 │   ├── MultiImageUpload.tsx         # Multi-image upload with incremental logic
 │   └── SteckbriefStatusActions.tsx  # Dashboard status action buttons
+├── rankings/              # Student ranking components
+│   ├── RankingsPage.tsx             # Main page with progress + submit/retract
+│   ├── QuestionCard.tsx             # Single question with autocomplete(s)
+│   ├── PersonAutocomplete.tsx       # Debounced search with strict validation
+│   └── CandidateList.tsx            # Collapsible inspiration list
 ├── admin/                 # Admin components
 │   ├── StudentManagement, StudentList, StudentForm  # Student whitelist management
-│   └── steckbrief-fields/ # FieldManagement, FieldList, FieldForm
+│   ├── steckbrief-fields/ # FieldManagement, FieldList, FieldForm
+│   ├── teachers/          # TeacherManagement, TeacherList, TeacherForm
+│   ├── ranking-questions/ # QuestionManagement, QuestionList, QuestionForm
+│   └── rankings/          # RankingStats
 ├── navigation/            # Navigation components (StudentNav, AdminNav)
 └── providers/             # React providers (SessionProvider)
 
@@ -149,7 +166,7 @@ prisma/
 ## Key Schema Concepts
 
 - **Student:** Whitelist entry for registration
-  - firstName, lastName, email (must be @lessing-ffm.net)
+  - firstName, lastName, email (must be @lessing-ffm.net), gender (MALE | FEMALE | null)
   - `active` field for soft delete (deactivated students can't register)
   - `userId` optional relation to User (set after registration)
   - Admin manages via `/admin/schueler` (CRUD + CSV import)
@@ -172,6 +189,21 @@ prisma/
 - **SteckbriefValue:** Field values per student
   - profileId + fieldId unique constraint (one value per field per student)
   - textValue, imageValue, imagesValue (depending on field type)
+- **Teacher:** Teacher entries for ranking votes
+  - salutation (HERR | FRAU), lastName, optional firstName/subject
+  - `active` field for soft delete
+  - Admin manages via `/admin/lehrer` (CRUD + CSV import)
+- **RankingQuestion:** Admin-configured ranking questions
+  - text, type (STUDENT | TEACHER), genderSpecific (boolean), order
+  - `active` field for soft delete
+  - Admin manages via `/admin/ranking-fragen` (CRUD + reorder + CSV import)
+- **RankingVote:** Individual student votes
+  - voterId + questionId + genderTarget unique constraint
+  - References either a Student (studentId) or Teacher (teacherId)
+  - genderTarget: ALL | MALE | FEMALE (for gender-specific questions)
+- **RankingSubmission:** Per-user submission status
+  - One-to-one with User (userId unique)
+  - Status: DRAFT | SUBMITTED (submit/retract workflow)
 - **Status tracking:** DRAFT → SUBMITTED → APPROVED workflow (with retract option)
 - **Admin feedback:** Comments for rejected submissions, cleared on retract
 
@@ -248,7 +280,7 @@ Students can only register if their school email is in the whitelist (Student ta
 
 **CSV Import Format:**
 - Required columns: `Vorname`, `Nachname`
-- Optional: `Email` (auto-generated if missing: vorname.nachname@lessing-ffm.net)
+- Optional: `Email` (auto-generated if missing: vorname.nachname@lessing-ffm.net), `Geschlecht` (m/w)
 - Supports `;` and `,` delimiters
 - Skips duplicates, reports errors
 
@@ -338,6 +370,61 @@ Students can create and edit their yearbook profiles with text fields and images
 - Validation: max 5MB, JPG/PNG/WebP only
 - Utilities in `lib/file-upload.ts` handle all file operations
 - Old images are deleted when replaced
+
+## Ranking Feature (Implemented)
+
+**Overview:**
+Students vote on ranking questions, selecting one classmate or teacher per question. Gender-specific questions allow separate male/female votes. Results are anonymous and visible only to admins.
+
+### 1. Core Concepts
+- **Question types:** STUDENT (vote for classmate) or TEACHER (vote for teacher)
+- **Gender-specific:** Questions can require separate male + female answers
+- **Strict selection:** Autocomplete with validation, no free-text input
+- **Multi-word search:** Query split into words, each matched independently (e.g. "Herr Mayer" finds "Mayer")
+- **Candidate list:** Collapsible list of all eligible persons for inspiration
+
+### 2. Teacher Management (`/admin/lehrer`)
+- CRUD operations with soft-delete
+- CSV import (columns: `Anrede`, `Nachname`, optional `Vorname`, `Fach`)
+- Salutation determines gender for ranking filter (HERR → MALE, FRAU → FEMALE)
+
+### 3. Question Management (`/admin/ranking-fragen`)
+- CRUD with drag&drop reorder (desktop) + arrow buttons (mobile/tablet)
+- CSV import (columns: `Text`, `Typ` (Schüler/Lehrer), `Geschlechtsspezifisch` (ja/nein))
+- Fixed order for all students (admin-configurable)
+
+### 4. Voting Workflow
+- **DRAFT:** Student can vote/change freely
+- **SUBMITTED:** Locked, votes counted in statistics
+- **Retract:** Students can retract (SUBMITTED → DRAFT) to change votes
+- Unique constraint: one vote per question per genderTarget per user
+
+### 5. Admin Statistics (`/admin/rankings`)
+- Participation overview (total, submitted, not submitted list)
+- Per-question results (top 10 with vote count + percentage bars)
+- Gender-specific results displayed in separate columns
+- Only counts votes from submitted users
+
+### 6. API Endpoints
+
+**Student Rankings:**
+- `GET /api/rankings` - Load questions, votes, submission, candidates
+- `PATCH /api/rankings` - Save/update a vote
+- `DELETE /api/rankings/vote/[questionId]` - Remove a vote
+- `POST /api/rankings/submit` - Submit (DRAFT → SUBMITTED)
+- `POST /api/rankings/retract` - Retract (SUBMITTED → DRAFT)
+- `GET /api/rankings/search/students` - Autocomplete (with gender filter)
+- `GET /api/rankings/search/teachers` - Autocomplete (with salutation-based filter)
+
+**Admin:**
+- `GET/POST /api/admin/teachers` - Teacher CRUD
+- `PATCH/DELETE /api/admin/teachers/[id]` - Update/deactivate teacher
+- `POST /api/admin/teachers/import` - Teacher CSV import
+- `GET/POST /api/admin/ranking-questions` - Question CRUD
+- `PATCH/DELETE /api/admin/ranking-questions/[id]` - Update/deactivate question
+- `PATCH /api/admin/ranking-questions/reorder` - Bulk reorder
+- `POST /api/admin/ranking-questions/import` - Question CSV import
+- `GET /api/admin/rankings/stats/[questionId]` - Per-question results
 
 ## Important Implementation Notes
 
