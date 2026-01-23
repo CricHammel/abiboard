@@ -12,12 +12,11 @@ export default async function AdminDashboard() {
   }
 
   // Fetch statistics
-  const [totalStudents, totalProfiles, pendingProfiles, approvedProfiles] =
+  const [totalStudents, totalProfiles, submittedProfiles] =
     await Promise.all([
       prisma.user.count({ where: { role: "STUDENT", student: { isNot: null } } }),
       prisma.profile.count(),
       prisma.profile.count({ where: { status: "SUBMITTED" } }),
-      prisma.profile.count({ where: { status: "APPROVED" } }),
     ]);
 
   // Fetch recent submissions
@@ -46,7 +45,7 @@ export default async function AdminDashboard() {
       </div>
 
       {/* Statistics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card>
           <h3 className="text-sm font-medium text-gray-600 mb-1">
             Schüler gesamt
@@ -63,18 +62,9 @@ export default async function AdminDashboard() {
 
         <Card>
           <h3 className="text-sm font-medium text-gray-600 mb-1">
-            Zur Prüfung
+            Eingereicht
           </h3>
-          <p className="text-3xl font-bold text-blue-600">{pendingProfiles}</p>
-        </Card>
-
-        <Card>
-          <h3 className="text-sm font-medium text-gray-600 mb-1">
-            Genehmigt
-          </h3>
-          <p className="text-3xl font-bold text-green-600">
-            {approvedProfiles}
-          </p>
+          <p className="text-3xl font-bold text-green-600">{submittedProfiles}</p>
         </Card>
       </div>
 
@@ -104,14 +94,14 @@ export default async function AdminDashboard() {
                 d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
               />
             </svg>
-            <p>Keine eingereichten Profile zur Prüfung</p>
+            <p>Keine aktuellen Einreichungen</p>
           </div>
         ) : (
           <div className="space-y-3">
             {recentSubmissions.map((profile) => (
               <div
                 key={profile.id}
-                className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                className="flex items-center justify-between p-4 border border-gray-200 rounded-lg"
               >
                 <div>
                   <p className="font-medium text-gray-900">
@@ -119,16 +109,9 @@ export default async function AdminDashboard() {
                   </p>
                   <p className="text-sm text-gray-600">{profile.user.email}</p>
                 </div>
-                <div className="flex items-center space-x-2">
-                  <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-700">
-                    Eingereicht
-                  </span>
-                  <Link href={`/admin/steckbriefe/${profile.id}`}>
-                    <Button variant="primary" className="!py-2 !px-4">
-                      Prüfen
-                    </Button>
-                  </Link>
-                </div>
+                <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-700">
+                  Eingereicht
+                </span>
               </div>
             ))}
           </div>
@@ -147,7 +130,7 @@ export default async function AdminDashboard() {
                 href="/admin/steckbriefe"
                 className="text-primary hover:underline"
               >
-                → Steckbriefe prüfen
+                → Steckbrief-Übersicht
               </Link>
             </li>
             <li>
@@ -197,9 +180,9 @@ export default async function AdminDashboard() {
 
             <div>
               <div className="flex justify-between text-sm mb-1">
-                <span className="text-gray-600">Profile genehmigt</span>
+                <span className="text-gray-600">Steckbriefe eingereicht</span>
                 <span className="font-medium">
-                  {approvedProfiles}/{totalProfiles}
+                  {submittedProfiles}/{totalProfiles}
                 </span>
               </div>
               <div className="w-full bg-gray-200 rounded-full h-2">
@@ -208,7 +191,7 @@ export default async function AdminDashboard() {
                   style={{
                     width: `${
                       totalProfiles > 0
-                        ? (approvedProfiles / totalProfiles) * 100
+                        ? (submittedProfiles / totalProfiles) * 100
                         : 0
                     }%`,
                   }}

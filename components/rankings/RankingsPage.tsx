@@ -84,15 +84,20 @@ export function RankingsPage({ initialData }: RankingsPageProps) {
     if (!person) {
       // Delete vote
       try {
-        await fetch(
+        const response = await fetch(
           `/api/rankings/vote/${questionId}?genderTarget=${genderTarget}`,
           { method: "DELETE" }
         );
+        const data = await response.json();
         setVotes((prev) =>
           prev.filter(
             (v) => !(v.questionId === questionId && v.genderTarget === genderTarget)
           )
         );
+        // Auto-retract: update status if server changed it
+        if (data.status) {
+          setStatus(data.status);
+        }
       } catch {
         setError("Fehler beim Löschen der Stimme.");
       }
@@ -131,6 +136,10 @@ export function RankingsPage({ initialData }: RankingsPageProps) {
         );
         return [...filtered, data.vote];
       });
+      // Auto-retract: update status if server changed it
+      if (data.status) {
+        setStatus(data.status);
+      }
     } catch {
       setError("Fehler beim Speichern der Stimme.");
     }
@@ -245,7 +254,6 @@ export function RankingsPage({ initialData }: RankingsPageProps) {
               allStudents={students}
               allTeachers={teachers}
               onVote={handleVote}
-              disabled={isSubmitted}
             />
           ))}
         </div>
@@ -263,7 +271,6 @@ export function RankingsPage({ initialData }: RankingsPageProps) {
               allStudents={students}
               allTeachers={teachers}
               onVote={handleVote}
-              disabled={isSubmitted}
             />
           ))}
         </div>
@@ -309,8 +316,8 @@ export function RankingsPage({ initialData }: RankingsPageProps) {
         }
         message={
           confirmDialog.action === "submit"
-            ? "Möchtest du deine Rankings abschicken? Du kannst sie danach nicht mehr bearbeiten."
-            : "Möchtest du deine Rankings zurückziehen? Du kannst sie danach wieder bearbeiten und erneut abschicken."
+            ? "Deine Rankings werden als fertig markiert. Du kannst sie weiterhin bearbeiten – der Status wird dann zurückgesetzt."
+            : "Möchtest du deine Rankings als noch nicht fertig markieren?"
         }
         confirmText={
           confirmDialog.action === "submit" ? "Abschicken" : "Zurückziehen"

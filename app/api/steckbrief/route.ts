@@ -84,7 +84,6 @@ export async function GET() {
         profile: {
           id: profile.id,
           status: profile.status,
-          feedback: profile.feedback,
         },
         fields: fields.map(toFieldDefinition),
         values,
@@ -128,14 +127,6 @@ export async function PATCH(request: Request) {
       return NextResponse.json(
         { error: "Profil nicht gefunden." },
         { status: 404 }
-      );
-    }
-
-    // Check if profile is not already submitted/approved
-    if (existingProfile.status !== "DRAFT") {
-      return NextResponse.json(
-        { error: "Der Steckbrief kann nicht mehr bearbeitet werden." },
-        { status: 403 }
       );
     }
 
@@ -320,10 +311,13 @@ export async function PATCH(request: Request) {
       )
     );
 
-    // Update profile timestamp
+    // Auto-retract: if submitted, reset to DRAFT on edit
     await prisma.profile.update({
       where: { id: existingProfile.id },
-      data: { updatedAt: new Date() },
+      data: {
+        updatedAt: new Date(),
+        ...(existingProfile.status === "SUBMITTED" && { status: "DRAFT" }),
+      },
     });
 
     // Fetch updated values for response
@@ -364,7 +358,6 @@ export async function PATCH(request: Request) {
         profile: {
           id: updatedProfile!.id,
           status: updatedProfile!.status,
-          feedback: updatedProfile!.feedback,
         },
         values: updatedValues,
       },

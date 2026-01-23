@@ -33,12 +33,11 @@ export async function POST(request: Request) {
       );
     }
 
-    // Update status back to DRAFT and clear feedback
+    // Update status back to DRAFT
     const updatedProfile = await prisma.profile.update({
       where: { userId: session.user.id },
       data: {
         status: 'DRAFT',
-        feedback: null, // Clear any existing feedback
       },
     });
 

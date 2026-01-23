@@ -15,7 +15,6 @@ enum Role {
 enum ProfileStatus {
   DRAFT
   SUBMITTED
-  APPROVED
 }
 
 enum FieldType {
@@ -107,7 +106,6 @@ model Profile {
 
   // Status and workflow
   status     ProfileStatus @default(DRAFT)
-  feedback   String?       @db.Text
 
   // Dynamic field values (new system)
   values     SteckbriefValue[]

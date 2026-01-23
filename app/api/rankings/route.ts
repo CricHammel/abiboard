@@ -89,18 +89,6 @@ export async function PATCH(request: Request) {
       );
     }
 
-    // Check submission status
-    const submission = await prisma.rankingSubmission.findFirst({
-      where: { userId: session.user.id },
-    });
-
-    if (submission?.status === "SUBMITTED") {
-      return NextResponse.json(
-        { error: "Rankings bereits abgeschickt. Bitte zuerst zurückziehen." },
-        { status: 400 }
-      );
-    }
-
     const body = await request.json();
     const validation = voteSchema.safeParse(body);
 
@@ -220,14 +208,20 @@ export async function PATCH(request: Request) {
       },
     });
 
-    // Ensure submission record exists
-    await prisma.rankingSubmission.upsert({
+    // Auto-retract: if submitted, reset to DRAFT on vote change
+    const existingSubmission = await prisma.rankingSubmission.findFirst({
       where: { userId: session.user.id },
-      create: { userId: session.user.id, status: "DRAFT" },
-      update: {},
     });
 
-    return NextResponse.json({ vote });
+    const submission = await prisma.rankingSubmission.upsert({
+      where: { userId: session.user.id },
+      create: { userId: session.user.id, status: "DRAFT" },
+      update: existingSubmission?.status === "SUBMITTED"
+        ? { status: "DRAFT", submittedAt: null }
+        : {},
+    });
+
+    return NextResponse.json({ vote, status: submission.status });
   } catch (error) {
     console.error("Vote save error:", error);
     return NextResponse.json(

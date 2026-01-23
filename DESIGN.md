@@ -236,9 +236,6 @@ DRAFT (Entwurf):
   bg-gray-100, text-gray-700
 
 SUBMITTED (Eingereicht):
-  bg-blue-100, text-blue-700
-
-APPROVED (Genehmigt):
   bg-green-100, text-green-700
 
 Border Radius: 9999px (rounded-full)

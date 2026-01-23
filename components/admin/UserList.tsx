@@ -85,13 +85,11 @@ export function UserList({ users, onEdit, onToggleActive }: UserListProps) {
     const labels = {
       DRAFT: "Entwurf",
       SUBMITTED: "Eingereicht",
-      APPROVED: "Genehmigt",
     };
 
     const colors = {
       DRAFT: "bg-gray-100 text-gray-700",
-      SUBMITTED: "bg-yellow-100 text-yellow-700",
-      APPROVED: "bg-green-100 text-green-700",
+      SUBMITTED: "bg-green-100 text-green-700",
     };
 
     return (

@@ -24,18 +24,6 @@ export async function DELETE(
       );
     }
 
-    // Check submission status
-    const submission = await prisma.rankingSubmission.findFirst({
-      where: { userId: session.user.id },
-    });
-
-    if (submission?.status === "SUBMITTED") {
-      return NextResponse.json(
-        { error: "Rankings bereits abgeschickt. Bitte zuerst zurückziehen." },
-        { status: 400 }
-      );
-    }
-
     // Get genderTarget from query params
     const url = new URL(request.url);
     const genderTarget = url.searchParams.get("genderTarget") || "ALL";
@@ -56,7 +44,19 @@ export async function DELETE(
       },
     });
 
-    return NextResponse.json({ message: "Stimme gelöscht." });
+    // Auto-retract: if submitted, reset to DRAFT on vote delete
+    const submission = await prisma.rankingSubmission.findFirst({
+      where: { userId: session.user.id },
+    });
+
+    if (submission?.status === "SUBMITTED") {
+      await prisma.rankingSubmission.update({
+        where: { userId: session.user.id },
+        data: { status: "DRAFT", submittedAt: null },
+      });
+    }
+
+    return NextResponse.json({ message: "Stimme gelöscht.", status: "DRAFT" });
   } catch (error) {
     console.error("Vote delete error:", error);
     return NextResponse.json(

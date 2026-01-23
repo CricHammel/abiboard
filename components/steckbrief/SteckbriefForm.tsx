@@ -13,7 +13,6 @@ interface SteckbriefFormProps {
   fields: FieldDefinition[];
   initialValues: Record<string, unknown>;
   status: string;
-  feedback?: string | null;
 }
 
 // Helper to initialize state for a field
@@ -70,8 +69,7 @@ function hasValueChanged(
 export function SteckbriefForm({
   fields,
   initialValues,
-  status,
-  feedback,
+  status: initialStatus,
 }: SteckbriefFormProps) {
   const router = useRouter();
 
@@ -106,10 +104,12 @@ export function SteckbriefForm({
     }
   );
 
+  const [currentStatus, setCurrentStatus] = useState(initialStatus);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [generalError, setGeneralError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [showSubmitDialog, setShowSubmitDialog] = useState(false);
   const [showRetractDialog, setShowRetractDialog] = useState(false);
 
   // Calculate if there are unsaved changes
@@ -172,8 +172,8 @@ export function SteckbriefForm({
     await submitForm("draft");
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async () => {
+    setShowSubmitDialog(false);
     await submitForm("submit");
   };
 
@@ -196,9 +196,8 @@ export function SteckbriefForm({
         return;
       }
 
-      setSuccessMessage(
-        "Einreichung erfolgreich zurückgezogen. Du kannst den Steckbrief jetzt bearbeiten."
-      );
+      setCurrentStatus("DRAFT");
+      setSuccessMessage("Steckbrief als nicht fertig markiert.");
       setShowRetractDialog(false);
       router.refresh();
       setIsLoading(false);
@@ -273,7 +272,12 @@ export function SteckbriefForm({
         // Update state from server response
         updateStateFromResponse(data.values);
 
-        setSuccessMessage("Steckbrief als Entwurf gespeichert.");
+        // Update status from server (may have been auto-retracted)
+        if (data.profile?.status) {
+          setCurrentStatus(data.profile.status);
+        }
+
+        setSuccessMessage("Steckbrief gespeichert.");
         router.refresh();
       } else {
         // First save, then submit
@@ -294,7 +298,7 @@ export function SteckbriefForm({
         // Update state from server response
         updateStateFromResponse(saveData.values);
 
-        // Now submit for review
+        // Now submit (mark as done)
         const submitResponse = await fetch("/api/steckbrief/submit", {
           method: "POST",
         });
@@ -307,7 +311,8 @@ export function SteckbriefForm({
           return;
         }
 
-        setSuccessMessage("Steckbrief erfolgreich eingereicht!");
+        setCurrentStatus("SUBMITTED");
+        setSuccessMessage("Steckbrief eingereicht.");
         router.refresh();
       }
 
@@ -352,8 +357,6 @@ export function SteckbriefForm({
     setLastSavedState(newSavedState);
   };
 
-  const isSubmitted = status !== "DRAFT";
-
   // Get the value to pass to FieldRenderer
   const getFieldValue = (field: FieldDefinition): unknown => {
     const value = formState[field.key];
@@ -388,17 +391,9 @@ export function SteckbriefForm({
         </div>
       )}
 
-      {isSubmitted && (
-        <div className="bg-blue-50 border border-blue-200 text-blue-800 px-4 py-3 rounded-lg">
-          Dein Steckbrief wurde eingereicht und wird geprüft. Du kannst ihn
-          nicht mehr bearbeiten.
-        </div>
-      )}
-
-      {feedback && status === "DRAFT" && (
-        <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-3 rounded-lg">
-          <strong>Feedback vom Abi-Komitee:</strong>
-          <p className="mt-1">{feedback}</p>
+      {currentStatus === "SUBMITTED" && (
+        <div className="bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg">
+          Dein Steckbrief ist eingereicht und wird ins Abibuch übernommen. Du kannst ihn weiterhin bearbeiten – der Status wird dann zurückgesetzt.
         </div>
       )}
 
@@ -409,50 +404,58 @@ export function SteckbriefForm({
           value={getFieldValue(field)}
           onChange={(value) => handleFieldChange(field.key, value)}
           error={errors[field.key]}
-          disabled={isLoading || isSubmitted}
+          disabled={isLoading}
         />
       ))}
 
-      {!isSubmitted && (
-        <div className="flex flex-col sm:flex-row gap-3 pt-4">
+      <div className="flex flex-col sm:flex-row gap-3 pt-4">
+        <Button
+          type="button"
+          onClick={handleSaveDraft}
+          variant="secondary"
+          loading={isLoading}
+          className="flex-1"
+        >
+          Speichern
+        </Button>
+        {currentStatus === "DRAFT" ? (
           <Button
             type="button"
-            onClick={handleSaveDraft}
-            variant="secondary"
-            loading={isLoading}
-            className="flex-1"
-          >
-            Als Entwurf speichern
-          </Button>
-          <Button
-            type="button"
-            onClick={handleSubmit}
+            onClick={() => setShowSubmitDialog(true)}
             variant="primary"
             loading={isLoading}
             className="flex-1"
           >
-            Zur Prüfung einreichen
+            Einreichen
           </Button>
-        </div>
-      )}
-
-      {status === "SUBMITTED" && (
-        <div className="pt-4">
+        ) : (
           <Button
             type="button"
             onClick={() => setShowRetractDialog(true)}
             variant="secondary"
             loading={isLoading}
+            className="flex-1"
           >
-            Einreichung zurückziehen
+            Zurückziehen
           </Button>
-        </div>
-      )}
+        )}
+      </div>
+
+      <ConfirmDialog
+        isOpen={showSubmitDialog}
+        title="Steckbrief einreichen"
+        message="Dein Steckbrief wird als fertig markiert und kann ins Abibuch übernommen werden. Du kannst ihn weiterhin bearbeiten – der Status wird dann zurückgesetzt."
+        confirmText="Einreichen"
+        variant="warning"
+        onConfirm={handleSubmit}
+        onCancel={() => setShowSubmitDialog(false)}
+        isLoading={isLoading}
+      />
 
       <ConfirmDialog
         isOpen={showRetractDialog}
         title="Einreichung zurückziehen"
-        message="Möchtest du deine Einreichung wirklich zurückziehen? Du kannst den Steckbrief danach wieder bearbeiten."
+        message="Möchtest du deinen Steckbrief als noch nicht fertig markieren?"
         confirmText="Zurückziehen"
         variant="warning"
         onConfirm={handleRetract}

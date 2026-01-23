@@ -34,8 +34,8 @@ const navItems: NavItem[] = [
   },
   {
     href: "/admin/steckbriefe",
-    label: "Steckbriefe prüfen",
-    mobileLabel: "Prüfen",
+    label: "Steckbriefe",
+    mobileLabel: "Steckbriefe",
     icon: (
       <svg
         className="w-5 h-5"

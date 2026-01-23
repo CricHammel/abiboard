@@ -7,7 +7,7 @@ import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import Link from 'next/link';
 
 interface SteckbriefStatusActionsProps {
-  status: 'DRAFT' | 'SUBMITTED' | 'APPROVED';
+  status: 'DRAFT' | 'SUBMITTED';
 }
 
 export function SteckbriefStatusActions({ status }: SteckbriefStatusActionsProps) {
@@ -34,10 +34,9 @@ export function SteckbriefStatusActions({ status }: SteckbriefStatusActionsProps
         return;
       }
 
-      // Success - close dialog and refresh
       setShowRetractDialog(false);
       router.refresh();
-    } catch (err) {
+    } catch {
       setError('Ein Fehler ist aufgetreten. Bitte versuche es erneut.');
       setIsLoading(false);
       setShowRetractDialog(false);
@@ -46,14 +45,12 @@ export function SteckbriefStatusActions({ status }: SteckbriefStatusActionsProps
 
   return (
     <>
-      <div>
-        {status === 'DRAFT' && (
-          <Link href="/steckbrief">
-            <Button variant="primary" className="!w-auto !py-2 !px-4 !text-sm">
-              Steckbrief bearbeiten
-            </Button>
-          </Link>
-        )}
+      <div className="flex items-center gap-2">
+        <Link href="/steckbrief">
+          <Button variant="primary" className="!w-auto !py-2 !px-4 !text-sm">
+            Steckbrief bearbeiten
+          </Button>
+        </Link>
 
         {status === 'SUBMITTED' && (
           <Button
@@ -62,16 +59,8 @@ export function SteckbriefStatusActions({ status }: SteckbriefStatusActionsProps
             loading={isLoading}
             className="!w-auto !py-2 !px-4 !text-sm"
           >
-            Einreichung zurückziehen
+            Zurückziehen
           </Button>
-        )}
-
-        {status === 'APPROVED' && (
-          <Link href="/steckbrief">
-            <Button variant="secondary" className="!w-auto !py-2 !px-4 !text-sm">
-              Steckbrief ansehen
-            </Button>
-          </Link>
         )}
 
         {error && (
@@ -82,7 +71,7 @@ export function SteckbriefStatusActions({ status }: SteckbriefStatusActionsProps
       <ConfirmDialog
         isOpen={showRetractDialog}
         title="Einreichung zurückziehen"
-        message="Möchtest du deine Einreichung wirklich zurückziehen? Du kannst den Steckbrief danach wieder bearbeiten."
+        message="Möchtest du deinen Steckbrief als noch nicht fertig markieren?"
         confirmText="Zurückziehen"
         variant="warning"
         onConfirm={handleRetract}

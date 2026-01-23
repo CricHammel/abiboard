@@ -25,7 +25,7 @@ interface StudentDetailClientProps {
       active: boolean;
       createdAt: Date;
       profile: {
-        status: "DRAFT" | "SUBMITTED" | "APPROVED";
+        status: "DRAFT" | "SUBMITTED";
         updatedAt: Date;
       } | null;
     } | null;
@@ -107,11 +107,10 @@ export function StudentDetailClient({ student }: StudentDetailClientProps) {
     }
   };
 
-  const getStatusBadge = (status: "DRAFT" | "SUBMITTED" | "APPROVED") => {
+  const getStatusBadge = (status: "DRAFT" | "SUBMITTED") => {
     const config = {
       DRAFT: { label: "Entwurf", className: "bg-gray-100 text-gray-700" },
-      SUBMITTED: { label: "Eingereicht", className: "bg-yellow-100 text-yellow-700" },
-      APPROVED: { label: "Genehmigt", className: "bg-green-100 text-green-700" },
+      SUBMITTED: { label: "Eingereicht", className: "bg-green-100 text-green-700" },
     };
     const { label, className } = config[status];
     return (

@@ -19,13 +19,11 @@ export default async function StudentDashboard() {
   const statusLabels = {
     DRAFT: "Entwurf",
     SUBMITTED: "Eingereicht",
-    APPROVED: "Genehmigt",
   };
 
   const statusColors = {
     DRAFT: "bg-gray-100 text-gray-700",
-    SUBMITTED: "bg-blue-100 text-blue-700",
-    APPROVED: "bg-green-100 text-green-700",
+    SUBMITTED: "bg-green-100 text-green-700",
   };
 
   return (
@@ -35,7 +33,7 @@ export default async function StudentDashboard() {
           Willkommen, {session.user.firstName}!
         </h1>
         <p className="text-gray-600 mt-2">
-          Verwalte deinen Abibuch-Steckbrief und reiche ihn zur Prüfung ein.
+          Verwalte deinen Abibuch-Steckbrief und reiche ihn ein, wenn er fertig ist.
         </p>
       </div>
 
@@ -61,35 +59,17 @@ export default async function StudentDashboard() {
           {profile.status === "DRAFT" && (
             <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
               <p className="text-sm text-blue-800">
-                Dein Steckbrief ist noch im Entwurf. Vervollständige ihn und reiche
-                ihn zur Prüfung ein.
+                Dein Steckbrief ist noch nicht eingereicht. Vervollständige ihn und
+                reiche ihn ein.
               </p>
             </div>
           )}
 
           {profile.status === "SUBMITTED" && (
-            <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-              <p className="text-sm text-yellow-800">
-                Dein Steckbrief wurde eingereicht und wird gerade geprüft. Du wirst
-                benachrichtigt, sobald er genehmigt wurde.
-              </p>
-            </div>
-          )}
-
-          {profile.status === "APPROVED" && (
             <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-lg">
               <p className="text-sm text-green-800">
-                Dein Steckbrief wurde genehmigt! Es wird im Abibuch erscheinen.
+                Dein Steckbrief ist eingereicht und wird ins Abibuch übernommen.
               </p>
-            </div>
-          )}
-
-          {profile.feedback && profile.status === "DRAFT" && (
-            <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
-              <p className="text-sm font-medium text-red-800 mb-1">
-                Feedback vom Abi-Komitee:
-              </p>
-              <p className="text-sm text-red-700">{profile.feedback}</p>
             </div>
           )}
         </Card>
@@ -127,24 +107,15 @@ export default async function StudentDashboard() {
           <ul className="space-y-2 text-sm text-gray-600">
             {profile?.status === "DRAFT" && (
               <>
-                <li>✓ Steckbrief vervollständigen</li>
-                <li>✓ Zur Prüfung einreichen</li>
-                <li>⏳ Auf Genehmigung warten</li>
+                <li>1. Steckbrief vervollständigen</li>
+                <li>2. Einreichen</li>
               </>
             )}
             {profile?.status === "SUBMITTED" && (
               <>
                 <li className="line-through">Steckbrief vervollständigen</li>
-                <li className="line-through">Zur Prüfung einreichen</li>
-                <li>⏳ Auf Genehmigung warten</li>
-              </>
-            )}
-            {profile?.status === "APPROVED" && (
-              <>
-                <li className="line-through">Steckbrief vervollständigen</li>
-                <li className="line-through">Zur Prüfung einreichen</li>
-                <li className="line-through">Auf Genehmigung warten</li>
-                <li className="text-green-600">✓ Fertig!</li>
+                <li className="line-through">Einreichen</li>
+                <li className="text-green-600 font-medium">Fertig!</li>
               </>
             )}
           </ul>

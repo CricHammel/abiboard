@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**AbiBoard** is an **Abibuch (yearbook) management web application** for a German high school graduating class. The app allows students to manage their profiles and admins (Abi-Komitee) to review and approve content before it goes into the yearbook.
+**AbiBoard** is an **Abibuch (yearbook) management web application** for a German high school graduating class. The app allows students to manage their profiles, and admins (Abi-Komitee) can track submission progress.
 
 **Important:** This is NOT a public application - it's internal for one graduating class only.
 
@@ -26,13 +26,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ### User Roles
 - **STUDENT:** Can edit their own profile/Steckbrief, view limited content
-- **ADMIN:** Full access to all profiles, can approve/reject submissions, manage all content
+- **ADMIN:** Full access to all profiles, can view submission progress, manage all content
 
 ### Core Data Flow
 1. Students create/edit their Steckbrief (profile)
-2. Students submit for review (status: DRAFT → SUBMITTED)
-3. Admins review submissions in dashboard
-4. Admins approve or reject (SUBMITTED → APPROVED or back to DRAFT with feedback)
+2. Students submit when done (status: DRAFT → SUBMITTED)
+3. Editing after submit automatically resets status to DRAFT (auto-retract)
+4. Admins view progress on overview page (no approval workflow)
 
 ### Planned Features (Implementation Order)
 1. ✓ Authentication & User Management
@@ -41,8 +41,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 4. ✓ Student Steckbrief (profile with text fields + images, draft/submit workflow, unsaved changes warnings)
 5. ✓ Dynamic Steckbrief Field Management (admin can add/edit/reorder/deactivate fields at runtime)
 6. ✓ Rankings (student & teacher rankings with gender-specific questions)
-7. Admin Dashboard (review & approval workflow) - **NEXT**
-8. Kommentare (student comments about other students)
+7. ✓ Admin Steckbrief-Übersicht (progress tracking, no approval workflow)
+8. Kommentare (student comments about other students) - **NEXT**
 9. Umfragen (surveys/polls)
 10. Data export for yearbook printing
 
@@ -102,7 +102,7 @@ app/                        # Next.js App Router
 │   ├── schueler/          # Student whitelist management (list, detail, import)
 │   ├── lehrer/            # Teacher management (list, import)
 │   ├── steckbrief-felder/ # Dynamic field management
-│   ├── steckbriefe/       # Profile review pages (TODO)
+│   ├── steckbriefe/       # Steckbrief submission overview
 │   ├── ranking-fragen/    # Ranking question management (list, import)
 │   ├── rankings/          # Ranking statistics
 │   └── einstellungen/     # Admin settings
@@ -178,8 +178,7 @@ prisma/
 - **Profile/Steckbrief:** Student yearbook profile
   - One-to-one relationship with User (userId unique)
   - Automatically created for STUDENT role users
-  - Status: DRAFT | SUBMITTED | APPROVED (enum ProfileStatus)
-  - Feedback: String? @db.Text (admin comments for rejected submissions)
+  - Status: DRAFT | SUBMITTED (enum ProfileStatus)
   - `values` relation to SteckbriefValue (dynamic field values)
 - **SteckbriefField:** Dynamic field definitions (admin-configurable)
   - key: unique identifier (immutable after creation)
@@ -204,8 +203,7 @@ prisma/
 - **RankingSubmission:** Per-user submission status
   - One-to-one with User (userId unique)
   - Status: DRAFT | SUBMITTED (submit/retract workflow)
-- **Status tracking:** DRAFT → SUBMITTED → APPROVED workflow (with retract option)
-- **Admin feedback:** Comments for rejected submissions, cleared on retract
+- **Status tracking:** DRAFT → SUBMITTED workflow (auto-retract on edit, explicit retract available)
 
 ## Database Commands
 
@@ -317,10 +315,10 @@ Students can create and edit their yearbook profiles with text fields and images
 - **Configurable limit:** maxFiles per field (default 3)
 
 ### 4. Workflow States
-- **DRAFT:** Student can edit freely
-- **SUBMITTED:** Locked for editing, awaiting admin review
-- **APPROVED:** Final state, content goes to yearbook
-- **Retract:** Students can retract submissions (SUBMITTED → DRAFT)
+- **DRAFT:** Student can edit freely, not yet submitted
+- **SUBMITTED:** Marked as done, content goes to yearbook export
+- **Auto-retract:** Editing after submit automatically resets to DRAFT
+- **Explicit retract:** Students can also manually retract (SUBMITTED → DRAFT)
 
 ### 5. User Experience
 - **ConfirmDialog:** All destructive actions (retract, remove image) use design-consistent dialogs
@@ -330,7 +328,6 @@ Students can create and edit their yearbook profiles with text fields and images
   - Tracks changes with `lastSavedState` (not just initial)
 - **Visual feedback:** "Neu" label on unsaved images, removed after save without reload
 - **Auto-sync:** State updates immediately after save, no manual refresh needed
-- **Feedback display:** Shows admin feedback when profile was rejected
 
 ### 6. Default Fields (Admin-Configurable)
 1. **Profilbild** (SINGLE_IMAGE) - Profile picture
@@ -394,9 +391,10 @@ Students vote on ranking questions, selecting one classmate or teacher per quest
 - Fixed order for all students (admin-configurable)
 
 ### 4. Voting Workflow
-- **DRAFT:** Student can vote/change freely
-- **SUBMITTED:** Locked, votes counted in statistics
-- **Retract:** Students can retract (SUBMITTED → DRAFT) to change votes
+- **DRAFT:** Student can vote/change freely, not yet submitted
+- **SUBMITTED:** Marked as done, votes counted in statistics
+- **Auto-retract:** Changing a vote after submit automatically resets to DRAFT
+- **Explicit retract:** Students can also manually retract (SUBMITTED → DRAFT)
 - Unique constraint: one vote per question per genderTarget per user
 
 ### 5. Admin Statistics (`/admin/rankings`)

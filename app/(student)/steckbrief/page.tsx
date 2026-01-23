@@ -82,7 +82,6 @@ export default async function SteckbriefPage() {
           fields={fields.map(toFieldDefinition)}
           initialValues={values}
           status={profile.status}
-          feedback={profile.feedback}
         />
       </Card>
     </div>

@@ -25,11 +25,11 @@ export async function POST(request: Request) {
       );
     }
 
-    // Check if already submitted
-    if (profile.status !== 'DRAFT') {
+    // If already submitted, return success (idempotent)
+    if (profile.status === 'SUBMITTED') {
       return NextResponse.json(
-        { error: 'Der Steckbrief wurde bereits eingereicht.' },
-        { status: 400 }
+        { message: 'Steckbrief ist bereits eingereicht.', profile },
+        { status: 200 }
       );
     }
 
