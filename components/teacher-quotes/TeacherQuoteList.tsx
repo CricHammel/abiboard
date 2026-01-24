@@ -30,10 +30,10 @@ export function TeacherQuoteList({ teachers, basePath = "/lehrerzitate" }: Teach
       const words = search.toLowerCase().split(/\s+/).filter((w) => w.length > 0);
       result = result.filter((t) => {
         const searchable = [
-          t.lastName.toLowerCase(),
-          t.firstName?.toLowerCase() || "",
-          t.subject?.toLowerCase() || "",
           t.salutation === "HERR" ? "herr" : "frau",
+          t.firstName?.toLowerCase() || "",
+          t.lastName.toLowerCase(),
+          t.subject?.toLowerCase() || "",
         ].join(" ");
         return words.every((word) => searchable.includes(word));
       });

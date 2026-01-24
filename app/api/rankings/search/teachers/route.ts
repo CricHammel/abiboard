@@ -20,8 +20,8 @@ export async function GET(request: Request) {
     // Map gender to salutation for filtering
     const salutationFilter = gender === "MALE" ? "HERR" : gender === "FEMALE" ? "FRAU" : undefined;
 
-    // Split query into words and search each separately (union results)
-    // This allows "Herr Mayer" to find "Mayer" even though "Herr" isn't a name field
+    // Split query into words - every word must match at least one field (AND logic)
+    // Searches against firstName, lastName, and salutation (Herr/Frau)
     const words = query.split(/\s+/).filter((w) => w.length > 0);
 
     const teachers = await prisma.teacher.findMany({
@@ -29,10 +29,14 @@ export async function GET(request: Request) {
         active: true,
         ...(salutationFilter && { salutation: salutationFilter as "HERR" | "FRAU" }),
         ...(words.length > 0 && {
-          OR: words.flatMap((word) => [
-            { lastName: { contains: word, mode: "insensitive" as const } },
-            { firstName: { contains: word, mode: "insensitive" as const } },
-          ]),
+          AND: words.map((word) => ({
+            OR: [
+              { lastName: { contains: word, mode: "insensitive" as const } },
+              { firstName: { contains: word, mode: "insensitive" as const } },
+              ...(word.toLowerCase() === "herr" ? [{ salutation: "HERR" as const }] : []),
+              ...(word.toLowerCase() === "frau" ? [{ salutation: "FRAU" as const }] : []),
+            ],
+          })),
         }),
       },
       select: { id: true, salutation: true, firstName: true, lastName: true, subject: true },
