@@ -66,6 +66,7 @@ model User {
 
   rankingVotes      RankingVote[]
   rankingSubmission RankingSubmission?
+  teacherQuotes    TeacherQuote[]
 
   @@map("users")
 }
@@ -165,7 +166,8 @@ model Teacher {
   createdAt  DateTime   @default(now())
   updatedAt  DateTime   @updatedAt
 
-  rankingVotes RankingVote[]
+  rankingVotes  RankingVote[]
+  teacherQuotes TeacherQuote[]
 
   @@map("teachers")
 }
@@ -202,6 +204,21 @@ model RankingVote {
 
   @@unique([voterId, questionId, genderTarget])
   @@map("ranking_votes")
+}
+
+model TeacherQuote {
+  id        String   @id @default(cuid())
+  text      String   @db.VarChar(500)
+  teacherId String
+  userId    String
+  createdAt DateTime @default(now())
+
+  teacher Teacher @relation(fields: [teacherId], references: [id])
+  user    User    @relation(fields: [userId], references: [id])
+
+  @@index([teacherId])
+  @@index([userId])
+  @@map("teacher_quotes")
 }
 
 model RankingSubmission {

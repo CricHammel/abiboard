@@ -113,6 +113,26 @@ const navItems: NavItem[] = [
     ),
   },
   {
+    href: "/admin/lehrerzitate",
+    label: "Lehrerzitate",
+    mobileLabel: "Zitate",
+    icon: (
+      <svg
+        className="w-5 h-5"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"
+        />
+      </svg>
+    ),
+  },
+  {
     href: "/admin/schueler",
     label: "Schülerverwaltung",
     mobileLabel: "Schüler",
@@ -192,7 +212,7 @@ export function AdminNav({ variant = "both" }: { variant?: "desktop" | "mobile" 
 
   // Check if any "more" item is active
   const isMoreItemActive = mobileMoreItems.some(
-    (item) => pathname.startsWith(item.href)
+    (item) => pathname === item.href || pathname.startsWith(item.href + "/")
   );
 
   // Close menu on outside click
@@ -222,8 +242,7 @@ export function AdminNav({ variant = "both" }: { variant?: "desktop" | "mobile" 
       {(variant === "desktop" || variant === "both") && (
         <nav className="px-4 space-y-1">
           {navItems.map((item) => {
-            const isActive = pathname.startsWith(item.href) &&
-              (item.href === "/admin/dashboard" ? pathname === item.href : true);
+            const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
             return (
               <Link
                 key={item.href}
@@ -247,8 +266,7 @@ export function AdminNav({ variant = "both" }: { variant?: "desktop" | "mobile" 
         <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-40">
           <div className="flex justify-around py-2">
             {mobileMainItems.map((item) => {
-              const isActive = pathname.startsWith(item.href) &&
-                (item.href === "/admin/dashboard" ? pathname === item.href : true);
+              const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
               return (
                 <Link
                   key={item.href}
@@ -293,7 +311,7 @@ export function AdminNav({ variant = "both" }: { variant?: "desktop" | "mobile" 
               {moreMenuOpen && (
                 <div className="absolute bottom-full right-0 mb-2 bg-white border border-gray-200 rounded-lg shadow-lg py-2 min-w-[180px]">
                   {mobileMoreItems.map((item) => {
-                    const isActive = pathname.startsWith(item.href);
+                    const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
                     return (
                       <Link
                         key={item.href}

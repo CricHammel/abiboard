@@ -42,9 +42,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 5. ✓ Dynamic Steckbrief Field Management (admin can add/edit/reorder/deactivate fields at runtime)
 6. ✓ Rankings (student & teacher rankings with gender-specific questions)
 7. ✓ Admin Steckbrief-Übersicht (progress tracking, no approval workflow)
-8. Kommentare (student comments about other students) - **NEXT**
-9. Umfragen (surveys/polls)
-10. Data export for yearbook printing
+8. ✓ Lehrerzitate (students collect and submit teacher quotes)
+9. Kommentare (student comments about other students) - **NEXT**
+10. Umfragen (surveys/polls)
+11. Data export for yearbook printing
 
 ## Development Approach
 
@@ -97,6 +98,7 @@ app/                        # Next.js App Router
 │   ├── dashboard/         # Student dashboard with status overview
 │   ├── steckbrief/        # Steckbrief editor page
 │   ├── rankings/          # Rankings voting page
+│   ├── lehrerzitate/      # Teacher quotes (list + detail)
 │   └── einstellungen/     # Student settings
 ├── admin/                 # Admin pages
 │   ├── schueler/          # Student whitelist management (list, detail, import)
@@ -105,6 +107,7 @@ app/                        # Next.js App Router
 │   ├── steckbriefe/       # Steckbrief submission overview
 │   ├── ranking-fragen/    # Ranking question management (list, import)
 │   ├── rankings/          # Ranking statistics
+│   ├── lehrerzitate/      # Teacher quotes admin (list + detail with edit/delete)
 │   └── einstellungen/     # Admin settings
 └── api/                   # API routes
     ├── auth/              # NextAuth endpoints
@@ -114,9 +117,11 @@ app/                        # Next.js App Router
     │   ├── teachers/      # Teacher CRUD + CSV import
     │   ├── steckbrief-fields/ # Dynamic field management endpoints
     │   ├── ranking-questions/ # Question CRUD + reorder + CSV import
-    │   └── rankings/stats/   # Admin statistics endpoints
+    │   ├── rankings/stats/   # Admin statistics endpoints
+    │   └── teacher-quotes/   # Admin teacher quotes (list, detail, edit, delete)
     ├── steckbrief/        # Steckbrief CRUD + submit/retract endpoints
     ├── rankings/          # Student ranking vote/submit/retract + search endpoints
+    ├── teacher-quotes/    # Student teacher quotes (list, detail, create, delete own)
     └── register/          # Whitelist-validated registration endpoint
 
 components/
@@ -134,12 +139,17 @@ components/
 │   ├── QuestionCard.tsx             # Single question with autocomplete(s)
 │   ├── PersonAutocomplete.tsx       # Debounced search with strict validation
 │   └── CandidateList.tsx            # Collapsible inspiration list
+├── teacher-quotes/        # Student teacher quotes components
+│   ├── TeacherQuoteList.tsx       # Teacher list with sort/search (shared with admin)
+│   ├── TeacherQuoteDetail.tsx     # Detail view with own + all quotes
+│   └── QuoteInput.tsx             # Textarea bulk input component
 ├── admin/                 # Admin components
 │   ├── StudentManagement, StudentList, StudentForm  # Student whitelist management
 │   ├── steckbrief-fields/ # FieldManagement, FieldList, FieldForm
 │   ├── teachers/          # TeacherManagement, TeacherList, TeacherForm
 │   ├── ranking-questions/ # QuestionManagement, QuestionList, QuestionForm
-│   └── rankings/          # RankingStats
+│   ├── rankings/          # RankingStats
+│   └── teacher-quotes/    # TeacherQuoteAdminDetail (with edit/delete)
 ├── navigation/            # Navigation components (StudentNav, AdminNav)
 └── providers/             # React providers (SessionProvider)
 
@@ -203,6 +213,11 @@ prisma/
 - **RankingSubmission:** Per-user submission status
   - One-to-one with User (userId unique)
   - Status: DRAFT | SUBMITTED (submit/retract workflow)
+- **TeacherQuote:** Student-submitted teacher quotes
+  - text (max 500 chars), teacherId, userId (submitter), createdAt
+  - Hard-delete (no soft-delete, quotes don't need deactivation)
+  - Students can only delete their own quotes
+  - Admins can edit and delete any quote
 - **Status tracking:** DRAFT → SUBMITTED workflow (auto-retract on edit, explicit retract available)
 
 ## Database Commands
@@ -423,6 +438,51 @@ Students vote on ranking questions, selecting one classmate or teacher per quest
 - `PATCH /api/admin/ranking-questions/reorder` - Bulk reorder
 - `POST /api/admin/ranking-questions/import` - Question CSV import
 - `GET /api/admin/rankings/stats/[questionId]` - Per-question results
+
+## Lehrerzitate Feature (Implemented)
+
+**Overview:**
+Students can collect and submit teacher quotes. Each teacher has a detail page showing all quotes (anonymous) and the student's own quotes (deletable). Admins can view all quotes with submitter info, edit, and delete them.
+
+### 1. Core Concepts
+- **No submission workflow:** Students simply add quotes incrementally, no DRAFT/SUBMITTED status
+- **Bulk entry:** Textarea with one quote per line (max 10 per submission, max 500 chars each)
+- **Anonymous to students:** Students see all quotes but not who submitted them
+- **Own quotes highlighted:** Student's own quotes shown in separate section with delete option
+- **Admin attribution:** Admins see who submitted each quote
+
+### 2. Data Model
+- `TeacherQuote`: id, text (VarChar 500), teacherId, userId, createdAt
+- Hard-delete (no soft-delete needed for quotes)
+- Relations: Teacher (many-to-one), User (many-to-one)
+
+### 3. Student Pages
+- **List (`/lehrerzitate`):** All active teachers with quote counts, sortable (alphabetical/by count), searchable
+- **Detail (`/lehrerzitate/[teacherId]`):** "Meine Zitate" (own, deletable) + "Alle Zitate" (all, anonymous, load-more pagination)
+
+### 4. Admin Pages
+- **List (`/admin/lehrerzitate`):** Same teacher list, links to admin detail
+- **Detail (`/admin/lehrerzitate/[teacherId]`):** All quotes with submitter name, inline edit, delete
+
+### 5. API Endpoints
+
+**Student:**
+- `GET /api/teacher-quotes` - List active teachers with quote counts
+- `GET /api/teacher-quotes/[teacherId]` - Teacher info + quotes (with isOwn flag)
+- `POST /api/teacher-quotes/[teacherId]` - Bulk create quotes (array of strings)
+- `DELETE /api/teacher-quotes/quote/[quoteId]` - Delete own quote
+
+**Admin:**
+- `GET /api/admin/teacher-quotes` - List active teachers with quote counts
+- `GET /api/admin/teacher-quotes/[teacherId]` - Quotes with user attribution
+- `PATCH /api/admin/teacher-quotes/quote/[quoteId]` - Edit quote text
+- `DELETE /api/admin/teacher-quotes/quote/[quoteId]` - Delete any quote
+
+### 6. Components
+- `TeacherQuoteList` - Shared list component (student + admin, basePath prop)
+- `TeacherQuoteDetail` - Student detail with add/delete own quotes
+- `QuoteInput` - Textarea with line-based parsing and validation
+- `TeacherQuoteAdminDetail` - Admin detail with inline edit/delete
 
 ## Important Implementation Notes
 

@@ -72,6 +72,26 @@ const navItems: NavItem[] = [
     ),
   },
   {
+    href: "/lehrerzitate",
+    label: "Lehrerzitate",
+    mobileLabel: "Zitate",
+    icon: (
+      <svg
+        className="w-5 h-5"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"
+        />
+      </svg>
+    ),
+  },
+  {
     href: "/einstellungen",
     label: "Einstellungen",
     icon: (
@@ -99,7 +119,7 @@ const navItems: NavItem[] = [
 ];
 
 // Number of items to show directly in mobile bottom nav (rest goes to "More" menu)
-const MOBILE_MAIN_ITEMS_COUNT = 3;
+const MOBILE_MAIN_ITEMS_COUNT = 4;
 
 // Items shown directly in mobile bottom nav
 const mobileMainItems = navItems.slice(0, MOBILE_MAIN_ITEMS_COUNT);
