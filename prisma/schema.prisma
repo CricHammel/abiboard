@@ -66,7 +66,8 @@ model User {
 
   rankingVotes      RankingVote[]
   rankingSubmission RankingSubmission?
-  teacherQuotes    TeacherQuote[]
+  teacherQuotes     TeacherQuote[]
+  surveyAnswers     SurveyAnswer[]
 
   @@map("users")
 }
@@ -232,4 +233,48 @@ model RankingSubmission {
   user User @relation(fields: [userId], references: [id])
 
   @@map("ranking_submissions")
+}
+
+model SurveyQuestion {
+  id        String   @id @default(cuid())
+  text      String
+  order     Int
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  options SurveyOption[]
+  answers SurveyAnswer[]
+
+  @@map("survey_questions")
+}
+
+model SurveyOption {
+  id         String   @id @default(cuid())
+  text       String
+  order      Int
+  questionId String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  question SurveyQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  answers  SurveyAnswer[]
+
+  @@map("survey_options")
+}
+
+model SurveyAnswer {
+  id         String   @id @default(cuid())
+  userId     String
+  questionId String
+  optionId   String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  user     User           @relation(fields: [userId], references: [id])
+  question SurveyQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  option   SurveyOption   @relation(fields: [optionId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, questionId])
+  @@map("survey_answers")
 }

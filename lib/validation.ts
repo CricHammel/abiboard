@@ -193,6 +193,47 @@ export const updateTeacherQuoteSchema = z.object({
   text: teacherQuoteTextSchema,
 });
 
+// Survey Schemas
+export const surveyOptionSchema = z.object({
+  text: z
+    .string()
+    .min(1, "Bitte gib einen Antworttext ein.")
+    .max(200, "Maximal 200 Zeichen."),
+});
+
+export const createSurveyQuestionSchema = z.object({
+  text: z
+    .string()
+    .min(1, "Bitte gib einen Fragetext ein.")
+    .max(500, "Maximal 500 Zeichen."),
+  options: z
+    .array(surveyOptionSchema)
+    .min(2, "Bitte gib mindestens 2 Antwortmöglichkeiten ein.")
+    .max(10, "Maximal 10 Antwortmöglichkeiten."),
+});
+
+export const updateSurveyQuestionSchema = z
+  .object({
+    text: z
+      .string()
+      .min(1, "Bitte gib einen Fragetext ein.")
+      .max(500, "Maximal 500 Zeichen.")
+      .optional(),
+    options: z
+      .array(surveyOptionSchema)
+      .min(2, "Mindestens 2 Antwortmöglichkeiten erforderlich.")
+      .max(10, "Maximal 10 Antwortmöglichkeiten.")
+      .optional(),
+    active: z.boolean().optional(),
+  })
+  .refine((data) => Object.keys(data).length > 0, {
+    message: "Bitte gib mindestens ein Feld zum Aktualisieren an.",
+  });
+
+export const surveyAnswerSchema = z.object({
+  optionId: z.string().min(1, "Bitte wähle eine Antwort aus."),
+});
+
 // Export Types
 export type CreateTeacherQuotesInput = z.infer<typeof createTeacherQuotesSchema>;
 export type UpdateTeacherQuoteInput = z.infer<typeof updateTeacherQuoteSchema>;
@@ -206,3 +247,7 @@ export type CreateTeacherInput = z.infer<typeof createTeacherSchema>;
 export type UpdateTeacherInput = z.infer<typeof updateTeacherSchema>;
 export type CreateQuestionInput = z.infer<typeof createQuestionSchema>;
 export type UpdateQuestionInput = z.infer<typeof updateQuestionSchema>;
+export type SurveyOptionInput = z.infer<typeof surveyOptionSchema>;
+export type CreateSurveyQuestionInput = z.infer<typeof createSurveyQuestionSchema>;
+export type UpdateSurveyQuestionInput = z.infer<typeof updateSurveyQuestionSchema>;
+export type SurveyAnswerInput = z.infer<typeof surveyAnswerSchema>;

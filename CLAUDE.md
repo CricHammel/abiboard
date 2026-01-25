@@ -43,8 +43,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 6. ✓ Rankings (student & teacher rankings with gender-specific questions)
 7. ✓ Admin Steckbrief-Übersicht (progress tracking, no approval workflow)
 8. ✓ Lehrerzitate (students collect and submit teacher quotes)
-9. Kommentare (student comments about other students) - **NEXT**
-10. Umfragen (surveys/polls)
+9. ✓ Umfragen (anonymous surveys with multiple choice)
+10. Kommentare (student comments about other students) - **NEXT**
 11. Data export for yearbook printing
 
 ## Development Approach
@@ -99,6 +99,7 @@ app/                        # Next.js App Router
 │   ├── steckbrief/        # Steckbrief editor page
 │   ├── rankings/          # Rankings voting page
 │   ├── lehrerzitate/      # Teacher quotes (list + detail)
+│   ├── umfragen/          # Survey voting page
 │   └── einstellungen/     # Student settings
 ├── admin/                 # Admin pages
 │   ├── schueler/          # Student whitelist management (list, detail, import)
@@ -108,6 +109,8 @@ app/                        # Next.js App Router
 │   ├── ranking-fragen/    # Ranking question management (list, import)
 │   ├── rankings/          # Ranking statistics
 │   ├── lehrerzitate/      # Teacher quotes admin (list + detail with edit/delete)
+│   ├── umfragen/          # Survey question management
+│   ├── umfragen-statistik/# Survey statistics
 │   └── einstellungen/     # Admin settings
 └── api/                   # API routes
     ├── auth/              # NextAuth endpoints
@@ -118,10 +121,12 @@ app/                        # Next.js App Router
     │   ├── steckbrief-fields/ # Dynamic field management endpoints
     │   ├── ranking-questions/ # Question CRUD + reorder + CSV import
     │   ├── rankings/stats/   # Admin statistics endpoints
-    │   └── teacher-quotes/   # Admin teacher quotes (list, detail, edit, delete)
+    │   ├── teacher-quotes/   # Admin teacher quotes (list, detail, edit, delete)
+    │   └── survey-questions/ # Survey CRUD + reorder + stats
     ├── steckbrief/        # Steckbrief CRUD + submit/retract endpoints
     ├── rankings/          # Student ranking vote/submit/retract + search endpoints
     ├── teacher-quotes/    # Student teacher quotes (list, detail, create, delete own)
+    ├── survey/            # Student survey answers
     └── register/          # Whitelist-validated registration endpoint
 
 components/
@@ -143,13 +148,17 @@ components/
 │   ├── TeacherQuoteList.tsx       # Teacher list with sort/search (shared with admin)
 │   ├── TeacherQuoteDetail.tsx     # Detail view with own + all quotes
 │   └── QuoteInput.tsx             # Textarea bulk input component
+├── survey/                # Student survey components
+│   ├── SurveyPage.tsx             # Main page with progress
+│   └── SurveyQuestionCard.tsx     # Single question with radio buttons
 ├── admin/                 # Admin components
 │   ├── StudentManagement, StudentList, StudentForm  # Student whitelist management
 │   ├── steckbrief-fields/ # FieldManagement, FieldList, FieldForm
 │   ├── teachers/          # TeacherManagement, TeacherList, TeacherForm
 │   ├── ranking-questions/ # QuestionManagement, QuestionList, QuestionForm
 │   ├── rankings/          # RankingStats
-│   └── teacher-quotes/    # TeacherQuoteAdminDetail (with edit/delete)
+│   ├── teacher-quotes/    # TeacherQuoteAdminDetail (with edit/delete)
+│   └── survey/            # SurveyManagement, SurveyForm, SurveyList, SurveyStats
 ├── navigation/            # Navigation components (StudentNav, AdminNav)
 └── providers/             # React providers (SessionProvider)
 
@@ -218,6 +227,16 @@ prisma/
   - Hard-delete (no soft-delete, quotes don't need deactivation)
   - Students can only delete their own quotes
   - Admins can edit and delete any quote
+- **SurveyQuestion:** Admin-configured survey questions
+  - text, order, active (soft-delete)
+  - Has many SurveyOptions
+- **SurveyOption:** Answer options per question
+  - text, order, questionId
+  - Cascade-delete when question is deleted
+- **SurveyAnswer:** Student answers (anonymous in stats)
+  - userId + questionId unique (one answer per question per user)
+  - optionId references selected option
+  - userId stored for duplicate prevention but never exposed in stats API
 - **Status tracking:** DRAFT → SUBMITTED workflow (auto-retract on edit, explicit retract available)
 
 ## Database Commands
@@ -483,6 +502,54 @@ Students can collect and submit teacher quotes. Each teacher has a detail page s
 - `TeacherQuoteDetail` - Student detail with add/delete own quotes
 - `QuoteInput` - Textarea with line-based parsing and validation
 - `TeacherQuoteAdminDetail` - Admin detail with inline edit/delete
+
+## Umfragen Feature (Implemented)
+
+**Overview:**
+Anonymous multiple-choice surveys for the yearbook. Admins create questions with 2-10 answer options, students select one answer per question. Answers are saved immediately (no submit workflow). Results are fully anonymous - even admins only see aggregate statistics.
+
+### 1. Core Concepts
+- **No submission workflow:** Answers are saved immediately on click
+- **Anonymous:** userId stored for duplicate prevention but never exposed in stats
+- **2-10 options per question:** Admin-defined answer choices
+- **Fixed order:** Both questions and options have admin-defined order
+- **Soft-delete:** Questions can be deactivated (data preserved)
+
+### 2. Data Model
+- `SurveyQuestion`: id, text, order, active
+- `SurveyOption`: id, text, order, questionId (cascade-delete)
+- `SurveyAnswer`: id, userId, questionId, optionId (unique: userId+questionId)
+
+### 3. Student Page (`/umfragen`)
+- Progress bar showing answered/total questions
+- Info box about anonymity
+- Radio button selection with immediate save
+- Optimistic UI updates with error handling
+
+### 4. Admin Pages
+- **Management (`/admin/umfragen`):** CRUD for questions with dynamic option inputs, drag & drop reorder
+- **Statistics (`/admin/umfragen-statistik`):** Participation overview, per-question results with bar charts
+
+### 5. API Endpoints
+
+**Student:**
+- `GET /api/survey` - Active questions with options + user's answers
+- `PATCH /api/survey/[questionId]` - Save/update answer (upsert)
+
+**Admin:**
+- `GET /api/admin/survey-questions` - All questions (including inactive)
+- `POST /api/admin/survey-questions` - Create question with options
+- `PATCH /api/admin/survey-questions/[id]` - Update question/options/active
+- `PATCH /api/admin/survey-questions/reorder` - Bulk reorder questions
+- `GET /api/admin/survey-questions/stats` - Aggregate statistics (anonymous)
+
+### 6. Components
+- `SurveyPage` - Main student page with progress and questions
+- `SurveyQuestionCard` - Single question with radio buttons
+- `SurveyManagement` - Admin CRUD orchestration
+- `SurveyForm` - Form with dynamic option inputs (add/remove/reorder)
+- `SurveyList` - Draggable question list
+- `SurveyStats` - Statistics display with bar charts
 
 ## Important Implementation Notes
 
