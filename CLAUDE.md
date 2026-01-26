@@ -42,7 +42,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 5. ✓ Dynamic Steckbrief Field Management (admin can add/edit/reorder/deactivate fields at runtime)
 6. ✓ Rankings (student & teacher rankings with gender-specific questions)
 7. ✓ Admin Steckbrief-Übersicht (progress tracking, no approval workflow)
-8. ✓ Lehrerzitate (students collect and submit teacher quotes)
+8. ✓ Zitate (students collect quotes from teachers AND other students)
 9. ✓ Umfragen (anonymous surveys with multiple choice)
 10. ✓ Kommentare (student/teacher comments for yearbook)
 11. Data export for yearbook printing - **NEXT**
@@ -471,50 +471,72 @@ Students vote on ranking questions, selecting one classmate or teacher per quest
 - `POST /api/admin/ranking-questions/import` - Question CSV import
 - `GET /api/admin/rankings/stats/[questionId]` - Per-question results
 
-## Lehrerzitate Feature (Implemented)
+## Zitate Feature (Implemented)
 
 **Overview:**
-Students can collect and submit teacher quotes. Each teacher has a detail page showing all quotes (anonymous) and the student's own quotes (deletable). Admins can view all quotes with submitter info, edit, and delete them.
+Students can collect and submit quotes from teachers AND other students. Both types use the same UI pattern with tab navigation (Schüler | Lehrer). Each person has a detail page showing all quotes (anonymous) and the student's own quotes (deletable). Admins can view all quotes with submitter info, edit, and delete them.
 
 ### 1. Core Concepts
+- **Tab navigation:** `/zitate/schueler` and `/zitate/lehrer` for students, same for admin
 - **No submission workflow:** Students simply add quotes incrementally, no DRAFT/SUBMITTED status
 - **Bulk entry:** Textarea with one quote per line (max 10 per submission, max 500 chars each)
 - **Anonymous to students:** Students see all quotes but not who submitted them
 - **Own quotes highlighted:** Student's own quotes shown in separate section with delete option
 - **Admin attribution:** Admins see who submitted each quote
+- **Self-exclusion:** Students cannot add quotes about themselves
 
 ### 2. Data Model
 - `TeacherQuote`: id, text (VarChar 500), teacherId, userId, createdAt
+- `StudentQuote`: id, text (VarChar 500), studentId, userId, createdAt
 - Hard-delete (no soft-delete needed for quotes)
-- Relations: Teacher (many-to-one), User (many-to-one)
+- Relations: Teacher/Student (many-to-one), User (many-to-one)
 
 ### 3. Student Pages
-- **List (`/lehrerzitate`):** All active teachers with quote counts, sortable (alphabetical/by count), searchable
-- **Detail (`/lehrerzitate/[teacherId]`):** "Meine Zitate" (own, deletable) + "Alle Zitate" (all, anonymous, load-more pagination)
+- **Schüler-List (`/zitate/schueler`):** All registered students (except self) with quote counts
+- **Schüler-Detail (`/zitate/schueler/[studentId]`):** "Meine Zitate" + "Alle Zitate"
+- **Lehrer-List (`/zitate/lehrer`):** All active teachers with quote counts
+- **Lehrer-Detail (`/zitate/lehrer/[teacherId]`):** "Meine Zitate" + "Alle Zitate"
 
 ### 4. Admin Pages
-- **List (`/admin/lehrerzitate`):** Same teacher list, links to admin detail
-- **Detail (`/admin/lehrerzitate/[teacherId]`):** All quotes with submitter name, inline edit, delete
+- **Schüler-List (`/admin/zitate/schueler`):** All registered students with quote counts
+- **Schüler-Detail (`/admin/zitate/schueler/[studentId]`):** All quotes with submitter name
+- **Lehrer-List (`/admin/zitate/lehrer`):** All active teachers with quote counts
+- **Lehrer-Detail (`/admin/zitate/lehrer/[teacherId]`):** All quotes with submitter name
 
 ### 5. API Endpoints
 
-**Student:**
+**Student - Teacher Quotes:**
 - `GET /api/teacher-quotes` - List active teachers with quote counts
 - `GET /api/teacher-quotes/[teacherId]` - Teacher info + quotes (with isOwn flag)
 - `POST /api/teacher-quotes/[teacherId]` - Bulk create quotes (array of strings)
 - `DELETE /api/teacher-quotes/quote/[quoteId]` - Delete own quote
 
-**Admin:**
+**Student - Student Quotes:**
+- `GET /api/student-quotes` - List registered students (excluding self) with quote counts
+- `GET /api/student-quotes/[studentId]` - Student info + quotes (with isOwn flag)
+- `POST /api/student-quotes/[studentId]` - Bulk create quotes (array of strings)
+- `DELETE /api/student-quotes/quote/[quoteId]` - Delete own quote
+
+**Admin - Teacher Quotes:**
 - `GET /api/admin/teacher-quotes` - List active teachers with quote counts
 - `GET /api/admin/teacher-quotes/[teacherId]` - Quotes with user attribution
 - `PATCH /api/admin/teacher-quotes/quote/[quoteId]` - Edit quote text
 - `DELETE /api/admin/teacher-quotes/quote/[quoteId]` - Delete any quote
 
+**Admin - Student Quotes:**
+- `GET /api/admin/student-quotes` - List registered students with quote counts
+- `GET /api/admin/student-quotes/[studentId]` - Quotes with user attribution
+- `PATCH /api/admin/student-quotes/quote/[quoteId]` - Edit quote text
+- `DELETE /api/admin/student-quotes/quote/[quoteId]` - Delete any quote
+
 ### 6. Components
-- `TeacherQuoteList` - Shared list component (student + admin, basePath prop)
-- `TeacherQuoteDetail` - Student detail with add/delete own quotes
-- `QuoteInput` - Textarea with line-based parsing and validation
-- `TeacherQuoteAdminDetail` - Admin detail with inline edit/delete
+- `TeacherQuoteList` - Teacher list component (student + admin, basePath prop)
+- `StudentQuoteList` - Student list component (student + admin, basePath prop)
+- `TeacherQuoteDetail` - Student detail for teacher quotes
+- `StudentQuoteDetail` - Student detail for student quotes
+- `QuoteInput` - Shared textarea with line-based parsing and validation
+- `TeacherQuoteAdminDetail` - Admin detail for teacher quotes
+- `StudentQuoteAdminDetail` - Admin detail for student quotes
 
 ## Umfragen Feature (Implemented)
 

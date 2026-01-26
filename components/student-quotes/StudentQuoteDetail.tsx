@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { QuoteInput } from "./QuoteInput";
+import { QuoteInput } from "@/components/teacher-quotes/QuoteInput";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 
 interface Quote {
@@ -12,23 +12,21 @@ interface Quote {
   isOwn: boolean;
 }
 
-interface Teacher {
+interface Student {
   id: string;
-  salutation: string;
-  firstName: string | null;
+  firstName: string;
   lastName: string;
-  subject: string | null;
 }
 
-interface TeacherQuoteDetailProps {
-  teacher: Teacher;
+interface StudentQuoteDetailProps {
+  student: Student;
   initialQuotes: Quote[];
   backPath?: string;
 }
 
 const QUOTES_PER_PAGE = 10;
 
-export function TeacherQuoteDetail({ teacher, initialQuotes, backPath = "/zitate/lehrer" }: TeacherQuoteDetailProps) {
+export function StudentQuoteDetail({ student, initialQuotes, backPath = "/zitate/schueler" }: StudentQuoteDetailProps) {
   const [quotes, setQuotes] = useState<Quote[]>(initialQuotes);
   const [isAdding, setIsAdding] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -41,7 +39,7 @@ export function TeacherQuoteDetail({ teacher, initialQuotes, backPath = "/zitate
   const ownQuotes = quotes.filter((q) => q.isOwn);
   const otherQuotes = quotes.filter((q) => !q.isOwn);
 
-  const teacherDisplayName = `${teacher.salutation === "HERR" ? "Herr" : "Frau"} ${teacher.firstName ? `${teacher.firstName} ` : ""}${teacher.lastName}`;
+  const studentDisplayName = `${student.firstName} ${student.lastName}`;
 
   const handleAddQuotes = async (quoteTexts: string[]) => {
     setIsSubmitting(true);
@@ -49,7 +47,7 @@ export function TeacherQuoteDetail({ teacher, initialQuotes, backPath = "/zitate
     setSuccessMessage(null);
 
     try {
-      const response = await fetch(`/api/teacher-quotes/${teacher.id}`, {
+      const response = await fetch(`/api/student-quotes/${student.id}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ quotes: quoteTexts }),
@@ -66,7 +64,7 @@ export function TeacherQuoteDetail({ teacher, initialQuotes, backPath = "/zitate
       setIsAdding(false);
 
       // Reload quotes
-      const reloadResponse = await fetch(`/api/teacher-quotes/${teacher.id}`);
+      const reloadResponse = await fetch(`/api/student-quotes/${student.id}`);
       const reloadData = await reloadResponse.json();
       if (reloadResponse.ok) {
         setQuotes(reloadData.quotes);
@@ -83,7 +81,7 @@ export function TeacherQuoteDetail({ teacher, initialQuotes, backPath = "/zitate
     setIsDeleting(true);
 
     try {
-      const response = await fetch(`/api/teacher-quotes/quote/${deleteQuoteId}`, {
+      const response = await fetch(`/api/student-quotes/quote/${deleteQuoteId}`, {
         method: "DELETE",
       });
 
@@ -116,10 +114,7 @@ export function TeacherQuoteDetail({ teacher, initialQuotes, backPath = "/zitate
           </svg>
           Zurück
         </Link>
-        <h1 className="text-2xl font-bold text-gray-900">{teacherDisplayName}</h1>
-        {teacher.subject && (
-          <p className="text-gray-500 mt-1">{teacher.subject}</p>
-        )}
+        <h1 className="text-2xl font-bold text-gray-900">{studentDisplayName}</h1>
       </div>
 
       {/* Messages */}
@@ -177,7 +172,7 @@ export function TeacherQuoteDetail({ teacher, initialQuotes, backPath = "/zitate
 
         {/* Own quotes list */}
         {ownQuotes.length === 0 && !isAdding ? (
-          <p className="text-gray-500 text-sm">Du hast noch keine Zitate für diesen Lehrer hinzugefügt.</p>
+          <p className="text-gray-500 text-sm">Du hast noch keine Zitate für diesen Schüler hinzugefügt.</p>
         ) : (
           <div className="space-y-2">
             {ownQuotes.map((quote) => (

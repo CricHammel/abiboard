@@ -15,21 +15,19 @@ interface Quote {
   };
 }
 
-interface Teacher {
+interface Student {
   id: string;
-  salutation: string;
-  firstName: string | null;
+  firstName: string;
   lastName: string;
-  subject: string | null;
 }
 
-interface TeacherQuoteAdminDetailProps {
-  teacher: Teacher;
+interface StudentQuoteAdminDetailProps {
+  student: Student;
   initialQuotes: Quote[];
   backPath?: string;
 }
 
-export function TeacherQuoteAdminDetail({ teacher, initialQuotes, backPath = "/admin/zitate/lehrer" }: TeacherQuoteAdminDetailProps) {
+export function StudentQuoteAdminDetail({ student, initialQuotes, backPath = "/admin/zitate/schueler" }: StudentQuoteAdminDetailProps) {
   const [quotes, setQuotes] = useState<Quote[]>(initialQuotes);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editText, setEditText] = useState("");
@@ -38,7 +36,7 @@ export function TeacherQuoteAdminDetail({ teacher, initialQuotes, backPath = "/a
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
-  const teacherDisplayName = `${teacher.salutation === "HERR" ? "Herr" : "Frau"} ${teacher.firstName ? `${teacher.firstName} ` : ""}${teacher.lastName}`;
+  const studentDisplayName = `${student.firstName} ${student.lastName}`;
 
   const handleStartEdit = (quote: Quote) => {
     setEditingId(quote.id);
@@ -69,7 +67,7 @@ export function TeacherQuoteAdminDetail({ teacher, initialQuotes, backPath = "/a
     setError(null);
 
     try {
-      const response = await fetch(`/api/admin/teacher-quotes/quote/${editingId}`, {
+      const response = await fetch(`/api/admin/student-quotes/quote/${editingId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ text: trimmed }),
@@ -100,7 +98,7 @@ export function TeacherQuoteAdminDetail({ teacher, initialQuotes, backPath = "/a
     setIsLoading(true);
 
     try {
-      const response = await fetch(`/api/admin/teacher-quotes/quote/${deleteQuoteId}`, {
+      const response = await fetch(`/api/admin/student-quotes/quote/${deleteQuoteId}`, {
         method: "DELETE",
       });
 
@@ -133,10 +131,7 @@ export function TeacherQuoteAdminDetail({ teacher, initialQuotes, backPath = "/a
           </svg>
           Zurück
         </Link>
-        <h1 className="text-2xl font-bold text-gray-900">{teacherDisplayName}</h1>
-        {teacher.subject && (
-          <p className="text-gray-500 mt-1">{teacher.subject}</p>
-        )}
+        <h1 className="text-2xl font-bold text-gray-900">{studentDisplayName}</h1>
         <p className="text-sm text-gray-500 mt-1">{quotes.length} Zitat{quotes.length !== 1 ? "e" : ""}</p>
       </div>
 

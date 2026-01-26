@@ -193,6 +193,23 @@ export const updateTeacherQuoteSchema = z.object({
   text: teacherQuoteTextSchema,
 });
 
+// Student Quote Schemas
+export const studentQuoteTextSchema = z
+  .string()
+  .min(1, "Bitte gib ein Zitat ein.")
+  .max(500, "Ein Zitat darf maximal 500 Zeichen lang sein.");
+
+export const createStudentQuotesSchema = z.object({
+  quotes: z
+    .array(studentQuoteTextSchema)
+    .min(1, "Bitte gib mindestens ein Zitat ein.")
+    .max(10, "Du kannst maximal 10 Zitate auf einmal hinzufügen."),
+});
+
+export const updateStudentQuoteSchema = z.object({
+  text: studentQuoteTextSchema,
+});
+
 // Survey Schemas
 export const surveyOptionSchema = z.object({
   text: z
@@ -255,6 +272,8 @@ export const updateCommentSchema = z.object({
 // Export Types
 export type CreateTeacherQuotesInput = z.infer<typeof createTeacherQuotesSchema>;
 export type UpdateTeacherQuoteInput = z.infer<typeof updateTeacherQuoteSchema>;
+export type CreateStudentQuotesInput = z.infer<typeof createStudentQuotesSchema>;
+export type UpdateStudentQuoteInput = z.infer<typeof updateStudentQuoteSchema>;
 export type CreateUserInput = z.infer<typeof createUserSchema>;
 export type UpdateUserInput = z.infer<typeof updateUserSchema>;
 export type UpdateProfileInput = z.infer<typeof updateProfileSchema>;

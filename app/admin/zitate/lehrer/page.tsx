@@ -25,10 +25,5 @@ export default async function AdminLehrerzitateRoute() {
     orderBy: [{ lastName: "asc" }, { firstName: "asc" }],
   });
 
-  return (
-    <div className="space-y-6">
-      <h1 className="text-2xl font-bold text-gray-900">Lehrerzitate</h1>
-      <TeacherQuoteList teachers={teachers} basePath="/admin/lehrerzitate" />
-    </div>
-  );
+  return <TeacherQuoteList teachers={teachers} basePath="/admin/zitate/lehrer" />;
 }

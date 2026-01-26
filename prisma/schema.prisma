@@ -67,6 +67,7 @@ model User {
   rankingVotes      RankingVote[]
   rankingSubmission RankingSubmission?
   teacherQuotes     TeacherQuote[]
+  studentQuotes     StudentQuote[]
   surveyAnswers     SurveyAnswer[]
   commentsWritten   Comment[]     @relation("CommentsWritten")
 
@@ -87,7 +88,8 @@ model Student {
   user      User?    @relation(fields: [userId], references: [id])
 
   rankingVotes     RankingVote[]
-  commentsReceived Comment[]     @relation("CommentsReceivedStudent")
+  commentsReceived Comment[]      @relation("CommentsReceivedStudent")
+  quotesAbout      StudentQuote[] @relation("QuotesAbout")
 
   @@map("students")
 }
@@ -223,6 +225,21 @@ model TeacherQuote {
   @@index([teacherId])
   @@index([userId])
   @@map("teacher_quotes")
+}
+
+model StudentQuote {
+  id        String   @id @default(cuid())
+  text      String   @db.VarChar(500)
+  studentId String
+  userId    String
+  createdAt DateTime @default(now())
+
+  student Student @relation("QuotesAbout", fields: [studentId], references: [id])
+  user    User    @relation(fields: [userId], references: [id])
+
+  @@index([studentId])
+  @@index([userId])
+  @@map("student_quotes")
 }
 
 model RankingSubmission {

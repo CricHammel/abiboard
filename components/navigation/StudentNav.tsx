@@ -72,9 +72,8 @@ const navItems: NavItem[] = [
     ),
   },
   {
-    href: "/lehrerzitate",
-    label: "Lehrerzitate",
-    mobileLabel: "Zitate",
+    href: "/zitate",
+    label: "Zitate",
     icon: (
       <svg
         className="w-5 h-5"
