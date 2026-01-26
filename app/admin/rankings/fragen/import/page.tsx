@@ -83,12 +83,12 @@ export default function ImportQuestionsPage() {
     <div className="space-y-6 max-w-2xl">
       <div>
         <Link
-          href="/admin/ranking-fragen"
+          href="/admin/rankings/fragen"
           className="text-primary hover:underline text-sm mb-2 inline-block"
         >
-          ← Zurück zu den Ranking-Fragen
+          ← Zurück zu den Fragen
         </Link>
-        <h1 className="text-3xl font-bold text-gray-900">Fragen CSV Import</h1>
+        <h2 className="text-xl font-bold text-gray-900">CSV Import</h2>
         <p className="text-gray-600 mt-2">
           Importiere mehrere Ranking-Fragen aus einer CSV-Datei.
         </p>
@@ -185,7 +185,7 @@ export default function ImportQuestionsPage() {
               <Button
                 type="button"
                 variant="secondary"
-                onClick={() => router.push("/admin/ranking-fragen")}
+                onClick={() => router.push("/admin/rankings/fragen")}
                 disabled={isLoading}
               >
                 Abbrechen

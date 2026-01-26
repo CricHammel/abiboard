@@ -25,9 +25,10 @@ interface Student {
 
 interface StudentManagementProps {
   students: Student[];
+  basePath: string;
 }
 
-export function StudentManagement({ students }: StudentManagementProps) {
+export function StudentManagement({ students, basePath }: StudentManagementProps) {
   const router = useRouter();
   const [confirmDialog, setConfirmDialog] = useState<{
     isOpen: boolean;
@@ -43,7 +44,7 @@ export function StudentManagement({ students }: StudentManagementProps) {
   const [isLoading, setIsLoading] = useState(false);
 
   const handleEdit = (studentId: string) => {
-    router.push(`/admin/schueler/${studentId}`);
+    router.push(`${basePath}/${studentId}`);
   };
 
   const handleToggleActive = (

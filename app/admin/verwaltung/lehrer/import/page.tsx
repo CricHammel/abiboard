@@ -83,12 +83,12 @@ export default function ImportTeachersPage() {
     <div className="space-y-6 max-w-2xl">
       <div>
         <Link
-          href="/admin/lehrer"
+          href="/admin/verwaltung/lehrer"
           className="text-primary hover:underline text-sm mb-2 inline-block"
         >
           ← Zurück zur Lehrerliste
         </Link>
-        <h1 className="text-3xl font-bold text-gray-900">Lehrer CSV Import</h1>
+        <h2 className="text-xl font-bold text-gray-900">CSV Import</h2>
         <p className="text-gray-600 mt-2">
           Importiere mehrere Lehrer aus einer CSV-Datei.
         </p>
@@ -193,7 +193,7 @@ export default function ImportTeachersPage() {
               <Button
                 type="button"
                 variant="secondary"
-                onClick={() => router.push("/admin/lehrer")}
+                onClick={() => router.push("/admin/verwaltung/lehrer")}
                 disabled={isLoading}
               >
                 Abbrechen

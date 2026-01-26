@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { Card } from "@/components/ui/Card";
 import { SteckbriefeOverview } from "@/components/admin/steckbriefe/SteckbriefeOverview";
 
-export default async function SteckbriefeOverviewPage() {
+export default async function SteckbriefUebersichtPage() {
   const session = await auth();
   if (!session?.user || session.user.role !== "ADMIN") {
     redirect("/admin/dashboard");
@@ -34,12 +34,9 @@ export default async function SteckbriefeOverviewPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-gray-900">Steckbriefe</h1>
-        <p className="text-gray-600 mt-2">
-          Übersicht aller Steckbrief-Einreichungen.
-        </p>
-      </div>
+      <p className="text-gray-600">
+        Übersicht aller Steckbrief-Einreichungen.
+      </p>
 
       <Card>
         <div className="flex justify-between text-sm mb-2">

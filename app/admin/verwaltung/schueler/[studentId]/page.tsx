@@ -1,6 +1,5 @@
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { Card } from "@/components/ui/Card";
 import Link from "next/link";
 import { redirect, notFound } from "next/navigation";
 import { StudentDetailClient } from "./StudentDetailClient";
@@ -47,14 +46,14 @@ export default async function StudentDetailPage({
     <div className="space-y-6 max-w-2xl">
       <div>
         <Link
-          href="/admin/schueler"
+          href="/admin/verwaltung/schueler"
           className="text-primary hover:underline text-sm mb-2 inline-block"
         >
-          ← Zurück zur Schülerverwaltung
+          ← Zurück zur Schülerliste
         </Link>
-        <h1 className="text-3xl font-bold text-gray-900">
+        <h2 className="text-xl font-bold text-gray-900">
           {student.firstName} {student.lastName}
-        </h1>
+        </h2>
         <p className="text-gray-600 mt-2">{student.email}</p>
       </div>
 

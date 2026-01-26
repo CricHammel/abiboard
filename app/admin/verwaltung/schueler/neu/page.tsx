@@ -9,19 +9,19 @@ export default function NewStudentPage() {
   const router = useRouter();
 
   const handleSuccess = () => {
-    router.push("/admin/schueler");
+    router.push("/admin/verwaltung/schueler");
   };
 
   return (
     <div className="space-y-6 max-w-2xl">
       <div>
         <Link
-          href="/admin/schueler"
+          href="/admin/verwaltung/schueler"
           className="text-primary hover:underline text-sm mb-2 inline-block"
         >
           ← Zurück zur Schülerliste
         </Link>
-        <h1 className="text-3xl font-bold text-gray-900">Neuer Schüler</h1>
+        <h2 className="text-xl font-bold text-gray-900">Neuer Schüler</h2>
         <p className="text-gray-600 mt-2">
           Füge einen Schüler zur Whitelist hinzu.
         </p>

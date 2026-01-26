@@ -3,7 +3,7 @@ import { Card } from "@/components/ui/Card";
 import { SurveyStats } from "@/components/admin/survey/SurveyStats";
 import { redirect } from "next/navigation";
 
-export default async function SurveyStatsPage() {
+export default async function UmfragenStatistikenPage() {
   const session = await auth();
 
   if (!session?.user || session.user.role !== "ADMIN") {
@@ -12,12 +12,9 @@ export default async function SurveyStatsPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-gray-900">Umfragen-Statistik</h1>
-        <p className="text-gray-600 mt-2">
-          Übersicht über die Umfrage-Ergebnisse.
-        </p>
-      </div>
+      <p className="text-gray-600">
+        Übersicht über die Umfrage-Ergebnisse.
+      </p>
 
       <Card>
         <SurveyStats />

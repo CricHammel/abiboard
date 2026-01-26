@@ -20,14 +20,11 @@ export default async function TeachersPage() {
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Lehrerverwaltung</h1>
-          <p className="text-gray-600 mt-2">
-            Verwalte alle Lehrer für die Rankings.
-          </p>
-        </div>
+        <p className="text-gray-600">
+          Verwalte alle Lehrer für die Rankings.
+        </p>
         <div className="flex gap-2">
-          <Link href="/admin/lehrer/import">
+          <Link href="/admin/verwaltung/lehrer/import">
             <Button variant="secondary" className="!w-auto">CSV Import</Button>
           </Link>
         </div>

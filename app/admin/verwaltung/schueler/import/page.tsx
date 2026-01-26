@@ -24,7 +24,7 @@ export default function ImportStudentsPage() {
     const selectedFile = e.target.files?.[0];
     if (selectedFile) {
       if (!selectedFile.name.endsWith(".csv")) {
-        setError("Bitte w\u00e4hle eine CSV-Datei aus.");
+        setError("Bitte wähle eine CSV-Datei aus.");
         setFile(null);
         return;
       }
@@ -38,7 +38,7 @@ export default function ImportStudentsPage() {
     e.preventDefault();
 
     if (!file) {
-      setError("Bitte w\u00e4hle eine Datei aus.");
+      setError("Bitte wähle eine Datei aus.");
       return;
     }
 
@@ -66,7 +66,6 @@ export default function ImportStudentsPage() {
       setResult(data.result);
       setFile(null);
 
-      // Reset file input
       const fileInput = document.getElementById(
         "csv-file"
       ) as HTMLInputElement | null;
@@ -84,12 +83,12 @@ export default function ImportStudentsPage() {
     <div className="space-y-6 max-w-2xl">
       <div>
         <Link
-          href="/admin/schueler"
+          href="/admin/verwaltung/schueler"
           className="text-primary hover:underline text-sm mb-2 inline-block"
         >
           ← Zurück zur Schülerliste
         </Link>
-        <h1 className="text-3xl font-bold text-gray-900">CSV Import</h1>
+        <h2 className="text-xl font-bold text-gray-900">CSV Import</h2>
         <p className="text-gray-600 mt-2">
           Importiere mehrere Schüler aus einer CSV-Datei.
         </p>
@@ -97,7 +96,6 @@ export default function ImportStudentsPage() {
 
       <Card>
         <div className="space-y-6">
-          {/* Format instructions */}
           <div className="bg-gray-50 p-4 rounded-lg">
             <h3 className="font-medium text-gray-900 mb-2">CSV-Format</h3>
             <p className="text-sm text-gray-600 mb-2">
@@ -193,7 +191,7 @@ export default function ImportStudentsPage() {
               <Button
                 type="button"
                 variant="secondary"
-                onClick={() => router.push("/admin/schueler")}
+                onClick={() => router.push("/admin/verwaltung/schueler")}
                 disabled={isLoading}
               >
                 Abbrechen

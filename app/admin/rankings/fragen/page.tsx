@@ -6,7 +6,7 @@ import { QuestionManagement } from "@/components/admin/ranking-questions/Questio
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
-export default async function RankingQuestionsPage() {
+export default async function RankingsFragenPage() {
   const session = await auth();
 
   if (!session?.user || session.user.role !== "ADMIN") {
@@ -20,14 +20,11 @@ export default async function RankingQuestionsPage() {
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Ranking-Fragen</h1>
-          <p className="text-gray-600 mt-2">
-            Verwalte die Fragen für die Rankings.
-          </p>
-        </div>
+        <p className="text-gray-600">
+          Verwalte die Fragen für die Rankings.
+        </p>
         <div className="flex gap-2">
-          <Link href="/admin/ranking-fragen/import">
+          <Link href="/admin/rankings/fragen/import">
             <Button variant="secondary" className="!w-auto">CSV Import</Button>
           </Link>
         </div>
