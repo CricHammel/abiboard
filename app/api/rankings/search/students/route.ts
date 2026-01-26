@@ -16,6 +16,7 @@ export async function GET(request: Request) {
     const url = new URL(request.url);
     const query = url.searchParams.get("q") || "";
     const gender = url.searchParams.get("gender");
+    const excludeUserId = url.searchParams.get("excludeUserId");
 
     // Split query into words and search each separately (union results)
     const words = query.split(/\s+/).filter((w) => w.length > 0);
@@ -24,6 +25,7 @@ export async function GET(request: Request) {
       where: {
         active: true,
         ...(gender && { gender: gender as "MALE" | "FEMALE" }),
+        ...(excludeUserId && { userId: { not: excludeUserId } }),
         ...(words.length > 0 && {
           OR: words.flatMap((word) => [
             { firstName: { contains: word, mode: "insensitive" as const } },

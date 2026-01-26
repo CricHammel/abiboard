@@ -24,6 +24,7 @@ type PersonOption =
 interface PersonAutocompleteProps {
   personType: "student" | "teacher";
   gender?: "MALE" | "FEMALE";
+  excludeUserId?: string;
   selectedPerson?: PersonOption | null;
   allStudents?: StudentOption[];
   allTeachers?: TeacherOption[];
@@ -52,6 +53,7 @@ function getTeacherDisplayName(teacher: TeacherOption): string {
 export function PersonAutocomplete({
   personType,
   gender,
+  excludeUserId,
   selectedPerson,
   allStudents,
   allTeachers,
@@ -87,6 +89,7 @@ export function PersonAutocomplete({
     try {
       const params = new URLSearchParams({ q: searchQuery });
       if (gender) params.set("gender", gender);
+      if (excludeUserId && personType === "student") params.set("excludeUserId", excludeUserId);
 
       const endpoint = personType === "student"
         ? `/api/rankings/search/students?${params}`
@@ -109,7 +112,7 @@ export function PersonAutocomplete({
     } finally {
       setIsSearching(false);
     }
-  }, [personType, gender]);
+  }, [personType, gender, excludeUserId]);
 
   const handleInputChange = (value: string) => {
     setQuery(value);

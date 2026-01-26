@@ -68,6 +68,7 @@ model User {
   rankingSubmission RankingSubmission?
   teacherQuotes     TeacherQuote[]
   surveyAnswers     SurveyAnswer[]
+  commentsWritten   Comment[]     @relation("CommentsWritten")
 
   @@map("users")
 }
@@ -85,7 +86,8 @@ model Student {
   userId    String?  @unique
   user      User?    @relation(fields: [userId], references: [id])
 
-  rankingVotes RankingVote[]
+  rankingVotes     RankingVote[]
+  commentsReceived Comment[]     @relation("CommentsReceivedStudent")
 
   @@map("students")
 }
@@ -167,8 +169,9 @@ model Teacher {
   createdAt  DateTime   @default(now())
   updatedAt  DateTime   @updatedAt
 
-  rankingVotes  RankingVote[]
-  teacherQuotes TeacherQuote[]
+  rankingVotes     RankingVote[]
+  teacherQuotes    TeacherQuote[]
+  commentsReceived Comment[]      @relation("CommentsReceivedTeacher")
 
   @@map("teachers")
 }
@@ -277,4 +280,27 @@ model SurveyAnswer {
 
   @@unique([userId, questionId])
   @@map("survey_answers")
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  text      String   @db.VarChar(500)
+  authorId  String
+
+  targetStudentId String?
+  targetTeacherId String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  author        User     @relation("CommentsWritten", fields: [authorId], references: [id])
+  targetStudent Student? @relation("CommentsReceivedStudent", fields: [targetStudentId], references: [id])
+  targetTeacher Teacher? @relation("CommentsReceivedTeacher", fields: [targetTeacherId], references: [id])
+
+  @@unique([authorId, targetStudentId])
+  @@unique([authorId, targetTeacherId])
+  @@index([authorId])
+  @@index([targetStudentId])
+  @@index([targetTeacherId])
+  @@map("comments")
 }

@@ -44,8 +44,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 7. ✓ Admin Steckbrief-Übersicht (progress tracking, no approval workflow)
 8. ✓ Lehrerzitate (students collect and submit teacher quotes)
 9. ✓ Umfragen (anonymous surveys with multiple choice)
-10. Kommentare (student comments about other students) - **NEXT**
-11. Data export for yearbook printing
+10. ✓ Kommentare (student/teacher comments for yearbook)
+11. Data export for yearbook printing - **NEXT**
 
 ## Development Approach
 
@@ -100,6 +100,7 @@ app/                        # Next.js App Router
 │   ├── rankings/          # Rankings voting page
 │   ├── lehrerzitate/      # Teacher quotes (list + detail)
 │   ├── umfragen/          # Survey voting page
+│   ├── kommentare/        # Comments page (write comments about others)
 │   └── einstellungen/     # Student settings
 ├── admin/                 # Admin pages
 │   ├── schueler/          # Student whitelist management (list, detail, import)
@@ -111,6 +112,7 @@ app/                        # Next.js App Router
 │   ├── lehrerzitate/      # Teacher quotes admin (list + detail with edit/delete)
 │   ├── umfragen/          # Survey question management
 │   ├── umfragen-statistik/# Survey statistics
+│   ├── kommentare/        # Comments admin (view all, edit, delete)
 │   └── einstellungen/     # Admin settings
 └── api/                   # API routes
     ├── auth/              # NextAuth endpoints
@@ -122,11 +124,13 @@ app/                        # Next.js App Router
     │   ├── ranking-questions/ # Question CRUD + reorder + CSV import
     │   ├── rankings/stats/   # Admin statistics endpoints
     │   ├── teacher-quotes/   # Admin teacher quotes (list, detail, edit, delete)
-    │   └── survey-questions/ # Survey CRUD + reorder + stats
+    │   ├── survey-questions/ # Survey CRUD + reorder + stats
+    │   └── comments/        # Admin comments (list, edit, delete)
     ├── steckbrief/        # Steckbrief CRUD + submit/retract endpoints
     ├── rankings/          # Student ranking vote/submit/retract + search endpoints
     ├── teacher-quotes/    # Student teacher quotes (list, detail, create, delete own)
     ├── survey/            # Student survey answers
+    ├── comments/          # Student comments (CRUD own comments)
     └── register/          # Whitelist-validated registration endpoint
 
 components/
@@ -151,6 +155,10 @@ components/
 ├── survey/                # Student survey components
 │   ├── SurveyPage.tsx             # Main page with progress
 │   └── SurveyQuestionCard.tsx     # Single question with radio buttons
+├── comments/              # Student comments components
+│   ├── CommentPage.tsx            # Main page with add form + list
+│   ├── CommentForm.tsx            # Target selector + autocomplete + textarea
+│   └── CommentList.tsx            # List of own comments with edit/delete
 ├── admin/                 # Admin components
 │   ├── StudentManagement, StudentList, StudentForm  # Student whitelist management
 │   ├── steckbrief-fields/ # FieldManagement, FieldList, FieldForm
@@ -158,7 +166,8 @@ components/
 │   ├── ranking-questions/ # QuestionManagement, QuestionList, QuestionForm
 │   ├── rankings/          # RankingStats
 │   ├── teacher-quotes/    # TeacherQuoteAdminDetail (with edit/delete)
-│   └── survey/            # SurveyManagement, SurveyForm, SurveyList, SurveyStats
+│   ├── survey/            # SurveyManagement, SurveyForm, SurveyList, SurveyStats
+│   └── comments/          # CommentAdminPage (with filters, inline edit/delete)
 ├── navigation/            # Navigation components (StudentNav, AdminNav)
 └── providers/             # React providers (SessionProvider)
 
@@ -237,6 +246,10 @@ prisma/
   - userId + questionId unique (one answer per question per user)
   - optionId references selected option
   - userId stored for duplicate prevention but never exposed in stats API
+- **Comment:** Student comments about other students/teachers
+  - text (VarChar 500), authorId, targetStudentId (nullable), targetTeacherId (nullable)
+  - Unique constraints: `[authorId, targetStudentId]` and `[authorId, targetTeacherId]`
+  - Hard-delete (no soft-delete)
 - **Status tracking:** DRAFT → SUBMITTED workflow (auto-retract on edit, explicit retract available)
 
 ## Database Commands
@@ -550,6 +563,57 @@ Anonymous multiple-choice surveys for the yearbook. Admins create questions with
 - `SurveyForm` - Form with dynamic option inputs (add/remove/reorder)
 - `SurveyList` - Draggable question list
 - `SurveyStats` - Statistics display with bar charts
+
+## Kommentare Feature (Implemented)
+
+**Overview:**
+Students can write comments about other students AND teachers for the yearbook. Comments are anonymous to recipients (surprise for yearbook) but visible to admins for moderation.
+
+### 1. Core Concepts
+- **Target types:** Can comment on students OR teachers
+- **One per target:** Max one comment per target per student (unique constraint)
+- **No self-comments:** Students cannot comment on themselves
+- **Anonymous to recipients:** Students cannot see comments about themselves
+- **Own comments visible:** Students can see, edit, and delete their own written comments
+- **Admin moderation:** Admins see all comments with author info, can edit/delete
+- **No submission workflow:** Comments are saved immediately
+
+### 2. Data Model
+- `Comment`: id, text (VarChar 500), authorId, targetStudentId (nullable), targetTeacherId (nullable)
+- Unique constraints: `[authorId, targetStudentId]` and `[authorId, targetTeacherId]`
+- Hard-delete (no soft-delete needed for comments)
+- Relations: User (author), Student (target), Teacher (target)
+
+### 3. Student Page (`/kommentare`)
+- "Neuen Kommentar schreiben" button opens form
+- Target type selection (Mitschüler/in or Lehrer/in)
+- PersonAutocomplete for target selection (excludes self)
+- List of own written comments with edit/delete
+
+### 4. Admin Page (`/admin/kommentare`)
+- Statistics overview (total, by target type)
+- Search and filter (by target type)
+- All comments with author name displayed
+- Inline edit and delete for any comment
+
+### 5. API Endpoints
+
+**Student:**
+- `GET /api/comments` - List own written comments
+- `POST /api/comments` - Create comment (with self-check and duplicate prevention)
+- `PATCH /api/comments/[commentId]` - Edit own comment
+- `DELETE /api/comments/[commentId]` - Delete own comment
+
+**Admin:**
+- `GET /api/admin/comments` - List all comments with author info
+- `PATCH /api/admin/comments/[commentId]` - Edit any comment
+- `DELETE /api/admin/comments/[commentId]` - Delete any comment
+
+### 6. Components
+- `CommentPage` - Main student page with add form and comment list
+- `CommentForm` - Target type selector, PersonAutocomplete, textarea
+- `CommentList` - List of own comments with edit/delete
+- `CommentAdminPage` - Admin view with filters, inline edit/delete
 
 ## Important Implementation Notes
 

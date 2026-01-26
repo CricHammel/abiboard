@@ -234,6 +234,24 @@ export const surveyAnswerSchema = z.object({
   optionId: z.string().min(1, "Bitte wähle eine Antwort aus."),
 });
 
+// Comment Schemas
+export const commentTextSchema = z
+  .string()
+  .min(1, "Bitte gib einen Kommentar ein.")
+  .max(500, "Ein Kommentar darf maximal 500 Zeichen lang sein.");
+
+export const createCommentSchema = z.object({
+  text: commentTextSchema,
+  targetType: z.enum(["STUDENT", "TEACHER"], {
+    message: "Bitte wähle eine gültige Zielart aus.",
+  }),
+  targetId: z.string().min(1, "Bitte wähle eine Person aus."),
+});
+
+export const updateCommentSchema = z.object({
+  text: commentTextSchema,
+});
+
 // Export Types
 export type CreateTeacherQuotesInput = z.infer<typeof createTeacherQuotesSchema>;
 export type UpdateTeacherQuoteInput = z.infer<typeof updateTeacherQuoteSchema>;
@@ -251,3 +269,5 @@ export type SurveyOptionInput = z.infer<typeof surveyOptionSchema>;
 export type CreateSurveyQuestionInput = z.infer<typeof createSurveyQuestionSchema>;
 export type UpdateSurveyQuestionInput = z.infer<typeof updateSurveyQuestionSchema>;
 export type SurveyAnswerInput = z.infer<typeof surveyAnswerSchema>;
+export type CreateCommentInput = z.infer<typeof createCommentSchema>;
+export type UpdateCommentInput = z.infer<typeof updateCommentSchema>;
