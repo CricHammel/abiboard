@@ -30,17 +30,19 @@ export default async function StudentLayout({
 
       <div className="lg:flex">
         {/* Desktop Sidebar */}
-        <aside className="hidden lg:block w-64 bg-white border-r border-gray-200 min-h-screen fixed">
-          <div className="p-6">
+        <aside className="hidden lg:flex flex-col w-64 bg-white border-r border-gray-200 h-screen fixed">
+          <div className="p-6 shrink-0">
             <h1 className="text-2xl font-bold text-gray-900">AbiBoard</h1>
             <p className="text-sm text-gray-600 mt-1">
               {session.user.firstName} {session.user.lastName}
             </p>
           </div>
 
-          <StudentNav variant="desktop" />
+          <div className="flex-1 overflow-y-auto min-h-0">
+            <StudentNav variant="desktop" />
+          </div>
 
-          <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-200">
+          <div className="shrink-0 p-4 border-t border-gray-200 bg-white">
             <LogoutButton variant="secondary" className="w-full" />
           </div>
         </aside>
