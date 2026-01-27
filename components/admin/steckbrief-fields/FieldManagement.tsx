@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { ErrorMessage } from "@/components/ui/ErrorMessage";
+import { Alert } from "@/components/ui/Alert";
 import { FieldList } from "./FieldList";
 import { FieldForm } from "./FieldForm";
 import type { FieldDefinition } from "@/lib/steckbrief-validation-dynamic";
@@ -195,9 +196,7 @@ export function FieldManagement({ initialFields }: FieldManagementProps) {
       {error && <ErrorMessage message={error} />}
 
       {successMessage && (
-        <div className="bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg">
-          {successMessage}
-        </div>
+        <Alert variant="success">{successMessage}</Alert>
       )}
 
       <div className="flex justify-between items-center">
@@ -213,7 +212,6 @@ export function FieldManagement({ initialFields }: FieldManagementProps) {
           }}
           variant="primary"
           disabled={isLoading || isCreating}
-          className="!w-auto"
         >
           Neues Feld
         </Button>

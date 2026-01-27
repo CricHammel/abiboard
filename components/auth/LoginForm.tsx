@@ -176,7 +176,7 @@ export function LoginForm() {
         )}
       </div>
 
-      <Button type="submit" variant="primary" loading={isLoading}>
+      <Button type="submit" variant="primary" fullWidth loading={isLoading}>
         Anmelden
       </Button>
 

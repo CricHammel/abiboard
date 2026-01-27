@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
 import { ErrorMessage } from "@/components/ui/ErrorMessage";
+import { Alert } from "@/components/ui/Alert";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { FieldRenderer } from "./FieldRenderer";
 import { useUnsavedChangesWarning } from "@/hooks/useUnsavedChangesWarning";
@@ -385,16 +386,12 @@ export function SteckbriefForm({
     <form className="space-y-6">
       {generalError && <ErrorMessage message={generalError} />}
 
-      {successMessage && (
-        <div className="bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg">
-          {successMessage}
-        </div>
-      )}
+      {successMessage && <Alert variant="success">{successMessage}</Alert>}
 
       {currentStatus === "SUBMITTED" && (
-        <div className="bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg">
+        <Alert variant="success">
           Dein Steckbrief ist eingereicht und wird ins Abibuch übernommen. Du kannst ihn weiterhin bearbeiten – der Status wird dann zurückgesetzt.
-        </div>
+        </Alert>
       )}
 
       {fields.map((field) => (

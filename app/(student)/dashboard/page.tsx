@@ -1,5 +1,7 @@
 import { auth } from "@/lib/auth";
 import { Card } from "@/components/ui/Card";
+import { Alert } from "@/components/ui/Alert";
+import { Badge } from "@/components/ui/Badge";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { SteckbriefStatusActions } from "@/components/steckbrief/SteckbriefStatusActions";
@@ -16,14 +18,9 @@ export default async function StudentDashboard() {
     where: { userId: session.user.id },
   });
 
-  const statusLabels = {
-    DRAFT: "Entwurf",
-    SUBMITTED: "Eingereicht",
-  };
-
-  const statusColors = {
-    DRAFT: "bg-gray-100 text-gray-700",
-    SUBMITTED: "bg-green-100 text-green-700",
+  const statusConfig = {
+    DRAFT: { label: "Entwurf", variant: "draft" as const },
+    SUBMITTED: { label: "Eingereicht", variant: "submitted" as const },
   };
 
   return (
@@ -45,32 +42,24 @@ export default async function StudentDashboard() {
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
               <p className="text-sm text-gray-600 mb-2">Aktueller Status:</p>
-              <span
-                className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
-                  statusColors[profile.status]
-                }`}
-              >
-                {statusLabels[profile.status]}
-              </span>
+              <Badge variant={statusConfig[profile.status].variant}>
+                {statusConfig[profile.status].label}
+              </Badge>
             </div>
             <SteckbriefStatusActions status={profile.status} />
           </div>
 
           {profile.status === "DRAFT" && (
-            <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-              <p className="text-sm text-blue-800">
-                Dein Steckbrief ist noch nicht eingereicht. Vervollständige ihn und
-                reiche ihn ein.
-              </p>
-            </div>
+            <Alert variant="info" className="mt-4">
+              Dein Steckbrief ist noch nicht eingereicht. Vervollständige ihn und
+              reiche ihn ein.
+            </Alert>
           )}
 
           {profile.status === "SUBMITTED" && (
-            <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-lg">
-              <p className="text-sm text-green-800">
-                Dein Steckbrief ist eingereicht und wird ins Abibuch übernommen.
-              </p>
-            </div>
+            <Alert variant="success" className="mt-4">
+              Dein Steckbrief ist eingereicht und wird ins Abibuch übernommen.
+            </Alert>
           )}
         </Card>
       )}

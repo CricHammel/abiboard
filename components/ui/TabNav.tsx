@@ -19,7 +19,7 @@ export function TabNav({ tabs }: TabNavProps) {
     <div className="border-b border-gray-200 mb-6">
       <nav className="flex gap-4 -mb-px overflow-x-auto">
         {tabs.map((tab) => {
-          const isActive = pathname === tab.href;
+          const isActive = pathname === tab.href || pathname.startsWith(tab.href + "/");
           return (
             <Link
               key={tab.href}

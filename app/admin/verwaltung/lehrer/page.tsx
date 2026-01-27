@@ -25,7 +25,7 @@ export default async function TeachersPage() {
         </p>
         <div className="flex gap-2">
           <Link href="/admin/verwaltung/lehrer/import">
-            <Button variant="secondary" className="!w-auto">CSV Import</Button>
+            <Button variant="secondary">CSV Import</Button>
           </Link>
         </div>
       </div>

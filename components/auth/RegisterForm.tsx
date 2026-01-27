@@ -299,7 +299,7 @@ export function RegisterForm() {
         )}
       </div>
 
-      <Button type="submit" variant="primary" loading={isLoading}>
+      <Button type="submit" variant="primary" fullWidth loading={isLoading}>
         Registrieren
       </Button>
 

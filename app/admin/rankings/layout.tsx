@@ -1,8 +1,8 @@
 import { TabNav } from "@/components/ui/TabNav";
 
 const tabs = [
-  { href: "/admin/rankings/fragen", label: "Fragen" },
   { href: "/admin/rankings/statistiken", label: "Statistiken" },
+  { href: "/admin/rankings/fragen", label: "Fragen" },
 ];
 
 export default function RankingsLayout({

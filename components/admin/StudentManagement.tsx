@@ -2,8 +2,10 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { StudentList } from "./StudentList";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { Button } from "@/components/ui/Button";
 
 interface Student {
   id: string;
@@ -105,7 +107,18 @@ export function StudentManagement({ students, basePath }: StudentManagementProps
   };
 
   return (
-    <>
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h2 className="text-lg font-semibold text-gray-900">
+          {students.length} Schüler
+        </h2>
+        <Link href={`${basePath}/neu`}>
+          <Button variant="primary">
+            Neuer Schüler
+          </Button>
+        </Link>
+      </div>
+
       <StudentList
         students={students}
         onEdit={handleEdit}
@@ -130,6 +143,6 @@ export function StudentManagement({ students, basePath }: StudentManagementProps
         onCancel={handleCancelToggleActive}
         isLoading={isLoading}
       />
-    </>
+    </div>
   );
 }

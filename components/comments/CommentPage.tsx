@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/Button";
+import { Alert } from "@/components/ui/Alert";
 import { CommentForm } from "./CommentForm";
 import { CommentList, CommentWithTarget } from "./CommentList";
 
@@ -142,24 +143,14 @@ export function CommentPage({
   return (
     <div className="space-y-6">
       {/* Info Box */}
-      <div className="bg-blue-50 border border-blue-100 rounded-lg p-4">
-        <p className="text-sm text-blue-800">
-          Schreibe nette Kommentare über deine Mitschüler und Lehrer für das Abibuch.
-          Du kannst für jede Person einen Kommentar schreiben.
-        </p>
-      </div>
+      <Alert variant="info">
+        Schreibe nette Kommentare über deine Mitschüler und Lehrer für das Abibuch.
+        Du kannst für jede Person einen Kommentar schreiben.
+      </Alert>
 
       {/* Messages */}
-      {error && (
-        <div className="p-3 bg-red-50 text-red-700 text-sm rounded-lg">
-          {error}
-        </div>
-      )}
-      {success && (
-        <div className="p-3 bg-green-50 text-green-700 text-sm rounded-lg">
-          {success}
-        </div>
-      )}
+      {error && <Alert variant="error">{error}</Alert>}
+      {success && <Alert variant="success">{success}</Alert>}
 
       {/* Add/Edit Form */}
       {isAdding && !editingComment && (

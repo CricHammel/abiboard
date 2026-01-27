@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { ErrorMessage } from "@/components/ui/ErrorMessage";
+import { Alert } from "@/components/ui/Alert";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { TeacherList } from "./TeacherList";
 import { TeacherForm } from "./TeacherForm";
@@ -153,9 +154,7 @@ export function TeacherManagement({ initialTeachers }: TeacherManagementProps) {
       {error && <ErrorMessage message={error} />}
 
       {successMessage && (
-        <div className="bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg">
-          {successMessage}
-        </div>
+        <Alert variant="success">{successMessage}</Alert>
       )}
 
       <div className="flex justify-between items-center">
@@ -171,7 +170,6 @@ export function TeacherManagement({ initialTeachers }: TeacherManagementProps) {
           }}
           variant="primary"
           disabled={isLoading || isCreating}
-          className="!w-auto"
         >
           Neuer Lehrer
         </Button>

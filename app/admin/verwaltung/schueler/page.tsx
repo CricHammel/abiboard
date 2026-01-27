@@ -39,14 +39,9 @@ export default async function SchuelerPage() {
         <p className="text-gray-600">
           Verwalte alle Schüler und deren Registrierungen.
         </p>
-        <div className="flex gap-2">
-          <Link href="/admin/verwaltung/schueler/import">
-            <Button variant="secondary" className="!w-auto">CSV Import</Button>
-          </Link>
-          <Link href="/admin/verwaltung/schueler/neu">
-            <Button variant="primary" className="!w-auto">Neuer Schüler</Button>
-          </Link>
-        </div>
+        <Link href="/admin/verwaltung/schueler/import">
+          <Button variant="secondary">CSV Import</Button>
+        </Link>
       </div>
 
       <Card>

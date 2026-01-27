@@ -47,7 +47,7 @@ export function SteckbriefStatusActions({ status }: SteckbriefStatusActionsProps
     <>
       <div className="flex items-center gap-2">
         <Link href="/steckbrief">
-          <Button variant="primary" className="!w-auto !py-2 !px-4 !text-sm">
+          <Button variant="primary" size="sm">
             Steckbrief bearbeiten
           </Button>
         </Link>
@@ -55,9 +55,9 @@ export function SteckbriefStatusActions({ status }: SteckbriefStatusActionsProps
         {status === 'SUBMITTED' && (
           <Button
             variant="secondary"
+            size="sm"
             onClick={() => setShowRetractDialog(true)}
             loading={isLoading}
-            className="!w-auto !py-2 !px-4 !text-sm"
           >
             Zurückziehen
           </Button>

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { ErrorMessage } from "@/components/ui/ErrorMessage";
+import { Badge } from "@/components/ui/Badge";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { CandidateList } from "./CandidateList";
 import { QuestionCard } from "./QuestionCard";
@@ -204,15 +205,12 @@ export function RankingsPage({ initialData }: RankingsPageProps) {
         <div className="flex items-center gap-2">
           {isSubmitted ? (
             <>
-              <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-700">
-                Abgeschickt
-              </span>
+              <Badge variant="submitted">Abgeschickt</Badge>
               <Button
                 variant="secondary"
                 onClick={() => setConfirmDialog({ isOpen: true, action: "retract" })}
                 disabled={isLoading}
-                className="!w-auto"
-              >
+                              >
                 Zurückziehen
               </Button>
             </>
@@ -221,8 +219,7 @@ export function RankingsPage({ initialData }: RankingsPageProps) {
               variant="primary"
               onClick={() => setConfirmDialog({ isOpen: true, action: "submit" })}
               disabled={isLoading}
-              className="!w-auto"
-            >
+                          >
               Rankings abschicken
             </Button>
           )}
@@ -290,8 +287,7 @@ export function RankingsPage({ initialData }: RankingsPageProps) {
               variant="secondary"
               onClick={() => setConfirmDialog({ isOpen: true, action: "retract" })}
               disabled={isLoading}
-              className="!w-auto"
-            >
+                          >
               Rankings zurückziehen
             </Button>
           ) : (
@@ -299,8 +295,7 @@ export function RankingsPage({ initialData }: RankingsPageProps) {
               variant="primary"
               onClick={() => setConfirmDialog({ isOpen: true, action: "submit" })}
               disabled={isLoading}
-              className="!w-auto"
-            >
+                          >
               Rankings abschicken
             </Button>
           )}

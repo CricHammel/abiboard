@@ -273,7 +273,7 @@ export function StudentList({
               <Button
                 variant="secondary"
                 onClick={() => onEdit(student.id)}
-                className="flex-1 !py-2 text-sm"
+                size="sm" className="flex-1"
               >
                 Details
               </Button>
@@ -286,7 +286,7 @@ export function StudentList({
                     student.active
                   )
                 }
-                className="flex-1 !py-2 text-sm"
+                size="sm" className="flex-1"
               >
                 {student.active ? "Deaktivieren" : "Aktivieren"}
               </Button>

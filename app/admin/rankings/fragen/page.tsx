@@ -25,7 +25,7 @@ export default async function RankingsFragenPage() {
         </p>
         <div className="flex gap-2">
           <Link href="/admin/rankings/fragen/import">
-            <Button variant="secondary" className="!w-auto">CSV Import</Button>
+            <Button variant="secondary">CSV Import</Button>
           </Link>
         </div>
       </div>
