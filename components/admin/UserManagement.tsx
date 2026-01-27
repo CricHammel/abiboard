@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { UserList } from "./UserList";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { Alert } from "@/components/ui/Alert";
 import { Role, ProfileStatus } from "@prisma/client";
 
 interface User {
@@ -23,6 +24,7 @@ interface UserManagementProps {
 
 export function UserManagement({ users }: UserManagementProps) {
   const router = useRouter();
+  const [error, setError] = useState<string | null>(null);
   const [confirmDialog, setConfirmDialog] = useState<{
     isOpen: boolean;
     userId: string;
@@ -45,6 +47,7 @@ export function UserManagement({ users }: UserManagementProps) {
     userName: string,
     isActive: boolean
   ) => {
+    setError(null);
     setConfirmDialog({
       isOpen: true,
       userId,
@@ -55,6 +58,7 @@ export function UserManagement({ users }: UserManagementProps) {
 
   const handleConfirmToggleActive = async () => {
     setIsLoading(true);
+    setError(null);
 
     try {
       const response = await fetch(`/api/admin/users/${confirmDialog.userId}`, {
@@ -71,10 +75,12 @@ export function UserManagement({ users }: UserManagementProps) {
         setConfirmDialog({ isOpen: false, userId: "", userName: "", isActive: true });
         router.refresh();
       } else {
-        alert("Ein Fehler ist aufgetreten. Bitte versuche es erneut.");
+        setError("Ein Fehler ist aufgetreten. Bitte versuche es erneut.");
+        setConfirmDialog({ isOpen: false, userId: "", userName: "", isActive: true });
       }
-    } catch (error) {
-      alert("Ein Fehler ist aufgetreten. Bitte versuche es erneut.");
+    } catch {
+      setError("Ein Fehler ist aufgetreten. Bitte versuche es erneut.");
+      setConfirmDialog({ isOpen: false, userId: "", userName: "", isActive: true });
     } finally {
       setIsLoading(false);
     }
@@ -85,7 +91,9 @@ export function UserManagement({ users }: UserManagementProps) {
   };
 
   return (
-    <>
+    <div className="space-y-4">
+      {error && <Alert variant="error">{error}</Alert>}
+
       <UserList
         users={users}
         onEdit={handleEdit}
@@ -110,6 +118,6 @@ export function UserManagement({ users }: UserManagementProps) {
         onCancel={handleCancelToggleActive}
         isLoading={isLoading}
       />
-    </>
+    </div>
   );
 }

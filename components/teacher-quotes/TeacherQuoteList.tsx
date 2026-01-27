@@ -19,7 +19,7 @@ interface TeacherQuoteListProps {
 
 type SortMode = "alpha" | "quotes";
 
-export function TeacherQuoteList({ teachers, basePath = "/lehrerzitate" }: TeacherQuoteListProps) {
+export function TeacherQuoteList({ teachers, basePath = "/zitate/lehrer" }: TeacherQuoteListProps) {
   const [search, setSearch] = useState("");
   const [sortMode, setSortMode] = useState<SortMode>("alpha");
 

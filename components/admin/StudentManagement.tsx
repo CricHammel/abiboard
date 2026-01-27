@@ -6,6 +6,7 @@ import Link from "next/link";
 import { StudentList } from "./StudentList";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { Button } from "@/components/ui/Button";
+import { Alert } from "@/components/ui/Alert";
 
 interface Student {
   id: string;
@@ -32,6 +33,7 @@ interface StudentManagementProps {
 
 export function StudentManagement({ students, basePath }: StudentManagementProps) {
   const router = useRouter();
+  const [error, setError] = useState<string | null>(null);
   const [confirmDialog, setConfirmDialog] = useState<{
     isOpen: boolean;
     studentId: string;
@@ -54,6 +56,7 @@ export function StudentManagement({ students, basePath }: StudentManagementProps
     studentName: string,
     isActive: boolean
   ) => {
+    setError(null);
     setConfirmDialog({
       isOpen: true,
       studentId,
@@ -64,6 +67,7 @@ export function StudentManagement({ students, basePath }: StudentManagementProps
 
   const handleConfirmToggleActive = async () => {
     setIsLoading(true);
+    setError(null);
 
     try {
       const response = await fetch(
@@ -88,10 +92,22 @@ export function StudentManagement({ students, basePath }: StudentManagementProps
         });
         router.refresh();
       } else {
-        alert("Ein Fehler ist aufgetreten. Bitte versuche es erneut.");
+        setError("Ein Fehler ist aufgetreten. Bitte versuche es erneut.");
+        setConfirmDialog({
+          isOpen: false,
+          studentId: "",
+          studentName: "",
+          isActive: true,
+        });
       }
     } catch {
-      alert("Ein Fehler ist aufgetreten. Bitte versuche es erneut.");
+      setError("Ein Fehler ist aufgetreten. Bitte versuche es erneut.");
+      setConfirmDialog({
+        isOpen: false,
+        studentId: "",
+        studentName: "",
+        isActive: true,
+      });
     } finally {
       setIsLoading(false);
     }
@@ -108,6 +124,8 @@ export function StudentManagement({ students, basePath }: StudentManagementProps
 
   return (
     <div className="space-y-6">
+      {error && <Alert variant="error">{error}</Alert>}
+
       <div className="flex justify-between items-center">
         <h2 className="text-lg font-semibold text-gray-900">
           {students.length} Schüler

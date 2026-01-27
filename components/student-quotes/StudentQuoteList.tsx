@@ -17,7 +17,7 @@ interface StudentQuoteListProps {
 
 type SortMode = "alpha" | "quotes";
 
-export function StudentQuoteList({ students, basePath = "/schuelerzitate" }: StudentQuoteListProps) {
+export function StudentQuoteList({ students, basePath = "/zitate/schueler" }: StudentQuoteListProps) {
   const [search, setSearch] = useState("");
   const [sortMode, setSortMode] = useState<SortMode>("alpha");
 
