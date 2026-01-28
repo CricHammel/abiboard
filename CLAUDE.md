@@ -153,6 +153,7 @@ components/
 │   ├── Alert.tsx          # Alert messages (info/success/warning/error)
 │   ├── Badge.tsx          # Status badges (draft/submitted/active/inactive)
 │   ├── TabNav.tsx         # Tab navigation for grouped pages
+│   ├── ProgressBar.tsx    # Progress bar with value/max, label, color variants
 │   ├── ErrorMessage.tsx   # Error display component
 │   └── ConfirmDialog.tsx  # Confirmation dialog for destructive actions
 ├── auth/                  # Auth components (LoginForm, RegisterForm, LogoutButton)
@@ -162,7 +163,7 @@ components/
 │   ├── FieldRenderer.tsx            # Dynamic field rendering
 │   ├── SingleImageUpload.tsx        # Single image upload component
 │   ├── MultiImageUpload.tsx         # Multi-image upload with incremental logic
-│   └── SteckbriefStatusActions.tsx  # Dashboard status action buttons
+│   └── SteckbriefStatusActions.tsx  # Submit/retract buttons on Steckbrief page
 ├── rankings/              # Student ranking components
 │   ├── RankingsPage.tsx             # Main page with progress + submit/retract
 │   ├── QuestionCard.tsx             # Single question with autocomplete(s)
@@ -192,6 +193,8 @@ components/
 │   ├── student-quotes/    # StudentQuoteAdminDetail (with edit/delete)
 │   ├── survey/            # SurveyManagement, SurveyForm, SurveyList, SurveyStats
 │   └── comments/          # CommentAdminPage (with filters, inline edit/delete)
+├── dashboard/             # Dashboard components
+│   └── CollapsibleList.tsx        # Expandable list for admin dashboard
 ├── navigation/            # Navigation components (StudentNav, AdminNav)
 └── providers/             # React providers (SessionProvider)
 
