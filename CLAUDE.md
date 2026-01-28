@@ -98,21 +98,30 @@ app/                        # Next.js App Router
 │   ├── dashboard/         # Student dashboard with status overview
 │   ├── steckbrief/        # Steckbrief editor page
 │   ├── rankings/          # Rankings voting page
-│   ├── lehrerzitate/      # Teacher quotes (list + detail)
+│   ├── zitate/            # Quotes with tab navigation
+│   │   ├── schueler/      # Student quotes (list + detail)
+│   │   └── lehrer/        # Teacher quotes (list + detail)
 │   ├── umfragen/          # Survey voting page
 │   ├── kommentare/        # Comments page (write comments about others)
 │   └── einstellungen/     # Student settings
-├── admin/                 # Admin pages
-│   ├── schueler/          # Student whitelist management (list, detail, import)
-│   ├── lehrer/            # Teacher management (list, import)
-│   ├── steckbrief-felder/ # Dynamic field management
-│   ├── steckbriefe/       # Steckbrief submission overview
-│   ├── ranking-fragen/    # Ranking question management (list, import)
-│   ├── rankings/          # Ranking statistics
-│   ├── lehrerzitate/      # Teacher quotes admin (list + detail with edit/delete)
-│   ├── umfragen/          # Survey question management
-│   ├── umfragen-statistik/# Survey statistics
+├── admin/                 # Admin pages (grouped with tab navigation)
+│   ├── dashboard/         # Admin dashboard
+│   ├── steckbrief/        # Steckbrief management (tabs: Übersicht | Felder)
+│   │   ├── uebersicht/    # Submission progress overview
+│   │   └── felder/        # Dynamic field management
+│   ├── rankings/          # Rankings management (tabs: Statistiken | Fragen)
+│   │   ├── statistiken/   # Ranking statistics
+│   │   └── fragen/        # Question management + CSV import
+│   ├── umfragen/          # Survey management (tabs: Statistiken | Fragen)
+│   │   ├── statistiken/   # Survey statistics
+│   │   └── fragen/        # Question management
+│   ├── zitate/            # Quote management (tabs: Schüler | Lehrer)
+│   │   ├── schueler/      # Student quotes admin (list + detail)
+│   │   └── lehrer/        # Teacher quotes admin (list + detail)
 │   ├── kommentare/        # Comments admin (view all, edit, delete)
+│   ├── verwaltung/        # Entity management (tabs: Schüler | Lehrer)
+│   │   ├── schueler/      # Student whitelist (list, detail, import, create)
+│   │   └── lehrer/        # Teacher management (list, import)
 │   └── einstellungen/     # Admin settings
 └── api/                   # API routes
     ├── auth/              # NextAuth endpoints
@@ -124,17 +133,28 @@ app/                        # Next.js App Router
     │   ├── ranking-questions/ # Question CRUD + reorder + CSV import
     │   ├── rankings/stats/   # Admin statistics endpoints
     │   ├── teacher-quotes/   # Admin teacher quotes (list, detail, edit, delete)
+    │   ├── student-quotes/   # Admin student quotes (list, detail, edit, delete)
     │   ├── survey-questions/ # Survey CRUD + reorder + stats
     │   └── comments/        # Admin comments (list, edit, delete)
     ├── steckbrief/        # Steckbrief CRUD + submit/retract endpoints
     ├── rankings/          # Student ranking vote/submit/retract + search endpoints
     ├── teacher-quotes/    # Student teacher quotes (list, detail, create, delete own)
+    ├── student-quotes/    # Student student quotes (list, detail, create, delete own)
     ├── survey/            # Student survey answers
     ├── comments/          # Student comments (CRUD own comments)
     └── register/          # Whitelist-validated registration endpoint
 
 components/
-├── ui/                    # Base UI components (Button, Card, Input, ErrorMessage, ConfirmDialog)
+├── ui/                    # Base UI components
+│   ├── Button.tsx         # Button with variant, size (sm/md), fullWidth props
+│   ├── Card.tsx           # Card container
+│   ├── Input.tsx          # Text input with label + error
+│   ├── PasswordInput.tsx  # Password input with show/hide toggle
+│   ├── Alert.tsx          # Alert messages (info/success/warning/error)
+│   ├── Badge.tsx          # Status badges (draft/submitted/active/inactive)
+│   ├── TabNav.tsx         # Tab navigation for grouped pages
+│   ├── ErrorMessage.tsx   # Error display component
+│   └── ConfirmDialog.tsx  # Confirmation dialog for destructive actions
 ├── auth/                  # Auth components (LoginForm, RegisterForm, LogoutButton)
 ├── settings/              # Settings forms (ProfileSettingsForm, PasswordChangeForm)
 ├── steckbrief/            # Steckbrief components
@@ -151,7 +171,10 @@ components/
 ├── teacher-quotes/        # Student teacher quotes components
 │   ├── TeacherQuoteList.tsx       # Teacher list with sort/search (shared with admin)
 │   ├── TeacherQuoteDetail.tsx     # Detail view with own + all quotes
-│   └── QuoteInput.tsx             # Textarea bulk input component
+│   └── QuoteInput.tsx             # Textarea bulk input component (shared)
+├── student-quotes/        # Student student quotes components
+│   ├── StudentQuoteList.tsx       # Student list with sort/search (shared with admin)
+│   └── StudentQuoteDetail.tsx     # Detail view with own + all quotes
 ├── survey/                # Student survey components
 │   ├── SurveyPage.tsx             # Main page with progress
 │   └── SurveyQuestionCard.tsx     # Single question with radio buttons
@@ -166,6 +189,7 @@ components/
 │   ├── ranking-questions/ # QuestionManagement, QuestionList, QuestionForm
 │   ├── rankings/          # RankingStats
 │   ├── teacher-quotes/    # TeacherQuoteAdminDetail (with edit/delete)
+│   ├── student-quotes/    # StudentQuoteAdminDetail (with edit/delete)
 │   ├── survey/            # SurveyManagement, SurveyForm, SurveyList, SurveyStats
 │   └── comments/          # CommentAdminPage (with filters, inline edit/delete)
 ├── navigation/            # Navigation components (StudentNav, AdminNav)
