@@ -45,7 +45,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 8. ✓ Zitate (students collect quotes from teachers AND other students)
 9. ✓ Umfragen (anonymous surveys with multiple choice)
 10. ✓ Kommentare (student/teacher comments for yearbook)
-11. Data export for yearbook printing - **NEXT**
+11. ✓ Data export for yearbook printing (TSV + image ZIP exports)
 
 ## Development Approach
 
@@ -119,6 +119,7 @@ app/                        # Next.js App Router
 │   │   ├── schueler/      # Student quotes admin (list + detail)
 │   │   └── lehrer/        # Teacher quotes admin (list + detail)
 │   ├── kommentare/        # Comments admin (view all, edit, delete)
+│   ├── export/            # Data export page (TSV downloads + image ZIP)
 │   ├── verwaltung/        # Entity management (tabs: Schüler | Lehrer)
 │   │   ├── schueler/      # Student whitelist (list, detail, import, create)
 │   │   └── lehrer/        # Teacher management (list, import)
@@ -135,7 +136,8 @@ app/                        # Next.js App Router
     │   ├── teacher-quotes/   # Admin teacher quotes (list, detail, edit, delete)
     │   ├── student-quotes/   # Admin student quotes (list, detail, edit, delete)
     │   ├── survey-questions/ # Survey CRUD + reorder + stats
-    │   └── comments/        # Admin comments (list, edit, delete)
+    │   ├── comments/        # Admin comments (list, edit, delete)
+    │   └── export/          # Data export endpoints (steckbriefe, rankings, zitate, umfragen, kommentare)
     ├── steckbrief/        # Steckbrief CRUD + submit/retract endpoints
     ├── rankings/          # Student ranking vote/submit/retract + search endpoints
     ├── teacher-quotes/    # Student teacher quotes (list, detail, create, delete own)
@@ -192,7 +194,8 @@ components/
 │   ├── teacher-quotes/    # TeacherQuoteAdminDetail (with edit/delete)
 │   ├── student-quotes/    # StudentQuoteAdminDetail (with edit/delete)
 │   ├── survey/            # SurveyManagement, SurveyForm, SurveyList, SurveyStats
-│   └── comments/          # CommentAdminPage (with filters, inline edit/delete)
+│   ├── comments/          # CommentAdminPage (with filters, inline edit/delete)
+│   └── export/            # ExportPage (download buttons for all export types)
 ├── dashboard/             # Dashboard components
 │   └── CollapsibleList.tsx        # Expandable list for admin dashboard
 ├── navigation/            # Navigation components (StudentNav, AdminNav)
@@ -207,7 +210,8 @@ lib/
 ├── auth.config.ts                 # NextAuth config (middleware, callbacks)
 ├── validation.ts                  # Zod schemas for validation
 ├── steckbrief-validation-dynamic.ts # Dynamic Zod schema generation from DB fields
-└── file-upload.ts                 # File validation, save, and delete utilities
+├── file-upload.ts                 # File validation, save, and delete utilities
+└── tsv-export.ts                  # TSV export utilities (BOM, escaping, response helper, filename sanitizer)
 
 types/
 └── next-auth.d.ts         # NextAuth type extensions for User & Session
