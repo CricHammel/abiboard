@@ -18,9 +18,6 @@ interface Student {
     firstName: string;
     lastName: string;
     active: boolean;
-    profile?: {
-      status: "DRAFT" | "SUBMITTED";
-    } | null;
   } | null;
 }
 
@@ -104,22 +101,6 @@ export function StudentList({
     );
   };
 
-  const getProfileStatusBadge = (status?: "DRAFT" | "SUBMITTED") => {
-    if (!status) return null;
-
-    const config = {
-      DRAFT: { label: "Entwurf", className: "bg-gray-100 text-gray-700" },
-      SUBMITTED: { label: "Eingereicht", className: "bg-green-100 text-green-700" },
-    };
-
-    const { label, className } = config[status];
-    return (
-      <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${className}`}>
-        {label}
-      </span>
-    );
-  };
-
   return (
     <div className="space-y-4">
       {/* Search and Filters */}
@@ -185,9 +166,6 @@ export function StudentList({
                 Registrierung
               </th>
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Steckbrief
-              </th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Status
               </th>
               <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -209,11 +187,6 @@ export function StudentList({
                 </td>
                 <td className="px-4 py-4 whitespace-nowrap">
                   {getRegistrationBadge(student)}
-                </td>
-                <td className="px-4 py-4 whitespace-nowrap">
-                  {student.user?.profile
-                    ? getProfileStatusBadge(student.user.profile.status)
-                    : <span className="text-gray-400">—</span>}
                 </td>
                 <td className="px-4 py-4 whitespace-nowrap">
                   {getStatusBadge(student.active)}
@@ -265,7 +238,6 @@ export function StudentList({
 
             <div className="flex flex-wrap gap-2">
               {getRegistrationBadge(student)}
-              {student.user?.profile && getProfileStatusBadge(student.user.profile.status)}
               {getStatusBadge(student.active)}
             </div>
 

@@ -42,6 +42,39 @@ export default async function StudentDetailPage({
     notFound();
   }
 
+  // Fetch feature data for registered students
+  let featureData = null;
+  if (student.user) {
+    const userId = student.user.id;
+    const [
+      rankingSubmission,
+      rankingVoteCount,
+      totalSurveyQuestions,
+      surveyAnswerCount,
+      teacherQuoteCount,
+      studentQuoteCount,
+      commentCount,
+    ] = await Promise.all([
+      prisma.rankingSubmission.findUnique({ where: { userId } }),
+      prisma.rankingVote.count({ where: { voterId: userId } }),
+      prisma.surveyQuestion.count({ where: { active: true } }),
+      prisma.surveyAnswer.count({ where: { userId } }),
+      prisma.teacherQuote.count({ where: { userId } }),
+      prisma.studentQuote.count({ where: { userId } }),
+      prisma.comment.count({ where: { authorId: userId } }),
+    ]);
+
+    featureData = {
+      rankingSubmissionStatus: rankingSubmission?.status ?? null,
+      rankingVoteCount,
+      totalSurveyQuestions,
+      surveyAnswerCount,
+      teacherQuoteCount,
+      studentQuoteCount,
+      commentCount,
+    };
+  }
+
   return (
     <div className="space-y-6 max-w-2xl">
       <div>
@@ -57,7 +90,7 @@ export default async function StudentDetailPage({
         <p className="text-gray-600 mt-2">{student.email}</p>
       </div>
 
-      <StudentDetailClient student={student} />
+      <StudentDetailClient student={student} featureData={featureData} />
     </div>
   );
 }

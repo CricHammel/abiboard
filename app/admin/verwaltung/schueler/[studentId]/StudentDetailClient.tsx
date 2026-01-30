@@ -8,6 +8,16 @@ import { Input } from "@/components/ui/Input";
 import { ErrorMessage } from "@/components/ui/ErrorMessage";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 
+interface FeatureData {
+  rankingSubmissionStatus: "DRAFT" | "SUBMITTED" | null;
+  rankingVoteCount: number;
+  totalSurveyQuestions: number;
+  surveyAnswerCount: number;
+  teacherQuoteCount: number;
+  studentQuoteCount: number;
+  commentCount: number;
+}
+
 interface StudentDetailClientProps {
   student: {
     id: string;
@@ -30,9 +40,18 @@ interface StudentDetailClientProps {
       } | null;
     } | null;
   };
+  featureData: FeatureData | null;
 }
 
-export function StudentDetailClient({ student }: StudentDetailClientProps) {
+type AreaStatus = "done" | "in_progress" | "not_started";
+
+const statusConfig: Record<AreaStatus, { dot: string; label: string }> = {
+  done: { dot: "bg-green-500", label: "Erledigt" },
+  in_progress: { dot: "bg-amber-500", label: "In Bearbeitung" },
+  not_started: { dot: "bg-gray-300", label: "Nicht begonnen" },
+};
+
+export function StudentDetailClient({ student, featureData }: StudentDetailClientProps) {
   const router = useRouter();
   const [isEditing, setIsEditing] = useState(false);
   const [firstName, setFirstName] = useState(student.firstName);
@@ -105,19 +124,6 @@ export function StudentDetailClient({ student }: StudentDetailClientProps) {
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const getStatusBadge = (status: "DRAFT" | "SUBMITTED") => {
-    const config = {
-      DRAFT: { label: "Entwurf", className: "bg-gray-100 text-gray-700" },
-      SUBMITTED: { label: "Eingereicht", className: "bg-green-100 text-green-700" },
-    };
-    const { label, className } = config[status];
-    return (
-      <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${className}`}>
-        {label}
-      </span>
-    );
   };
 
   const formatDate = (date: Date) => {
@@ -284,33 +290,99 @@ export function StudentDetailClient({ student }: StudentDetailClientProps) {
         )}
       </Card>
 
-      {/* Steckbrief-Status (nur wenn registriert) */}
-      {student.user && (
+      {/* Feature-Übersicht (nur wenn registriert) */}
+      {student.user && featureData && (
         <Card>
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">Steckbrief</h2>
-          {student.user.profile ? (
-            <div className="space-y-3">
-              <div className="flex items-center gap-2">
-                {getStatusBadge(student.user.profile.status)}
-              </div>
-              <div>
-                <p className="text-sm text-gray-500">Zuletzt bearbeitet</p>
-                <p className="text-gray-900">{formatDate(student.user.profile.updatedAt)}</p>
-              </div>
-            </div>
-          ) : (
-            <p className="text-gray-500 text-sm">Kein Steckbrief vorhanden.</p>
-          )}
-        </Card>
-      )}
+          <h2 className="text-xl font-semibold text-gray-900 mb-4">Beiträge</h2>
+          <div className="space-y-4">
+            {(() => {
+              const profile = student.user!.profile;
+              const steckbriefStatus: AreaStatus =
+                profile?.status === "SUBMITTED" ? "done" : profile ? "in_progress" : "not_started";
 
-      {/* Platzhalter für zukünftige Features */}
-      {student.user && (
-        <Card>
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">Weitere Beiträge</h2>
-          <p className="text-gray-500 text-sm">
-            Rankings, Kommentare und Umfragen werden hier angezeigt, sobald diese Features verfügbar sind.
-          </p>
+              const rankingStatus: AreaStatus =
+                featureData.rankingSubmissionStatus === "SUBMITTED"
+                  ? "done"
+                  : featureData.rankingVoteCount > 0
+                    ? "in_progress"
+                    : "not_started";
+
+              const umfragenStatus: AreaStatus =
+                featureData.totalSurveyQuestions > 0 && featureData.surveyAnswerCount >= featureData.totalSurveyQuestions
+                  ? "done"
+                  : featureData.surveyAnswerCount > 0
+                    ? "in_progress"
+                    : "not_started";
+
+              const totalQuotes = featureData.teacherQuoteCount + featureData.studentQuoteCount;
+              const zitateStatus: AreaStatus = totalQuotes > 0 ? "done" : "not_started";
+
+              const kommentareStatus: AreaStatus = featureData.commentCount > 0 ? "done" : "not_started";
+
+              const areas = [
+                {
+                  name: "Steckbrief",
+                  status: steckbriefStatus,
+                  detail: profile?.status === "SUBMITTED"
+                    ? "Eingereicht"
+                    : profile
+                      ? "Entwurf"
+                      : "Nicht begonnen",
+                  extra: profile?.updatedAt
+                    ? `Zuletzt bearbeitet: ${formatDate(profile.updatedAt)}`
+                    : undefined,
+                },
+                {
+                  name: "Rankings",
+                  status: rankingStatus,
+                  detail: featureData.rankingSubmissionStatus === "SUBMITTED"
+                    ? "Eingereicht"
+                    : featureData.rankingVoteCount > 0
+                      ? `${featureData.rankingVoteCount} Stimmen (Entwurf)`
+                      : "Nicht begonnen",
+                },
+                {
+                  name: "Umfragen",
+                  status: umfragenStatus,
+                  detail: featureData.totalSurveyQuestions > 0
+                    ? `${featureData.surveyAnswerCount}/${featureData.totalSurveyQuestions} beantwortet`
+                    : "Keine Umfragen vorhanden",
+                },
+                {
+                  name: "Zitate",
+                  status: zitateStatus,
+                  detail: totalQuotes > 0
+                    ? `${featureData.teacherQuoteCount} Lehrer, ${featureData.studentQuoteCount} Schüler`
+                    : "Keine Zitate",
+                },
+                {
+                  name: "Kommentare",
+                  status: kommentareStatus,
+                  detail: featureData.commentCount > 0
+                    ? `${featureData.commentCount} geschrieben`
+                    : "Keine Kommentare",
+                },
+              ];
+
+              return areas.map((area) => (
+                <div key={area.name} className="flex items-start gap-3">
+                  <span
+                    className={`w-2.5 h-2.5 rounded-full mt-1.5 flex-shrink-0 ${statusConfig[area.status].dot}`}
+                    title={statusConfig[area.status].label}
+                  />
+                  <div className="min-w-0">
+                    <div className="flex items-baseline gap-2">
+                      <span className="text-sm font-medium text-gray-900">{area.name}</span>
+                      <span className="text-sm text-gray-500">{area.detail}</span>
+                    </div>
+                    {area.extra && (
+                      <p className="text-xs text-gray-400 mt-0.5">{area.extra}</p>
+                    )}
+                  </div>
+                </div>
+              ));
+            })()}
+          </div>
         </Card>
       )}
 

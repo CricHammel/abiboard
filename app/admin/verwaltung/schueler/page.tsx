@@ -23,11 +23,6 @@ export default async function SchuelerPage() {
           firstName: true,
           lastName: true,
           active: true,
-          profile: {
-            select: {
-              status: true,
-            },
-          },
         },
       },
     },

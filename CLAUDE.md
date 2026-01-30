@@ -341,8 +341,8 @@ Students can only register if their school email is in the whitelist (Student ta
 6. Auto-login after successful registration
 
 **Admin Student Management (`/admin/schueler`):**
-- List all students with registration status, Steckbrief status
-- Detail view with all student information
+- List all students with registration status and active status
+- Detail view with student data, registration info, and per-feature status overview (Steckbrief, Rankings, Umfragen, Zitate, Kommentare)
 - Manual CRUD operations
 - CSV import for bulk creation
 - Activate/deactivate students
