@@ -14,6 +14,7 @@ interface SteckbriefFormProps {
   fields: FieldDefinition[];
   initialValues: Record<string, unknown>;
   status: string;
+  deadlinePassed?: boolean;
 }
 
 // Helper to initialize state for a field
@@ -71,6 +72,7 @@ export function SteckbriefForm({
   fields,
   initialValues,
   status: initialStatus,
+  deadlinePassed = false,
 }: SteckbriefFormProps) {
   const router = useRouter();
 
@@ -401,42 +403,44 @@ export function SteckbriefForm({
           value={getFieldValue(field)}
           onChange={(value) => handleFieldChange(field.key, value)}
           error={errors[field.key]}
-          disabled={isLoading}
+          disabled={isLoading || deadlinePassed}
         />
       ))}
 
-      <div className="flex flex-col sm:flex-row gap-3 pt-4">
-        <Button
-          type="button"
-          onClick={handleSaveDraft}
-          variant="secondary"
-          loading={isLoading}
-          className="flex-1"
-        >
-          Speichern
-        </Button>
-        {currentStatus === "DRAFT" ? (
+      {!deadlinePassed && (
+        <div className="flex flex-col sm:flex-row gap-3 pt-4">
           <Button
             type="button"
-            onClick={() => setShowSubmitDialog(true)}
-            variant="primary"
-            loading={isLoading}
-            className="flex-1"
-          >
-            Einreichen
-          </Button>
-        ) : (
-          <Button
-            type="button"
-            onClick={() => setShowRetractDialog(true)}
+            onClick={handleSaveDraft}
             variant="secondary"
             loading={isLoading}
             className="flex-1"
           >
-            Zurückziehen
+            Speichern
           </Button>
-        )}
-      </div>
+          {currentStatus === "DRAFT" ? (
+            <Button
+              type="button"
+              onClick={() => setShowSubmitDialog(true)}
+              variant="primary"
+              loading={isLoading}
+              className="flex-1"
+            >
+              Einreichen
+            </Button>
+          ) : (
+            <Button
+              type="button"
+              onClick={() => setShowRetractDialog(true)}
+              variant="secondary"
+              loading={isLoading}
+              className="flex-1"
+            >
+              Zurückziehen
+            </Button>
+          )}
+        </div>
+      )}
 
       <ConfirmDialog
         isOpen={showSubmitDialog}

@@ -299,6 +299,13 @@ model SurveyAnswer {
   @@map("survey_answers")
 }
 
+model AppSettings {
+  id       String    @id @default(cuid())
+  deadline DateTime?
+
+  @@map("app_settings")
+}
+
 model Comment {
   id        String   @id @default(cuid())
   text      String   @db.VarChar(500)

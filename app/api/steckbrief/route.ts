@@ -7,6 +7,7 @@ import {
   saveImageFile,
   deleteImageFile,
 } from "@/lib/file-upload";
+import { isDeadlinePassed } from "@/lib/deadline";
 import {
   createDynamicValidationSchema,
   toFieldDefinition,
@@ -108,6 +109,13 @@ export async function PATCH(request: Request) {
       return NextResponse.json(
         { error: "Nicht authentifiziert." },
         { status: 401 }
+      );
+    }
+
+    if (await isDeadlinePassed()) {
+      return NextResponse.json(
+        { error: "Die Abgabefrist ist abgelaufen." },
+        { status: 403 }
       );
     }
 

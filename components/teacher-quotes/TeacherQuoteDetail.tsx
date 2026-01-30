@@ -24,11 +24,12 @@ interface TeacherQuoteDetailProps {
   teacher: Teacher;
   initialQuotes: Quote[];
   backPath?: string;
+  deadlinePassed?: boolean;
 }
 
 const QUOTES_PER_PAGE = 10;
 
-export function TeacherQuoteDetail({ teacher, initialQuotes, backPath = "/zitate/lehrer" }: TeacherQuoteDetailProps) {
+export function TeacherQuoteDetail({ teacher, initialQuotes, backPath = "/zitate/lehrer", deadlinePassed = false }: TeacherQuoteDetailProps) {
   const [quotes, setQuotes] = useState<Quote[]>(initialQuotes);
   const [isAdding, setIsAdding] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -140,7 +141,7 @@ export function TeacherQuoteDetail({ teacher, initialQuotes, backPath = "/zitate
           <h2 className="text-lg font-semibold text-gray-900">
             Meine Zitate ({ownQuotes.length})
           </h2>
-          {!isAdding && (
+          {!isAdding && !deadlinePassed && (
             <button
               onClick={() => {
                 setIsAdding(true);
@@ -158,7 +159,7 @@ export function TeacherQuoteDetail({ teacher, initialQuotes, backPath = "/zitate
         </div>
 
         {/* Add quote form */}
-        {isAdding && (
+        {isAdding && !deadlinePassed && (
           <div className="border border-gray-200 rounded-lg p-4 bg-gray-50 space-y-3">
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-medium text-gray-700">Zitate hinzufügen</h3>
@@ -186,20 +187,22 @@ export function TeacherQuoteDetail({ teacher, initialQuotes, backPath = "/zitate
                 className="flex items-start justify-between gap-3 p-3 bg-gray-50 rounded-lg"
               >
                 <p className="text-gray-900 text-sm flex-1">&ldquo;{quote.text}&rdquo;</p>
-                <button
-                  onClick={() => setDeleteQuoteId(quote.id)}
-                  className="text-gray-400 hover:text-red-500 min-h-[44px] min-w-[44px] flex items-center justify-center flex-shrink-0"
-                  title="Löschen"
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                    />
-                  </svg>
-                </button>
+                {!deadlinePassed && (
+                  <button
+                    onClick={() => setDeleteQuoteId(quote.id)}
+                    className="text-gray-400 hover:text-red-500 min-h-[44px] min-w-[44px] flex items-center justify-center flex-shrink-0"
+                    title="Löschen"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                      />
+                    </svg>
+                  </button>
+                )}
               </div>
             ))}
           </div>

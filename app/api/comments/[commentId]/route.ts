@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { updateCommentSchema } from "@/lib/validation";
+import { isDeadlinePassed } from "@/lib/deadline";
 
 // PATCH /api/comments/[commentId] - Update own comment
 export async function PATCH(
@@ -21,6 +22,13 @@ export async function PATCH(
     if (session.user.role !== "STUDENT") {
       return NextResponse.json(
         { error: "Nur für Schüler zugänglich." },
+        { status: 403 }
+      );
+    }
+
+    if (await isDeadlinePassed()) {
+      return NextResponse.json(
+        { error: "Die Abgabefrist ist abgelaufen." },
         { status: 403 }
       );
     }
@@ -97,6 +105,13 @@ export async function DELETE(
     if (session.user.role !== "STUDENT") {
       return NextResponse.json(
         { error: "Nur für Schüler zugänglich." },
+        { status: 403 }
+      );
+    }
+
+    if (await isDeadlinePassed()) {
+      return NextResponse.json(
+        { error: "Die Abgabefrist ist abgelaufen." },
         { status: 403 }
       );
     }

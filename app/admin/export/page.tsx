@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { ExportPage } from "@/components/admin/export/ExportPage";
+import { getDeadline } from "@/lib/deadline";
 
 export default async function AdminExportPage() {
   const session = await auth();
@@ -8,6 +9,8 @@ export default async function AdminExportPage() {
   if (!session?.user || session.user.role !== "ADMIN") {
     redirect("/admin/dashboard");
   }
+
+  const deadline = await getDeadline();
 
   return (
     <div className="space-y-6">
@@ -17,7 +20,7 @@ export default async function AdminExportPage() {
           Daten als TSV-Dateien für den Abibuch-Druck herunterladen.
         </p>
       </div>
-      <ExportPage />
+      <ExportPage initialDeadline={deadline?.toISOString() ?? null} />
     </div>
   );
 }

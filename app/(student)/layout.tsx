@@ -2,6 +2,8 @@ import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { LogoutButton } from "@/components/auth/LogoutButton";
 import { StudentNav } from "@/components/navigation/StudentNav";
+import { DeadlineIndicator } from "@/components/navigation/DeadlineIndicator";
+import { getDeadline } from "@/lib/deadline";
 
 export default async function StudentLayout({
   children,
@@ -14,6 +16,9 @@ export default async function StudentLayout({
     redirect("/login");
   }
 
+  const deadline = await getDeadline();
+  const deadlineStr = deadline?.toISOString() ?? null;
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Mobile Header */}
@@ -21,9 +26,12 @@ export default async function StudentLayout({
         <div className="flex items-center justify-between px-4 py-3">
           <h1 className="text-xl font-bold text-gray-900">AbiBoard</h1>
           <div className="flex items-center space-x-4">
-            <span className="text-sm text-gray-600">
-              {session.user.firstName}
-            </span>
+            <div className="text-right">
+              <span className="text-sm text-gray-600">
+                {session.user.firstName}
+              </span>
+              <DeadlineIndicator deadline={deadlineStr} />
+            </div>
           </div>
         </div>
       </header>
@@ -36,6 +44,9 @@ export default async function StudentLayout({
             <p className="text-sm text-gray-600 mt-1">
               {session.user.firstName} {session.user.lastName}
             </p>
+            <div className="mt-2">
+              <DeadlineIndicator deadline={deadlineStr} />
+            </div>
           </div>
 
           <div className="flex-1 overflow-y-auto min-h-0">

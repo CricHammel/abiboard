@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { createStudentQuotesSchema } from "@/lib/validation";
+import { isDeadlinePassed } from "@/lib/deadline";
 
 export async function GET(
   request: Request,
@@ -99,6 +100,13 @@ export async function POST(
   if (session.user.role !== "STUDENT") {
     return NextResponse.json(
       { error: "Zugriff verweigert." },
+      { status: 403 }
+    );
+  }
+
+  if (await isDeadlinePassed()) {
+    return NextResponse.json(
+      { error: "Die Abgabefrist ist abgelaufen." },
       { status: 403 }
     );
   }

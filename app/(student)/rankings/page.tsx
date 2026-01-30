@@ -2,6 +2,8 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import { RankingsPage } from "@/components/rankings/RankingsPage";
+import { Alert } from "@/components/ui/Alert";
+import { isDeadlinePassed } from "@/lib/deadline";
 
 export default async function RankingsRoute() {
   const session = await auth();
@@ -37,15 +39,27 @@ export default async function RankingsRoute() {
     }),
   ]);
 
+  const deadlinePassed = await isDeadlinePassed();
+
   return (
-    <RankingsPage
-      initialData={{
-        questions,
-        votes,
-        submission: submission || { status: "DRAFT" },
-        students,
-        teachers,
-      }}
-    />
+    <>
+      {deadlinePassed && (
+        <div className="mb-6">
+          <Alert variant="info">
+            Die Abgabefrist ist abgelaufen. Inhalte können nicht mehr bearbeitet werden.
+          </Alert>
+        </div>
+      )}
+      <RankingsPage
+        initialData={{
+          questions,
+          votes,
+          submission: submission || { status: "DRAFT" },
+          students,
+          teachers,
+        }}
+        deadlinePassed={deadlinePassed}
+      />
+    </>
   );
 }

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Alert } from "@/components/ui/Alert";
+import { Badge } from "@/components/ui/Badge";
 
 interface DownloadState {
   loading: boolean;
@@ -47,8 +48,100 @@ function useDownload() {
   return { download, getState };
 }
 
-export function ExportPage() {
+interface ExportPageProps {
+  initialDeadline: string | null;
+}
+
+function formatDeadline(isoString: string): string {
+  return new Date(isoString).toLocaleString("de-DE", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+function toLocalDatetimeValue(isoString: string): string {
+  const d = new Date(isoString);
+  const offset = d.getTimezoneOffset();
+  const local = new Date(d.getTime() - offset * 60 * 1000);
+  return local.toISOString().slice(0, 16);
+}
+
+export function ExportPage({ initialDeadline }: ExportPageProps) {
   const { download, getState } = useDownload();
+  const [deadline, setDeadline] = useState<string | null>(initialDeadline);
+  const [deadlineInput, setDeadlineInput] = useState(
+    initialDeadline ? toLocalDatetimeValue(initialDeadline) : ""
+  );
+  const [deadlineLoading, setDeadlineLoading] = useState(false);
+  const [deadlineError, setDeadlineError] = useState<string | null>(null);
+  const [deadlineSuccess, setDeadlineSuccess] = useState<string | null>(null);
+
+  const isPassed = deadline ? new Date(deadline) < new Date() : false;
+
+  const handleSaveDeadline = async () => {
+    if (!deadlineInput) return;
+
+    setDeadlineLoading(true);
+    setDeadlineError(null);
+    setDeadlineSuccess(null);
+
+    try {
+      const isoDate = new Date(deadlineInput).toISOString();
+      const res = await fetch("/api/admin/deadline", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ deadline: isoDate }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setDeadlineError(data.error || "Ein Fehler ist aufgetreten.");
+        return;
+      }
+
+      setDeadline(data.deadline);
+      setDeadlineSuccess(data.message);
+      setTimeout(() => setDeadlineSuccess(null), 3000);
+    } catch {
+      setDeadlineError("Ein Fehler ist aufgetreten.");
+    } finally {
+      setDeadlineLoading(false);
+    }
+  };
+
+  const handleRemoveDeadline = async () => {
+    setDeadlineLoading(true);
+    setDeadlineError(null);
+    setDeadlineSuccess(null);
+
+    try {
+      const res = await fetch("/api/admin/deadline", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ deadline: null }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setDeadlineError(data.error || "Ein Fehler ist aufgetreten.");
+        return;
+      }
+
+      setDeadline(null);
+      setDeadlineInput("");
+      setDeadlineSuccess(data.message);
+      setTimeout(() => setDeadlineSuccess(null), 3000);
+    } catch {
+      setDeadlineError("Ein Fehler ist aufgetreten.");
+    } finally {
+      setDeadlineLoading(false);
+    }
+  };
 
   const sections = [
     {
@@ -132,50 +225,120 @@ export function ExportPage() {
   ];
 
   return (
-    <div className="grid gap-4 md:grid-cols-2">
-      {sections.map((section) => (
-        <Card key={section.title}>
-          <h2 className="text-lg font-semibold text-gray-900">{section.title}</h2>
-          <p className="text-sm text-gray-600 mt-1">{section.description}</p>
+    <div className="space-y-6">
+      {/* Deadline Management */}
+      <Card>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-semibold text-gray-900">Abgabefrist</h2>
+          {deadline && (
+            <Badge variant={isPassed ? "draft" : "submitted"}>
+              {isPassed ? "Abgelaufen" : "Aktiv"}
+            </Badge>
+          )}
+        </div>
 
-          <div className="mt-4 flex flex-wrap gap-3">
-            {section.buttons.map((btn) => {
-              const state = getState(btn.key);
-              return (
-                <div key={btn.key}>
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    loading={state.loading}
-                    onClick={() => download(btn.key, btn.url, btn.filename)}
-                    disabled={state.loading}
-                  >
-                    <svg
-                      className="w-4 h-4 mr-2 inline-block"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                      />
-                    </svg>
-                    {btn.label}
-                  </Button>
-                  {state.error && (
-                    <div className="mt-2">
-                      <Alert variant="error">{state.error}</Alert>
-                    </div>
-                  )}
-                </div>
-              );
-            })}
+        {deadline && (
+          <p className="text-sm text-gray-600 mb-4">
+            Aktuelle Frist: <span className="font-medium">{formatDeadline(deadline)}</span>
+          </p>
+        )}
+
+        {!deadline && (
+          <p className="text-sm text-gray-500 mb-4">
+            Keine Abgabefrist gesetzt. Nach Ablauf einer Frist können Schüler keine Inhalte mehr bearbeiten.
+          </p>
+        )}
+
+        {deadlineError && (
+          <div className="mb-4">
+            <Alert variant="error">{deadlineError}</Alert>
           </div>
-        </Card>
-      ))}
+        )}
+        {deadlineSuccess && (
+          <div className="mb-4">
+            <Alert variant="success">{deadlineSuccess}</Alert>
+          </div>
+        )}
+
+        <div className="flex flex-col sm:flex-row gap-3">
+          <input
+            type="datetime-local"
+            value={deadlineInput}
+            onChange={(e) => setDeadlineInput(e.target.value)}
+            className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+            disabled={deadlineLoading}
+          />
+          <div className="flex gap-2">
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={handleSaveDeadline}
+              loading={deadlineLoading}
+              disabled={deadlineLoading || !deadlineInput}
+            >
+              Speichern
+            </Button>
+            {deadline && (
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={handleRemoveDeadline}
+                loading={deadlineLoading}
+                disabled={deadlineLoading}
+              >
+                Entfernen
+              </Button>
+            )}
+          </div>
+        </div>
+      </Card>
+
+      {/* Download sections */}
+      <div className="grid gap-4 md:grid-cols-2">
+        {sections.map((section) => (
+          <Card key={section.title}>
+            <h2 className="text-lg font-semibold text-gray-900">{section.title}</h2>
+            <p className="text-sm text-gray-600 mt-1">{section.description}</p>
+
+            <div className="mt-4 flex flex-wrap gap-3">
+              {section.buttons.map((btn) => {
+                const state = getState(btn.key);
+                return (
+                  <div key={btn.key}>
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      loading={state.loading}
+                      onClick={() => download(btn.key, btn.url, btn.filename)}
+                      disabled={state.loading}
+                    >
+                      <svg
+                        className="w-4 h-4 mr-2 inline-block"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                        />
+                      </svg>
+                      {btn.label}
+                    </Button>
+                    {state.error && (
+                      <div className="mt-2">
+                        <Alert variant="error">{state.error}</Alert>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </Card>
+        ))}
+      </div>
     </div>
   );
 }

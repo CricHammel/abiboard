@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { buildTsv, tsvResponse } from "@/lib/tsv-export";
 import { NextResponse } from "next/server";
+import { isDeadlinePassed } from "@/lib/deadline";
 
 export async function GET() {
   try {
@@ -20,13 +21,26 @@ export async function GET() {
       orderBy: { order: "asc" },
     });
 
-    // Get submitted user IDs only
-    const submittedUserIds = await prisma.rankingSubmission.findMany({
-      where: { status: "SUBMITTED" },
-      select: { userId: true },
-    });
-    const submittedIds = submittedUserIds.map((s) => s.userId);
-    const totalVoters = submittedIds.length;
+    // After deadline: include all votes, not just submitted
+    const deadlinePassed = await isDeadlinePassed();
+
+    let voterIds: string[];
+    if (deadlinePassed) {
+      // Include all users who have votes
+      const allVoters = await prisma.rankingVote.findMany({
+        where: { question: { active: true } },
+        select: { voterId: true },
+        distinct: ["voterId"],
+      });
+      voterIds = allVoters.map((v) => v.voterId);
+    } else {
+      const submittedUserIds = await prisma.rankingSubmission.findMany({
+        where: { status: "SUBMITTED" },
+        select: { userId: true },
+      });
+      voterIds = submittedUserIds.map((s) => s.userId);
+    }
+    const totalVoters = voterIds.length;
 
     if (totalVoters === 0) {
       const tsv = buildTsv(
@@ -36,10 +50,10 @@ export async function GET() {
       return tsvResponse(tsv, "rankings.tsv");
     }
 
-    // Get all votes from submitted users
+    // Get all votes from relevant users
     const votes = await prisma.rankingVote.findMany({
       where: {
-        voterId: { in: submittedIds },
+        voterId: { in: voterIds },
         question: { active: true },
       },
       include: {

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { surveyAnswerSchema } from "@/lib/validation";
+import { isDeadlinePassed } from "@/lib/deadline";
 
 export async function PATCH(
   request: Request,
@@ -15,6 +16,13 @@ export async function PATCH(
       return NextResponse.json(
         { error: "Nicht authentifiziert." },
         { status: 401 }
+      );
+    }
+
+    if (await isDeadlinePassed()) {
+      return NextResponse.json(
+        { error: "Die Abgabefrist ist abgelaufen." },
+        { status: 403 }
       );
     }
 

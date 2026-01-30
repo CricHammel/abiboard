@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
+import { isDeadlinePassed } from "@/lib/deadline";
 import { z } from "zod";
 
 export async function GET() {
@@ -85,6 +86,13 @@ export async function PATCH(request: Request) {
     if (session.user.role !== "STUDENT") {
       return NextResponse.json(
         { error: "Nur für Schüler verfügbar." },
+        { status: 403 }
+      );
+    }
+
+    if (await isDeadlinePassed()) {
+      return NextResponse.json(
+        { error: "Die Abgabefrist ist abgelaufen." },
         { status: 403 }
       );
     }

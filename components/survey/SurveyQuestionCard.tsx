@@ -15,6 +15,7 @@ interface SurveyQuestionCardProps {
   options: SurveyOption[];
   selectedOptionId: string | null;
   onAnswer: (questionId: string, optionId: string) => Promise<boolean>;
+  disabled?: boolean;
 }
 
 export function SurveyQuestionCard({
@@ -24,6 +25,7 @@ export function SurveyQuestionCard({
   options,
   selectedOptionId,
   onAnswer,
+  disabled: externalDisabled = false,
 }: SurveyQuestionCardProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [localSelectedId, setLocalSelectedId] = useState<string | null>(
@@ -31,7 +33,7 @@ export function SurveyQuestionCard({
   );
 
   const handleOptionClick = async (optionId: string) => {
-    if (isLoading || localSelectedId === optionId) return;
+    if (isLoading || localSelectedId === optionId || externalDisabled) return;
 
     setIsLoading(true);
     setLocalSelectedId(optionId); // Optimistic update
@@ -64,7 +66,7 @@ export function SurveyQuestionCard({
             <button
               key={option.id}
               onClick={() => handleOptionClick(option.id)}
-              disabled={isLoading}
+              disabled={isLoading || externalDisabled}
               className={`
                 w-full text-left px-4 py-3 rounded-lg border transition-all
                 min-h-[44px] flex items-center gap-3

@@ -51,9 +51,10 @@ interface RankingsPageProps {
     students: StudentOption[];
     teachers: TeacherOption[];
   };
+  deadlinePassed?: boolean;
 }
 
-export function RankingsPage({ initialData }: RankingsPageProps) {
+export function RankingsPage({ initialData, deadlinePassed = false }: RankingsPageProps) {
   const [votes, setVotes] = useState<Vote[]>(initialData.votes);
   const [status, setStatus] = useState<"DRAFT" | "SUBMITTED">(
     initialData.submission.status
@@ -202,28 +203,30 @@ export function RankingsPage({ initialData }: RankingsPageProps) {
             {answeredCount} von {totalSlots} beantwortet
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          {isSubmitted ? (
-            <>
-              <Badge variant="submitted">Abgeschickt</Badge>
+        {!deadlinePassed && (
+          <div className="flex items-center gap-2">
+            {isSubmitted ? (
+              <>
+                <Badge variant="submitted">Abgeschickt</Badge>
+                <Button
+                  variant="secondary"
+                  onClick={() => setConfirmDialog({ isOpen: true, action: "retract" })}
+                  disabled={isLoading}
+                >
+                  Zurückziehen
+                </Button>
+              </>
+            ) : (
               <Button
-                variant="secondary"
-                onClick={() => setConfirmDialog({ isOpen: true, action: "retract" })}
+                variant="primary"
+                onClick={() => setConfirmDialog({ isOpen: true, action: "submit" })}
                 disabled={isLoading}
-                              >
-                Zurückziehen
+              >
+                Rankings abschicken
               </Button>
-            </>
-          ) : (
-            <Button
-              variant="primary"
-              onClick={() => setConfirmDialog({ isOpen: true, action: "submit" })}
-              disabled={isLoading}
-                          >
-              Rankings abschicken
-            </Button>
-          )}
-        </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Progress bar */}
@@ -251,6 +254,7 @@ export function RankingsPage({ initialData }: RankingsPageProps) {
               allStudents={students}
               allTeachers={teachers}
               onVote={handleVote}
+              disabled={deadlinePassed}
             />
           ))}
         </div>
@@ -268,6 +272,7 @@ export function RankingsPage({ initialData }: RankingsPageProps) {
               allStudents={students}
               allTeachers={teachers}
               onVote={handleVote}
+              disabled={deadlinePassed}
             />
           ))}
         </div>
@@ -280,14 +285,14 @@ export function RankingsPage({ initialData }: RankingsPageProps) {
       )}
 
       {/* Submit / Retract buttons at bottom */}
-      {questions.length > 0 && (
+      {questions.length > 0 && !deadlinePassed && (
         <div className="flex justify-end pt-4">
           {isSubmitted ? (
             <Button
               variant="secondary"
               onClick={() => setConfirmDialog({ isOpen: true, action: "retract" })}
               disabled={isLoading}
-                          >
+            >
               Rankings zurückziehen
             </Button>
           ) : (
@@ -295,7 +300,7 @@ export function RankingsPage({ initialData }: RankingsPageProps) {
               variant="primary"
               onClick={() => setConfirmDialog({ isOpen: true, action: "submit" })}
               disabled={isLoading}
-                          >
+            >
               Rankings abschicken
             </Button>
           )}

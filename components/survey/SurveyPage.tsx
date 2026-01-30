@@ -20,11 +20,13 @@ interface SurveyQuestion {
 interface SurveyPageProps {
   initialQuestions: SurveyQuestion[];
   initialAnswers: Record<string, string>;
+  deadlinePassed?: boolean;
 }
 
 export function SurveyPage({
   initialQuestions,
   initialAnswers,
+  deadlinePassed = false,
 }: SurveyPageProps) {
   const [answers, setAnswers] = useState<Record<string, string>>(initialAnswers);
   const [error, setError] = useState<string | null>(null);
@@ -129,6 +131,7 @@ export function SurveyPage({
             options={question.options}
             selectedOptionId={answers[question.id] || null}
             onAnswer={handleAnswer}
+            disabled={deadlinePassed}
           />
         ))}
       </div>

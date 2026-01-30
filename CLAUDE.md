@@ -46,6 +46,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 9. ✓ Umfragen (anonymous surveys with multiple choice)
 10. ✓ Kommentare (student/teacher comments for yearbook)
 11. ✓ Data export for yearbook printing (TSV + image ZIP exports)
+12. ✓ Global deadline (admin-configurable cutoff, blocks student edits, export includes all data)
 
 ## Development Approach
 
@@ -137,6 +138,7 @@ app/                        # Next.js App Router
     │   ├── student-quotes/   # Admin student quotes (list, detail, edit, delete)
     │   ├── survey-questions/ # Survey CRUD + reorder + stats
     │   ├── comments/        # Admin comments (list, edit, delete)
+    │   ├── deadline/        # Global deadline endpoint (GET, PATCH)
     │   └── export/          # Data export endpoints (steckbriefe, rankings, zitate, umfragen, kommentare)
     ├── steckbrief/        # Steckbrief CRUD + submit/retract endpoints
     ├── rankings/          # Student ranking vote/submit/retract + search endpoints
@@ -198,7 +200,7 @@ components/
 │   └── export/            # ExportPage (download buttons for all export types)
 ├── dashboard/             # Dashboard components
 │   └── CollapsibleList.tsx        # Expandable list for admin dashboard
-├── navigation/            # Navigation components (StudentNav, AdminNav)
+├── navigation/            # Navigation components (StudentNav, AdminNav, DeadlineIndicator)
 └── providers/             # React providers (SessionProvider)
 
 hooks/
@@ -211,7 +213,8 @@ lib/
 ├── validation.ts                  # Zod schemas for validation
 ├── steckbrief-validation-dynamic.ts # Dynamic Zod schema generation from DB fields
 ├── file-upload.ts                 # File validation, save, and delete utilities
-└── tsv-export.ts                  # TSV export utilities (BOM, escaping, response helper, filename sanitizer)
+├── tsv-export.ts                  # TSV export utilities (BOM, escaping, response helper, filename sanitizer)
+└── deadline.ts                    # Deadline utilities (getDeadline, isDeadlinePassed)
 
 types/
 └── next-auth.d.ts         # NextAuth type extensions for User & Session
@@ -223,6 +226,11 @@ prisma/
 ```
 
 ## Key Schema Concepts
+
+- **AppSettings:** Singleton table for global configuration
+  - `deadline` (DateTime, nullable) - global cutoff after which students can't edit
+  - Managed via `/admin/export` page
+  - Utility functions in `lib/deadline.ts`: `getDeadline()`, `isDeadlinePassed()`
 
 - **Student:** Whitelist entry for registration
   - firstName, lastName, email (must be @lessing-ffm.net), gender (MALE | FEMALE | null)
@@ -667,6 +675,41 @@ Students can write comments about other students AND teachers for the yearbook. 
 - `CommentForm` - Target type selector, PersonAutocomplete, textarea
 - `CommentList` - List of own comments with edit/delete
 - `CommentAdminPage` - Admin view with filters, inline edit/delete
+
+## Global Deadline Feature (Implemented)
+
+**Overview:**
+Admin-configurable global deadline. After the deadline passes, students can no longer create, edit, or delete any content. Admins remain unrestricted. The deadline is configured on the export page and displayed in the student sidebar/header.
+
+### 1. Core Concepts
+- **Singleton AppSettings:** One row in `app_settings` table with optional `deadline` field
+- **Server-side enforcement:** All 15 student write endpoints check `isDeadlinePassed()`
+- **Client-side visual lock:** Feature pages disable inputs, hide action buttons
+- **Export behavior:** After deadline, ranking export includes ALL votes (not just SUBMITTED)
+
+### 2. Data Model
+- `AppSettings`: id, deadline (DateTime, nullable)
+- Utility: `lib/deadline.ts` with `getDeadline()` and `isDeadlinePassed()`
+
+### 3. Admin UI
+- Export page (`/admin/export`): Deadline management card with datetime input, save/remove buttons
+- API: `GET/PATCH /api/admin/deadline`
+
+### 4. Student UI
+- **DeadlineIndicator** component in sidebar (desktop) and header (mobile):
+  - No deadline → hidden
+  - \>7 days → gray, shows date
+  - ≤7 days → amber, "Noch X Tage"
+  - Passed → red, "Abgabefrist abgelaufen"
+- **Feature pages:** Alert banner + disabled inputs/hidden action buttons when deadline passed
+
+### 5. Protected Endpoints (15 total)
+- Steckbrief: PATCH, submit, retract
+- Rankings: PATCH, DELETE vote, submit, retract
+- Survey: PATCH answer
+- Teacher quotes: POST, DELETE
+- Student quotes: POST, DELETE
+- Comments: POST, PATCH, DELETE
 
 ## Important Implementation Notes
 

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { auth } from '@/lib/auth';
+import { isDeadlinePassed } from '@/lib/deadline';
 
 export async function POST(request: Request) {
   try {
@@ -10,6 +11,13 @@ export async function POST(request: Request) {
       return NextResponse.json(
         { error: 'Nicht authentifiziert.' },
         { status: 401 }
+      );
+    }
+
+    if (await isDeadlinePassed()) {
+      return NextResponse.json(
+        { error: 'Die Abgabefrist ist abgelaufen.' },
+        { status: 403 }
       );
     }
 

@@ -2,6 +2,8 @@ import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { CommentPage } from "@/components/comments/CommentPage";
+import { Alert } from "@/components/ui/Alert";
+import { isDeadlinePassed } from "@/lib/deadline";
 
 export default async function KommentarePage() {
   const session = await auth();
@@ -59,14 +61,22 @@ export default async function KommentarePage() {
         : null,
   }));
 
+  const deadlinePassed = await isDeadlinePassed();
+
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-bold text-gray-900">Kommentare</h1>
+      {deadlinePassed && (
+        <Alert variant="info">
+          Die Abgabefrist ist abgelaufen. Inhalte können nicht mehr bearbeitet werden.
+        </Alert>
+      )}
       <CommentPage
         initialComments={transformedComments}
         allStudents={allStudents}
         allTeachers={allTeachers}
         currentUserId={session.user.id}
+        deadlinePassed={deadlinePassed}
       />
     </div>
   );

@@ -4,7 +4,9 @@ import { prisma } from "@/lib/prisma";
 import { FieldType } from "@prisma/client";
 import { SteckbriefForm } from "@/components/steckbrief/SteckbriefForm";
 import { Card } from "@/components/ui/Card";
+import { Alert } from "@/components/ui/Alert";
 import { toFieldDefinition } from "@/lib/steckbrief-validation-dynamic";
+import { isDeadlinePassed } from "@/lib/deadline";
 
 export default async function SteckbriefPage() {
   const session = await auth();
@@ -40,6 +42,8 @@ export default async function SteckbriefPage() {
       },
     });
   }
+
+  const deadlinePassed = await isDeadlinePassed();
 
   // Load active field definitions
   const fields = await prisma.steckbriefField.findMany({
@@ -77,11 +81,20 @@ export default async function SteckbriefPage() {
         </p>
       </div>
 
+      {deadlinePassed && (
+        <div className="mb-6">
+          <Alert variant="info">
+            Die Abgabefrist ist abgelaufen. Inhalte können nicht mehr bearbeitet werden.
+          </Alert>
+        </div>
+      )}
+
       <Card>
         <SteckbriefForm
           fields={fields.map(toFieldDefinition)}
           initialValues={values}
           status={profile.status}
+          deadlinePassed={deadlinePassed}
         />
       </Card>
     </div>

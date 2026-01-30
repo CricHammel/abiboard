@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { createCommentSchema } from "@/lib/validation";
 import { Prisma } from "@prisma/client";
+import { isDeadlinePassed } from "@/lib/deadline";
 
 // GET /api/comments - List own written comments
 export async function GET() {
@@ -82,6 +83,13 @@ export async function POST(request: Request) {
     if (session.user.role !== "STUDENT") {
       return NextResponse.json(
         { error: "Nur für Schüler zugänglich." },
+        { status: 403 }
+      );
+    }
+
+    if (await isDeadlinePassed()) {
+      return NextResponse.json(
+        { error: "Die Abgabefrist ist abgelaufen." },
         { status: 403 }
       );
     }

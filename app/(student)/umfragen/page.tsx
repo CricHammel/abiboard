@@ -2,6 +2,8 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { SurveyPage } from "@/components/survey/SurveyPage";
 import { redirect } from "next/navigation";
+import { Alert } from "@/components/ui/Alert";
+import { isDeadlinePassed } from "@/lib/deadline";
 
 export default async function StudentSurveyPage() {
   const session = await auth();
@@ -41,6 +43,8 @@ export default async function StudentSurveyPage() {
     answersMap[answer.questionId] = answer.optionId;
   }
 
+  const deadlinePassed = await isDeadlinePassed();
+
   return (
     <div className="space-y-6">
       <div>
@@ -50,7 +54,13 @@ export default async function StudentSurveyPage() {
         </p>
       </div>
 
-      <SurveyPage initialQuestions={questions} initialAnswers={answersMap} />
+      {deadlinePassed && (
+        <Alert variant="info">
+          Die Abgabefrist ist abgelaufen. Inhalte können nicht mehr bearbeitet werden.
+        </Alert>
+      )}
+
+      <SurveyPage initialQuestions={questions} initialAnswers={answersMap} deadlinePassed={deadlinePassed} />
     </div>
   );
 }
