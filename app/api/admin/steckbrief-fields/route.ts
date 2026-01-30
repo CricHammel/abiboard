@@ -20,10 +20,10 @@ const createFieldSchema = z.object({
     .string()
     .min(1, "Label ist erforderlich.")
     .max(100, "Label darf maximal 100 Zeichen lang sein."),
-  placeholder: z.string().max(200).optional(),
-  maxLength: z.number().int().positive().optional(),
-  maxFiles: z.number().int().min(1).max(10).optional(),
-  rows: z.number().int().min(1).max(20).optional(),
+  placeholder: z.string().max(200).optional().nullable(),
+  maxLength: z.number().int().positive().optional().nullable(),
+  maxFiles: z.number().int().min(1).max(10).optional().nullable(),
+  rows: z.number().int().min(1).max(20).optional().nullable(),
   required: z.boolean().optional(),
   order: z.number().int().optional(),
 });
