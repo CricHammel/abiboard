@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { PersonAutocomplete } from "@/components/rankings/PersonAutocomplete";
 import { Button } from "@/components/ui/Button";
 
@@ -60,11 +60,12 @@ export function CommentForm({
   const [error, setError] = useState<string | null>(null);
 
   // Reset selection when target type changes (only in create mode)
-  useEffect(() => {
+  const handleTargetTypeChange = (newType: "STUDENT" | "TEACHER") => {
+    setTargetType(newType);
     if (!editMode) {
       setSelectedPerson(null);
     }
-  }, [targetType, editMode]);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -117,7 +118,7 @@ export function CommentForm({
                 name="targetType"
                 value="STUDENT"
                 checked={targetType === "STUDENT"}
-                onChange={() => setTargetType("STUDENT")}
+                onChange={() => handleTargetTypeChange("STUDENT")}
                 className="w-4 h-4 text-primary-dark focus:ring-primary-light"
               />
               <span className="text-sm text-gray-700">Mitschüler/in</span>
@@ -128,7 +129,7 @@ export function CommentForm({
                 name="targetType"
                 value="TEACHER"
                 checked={targetType === "TEACHER"}
-                onChange={() => setTargetType("TEACHER")}
+                onChange={() => handleTargetTypeChange("TEACHER")}
                 className="w-4 h-4 text-primary-dark focus:ring-primary-light"
               />
               <span className="text-sm text-gray-700">Lehrer/in</span>

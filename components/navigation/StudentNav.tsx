@@ -190,10 +190,6 @@ export function StudentNav({ variant = "both" }: { variant?: "desktop" | "mobile
     };
   }, [moreMenuOpen]);
 
-  // Close menu on navigation
-  useEffect(() => {
-    setMoreMenuOpen(false);
-  }, [pathname]);
 
   return (
     <>
@@ -275,6 +271,7 @@ export function StudentNav({ variant = "both" }: { variant?: "desktop" | "mobile
                       <Link
                         key={item.href}
                         href={item.href}
+                        onClick={() => setMoreMenuOpen(false)}
                         className={`flex items-center gap-3 px-4 py-3 transition-colors ${
                           isActive
                             ? "bg-primary-light text-primary"
