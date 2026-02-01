@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { PersonAutocomplete } from "@/components/rankings/PersonAutocomplete";
 import { Button } from "@/components/ui/Button";
+import { ErrorMessage } from "@/components/ui/ErrorMessage";
 
 interface StudentOption {
   id: string;
@@ -99,11 +100,7 @@ export function CommentForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      {error && (
-        <div className="p-3 bg-red-50 text-red-700 text-sm rounded-lg">
-          {error}
-        </div>
-      )}
+      {error && <ErrorMessage message={error} />}
 
       {/* Target Type Selection (only in create mode) */}
       {!editMode && (

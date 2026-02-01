@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/Button";
+import { ErrorMessage } from "@/components/ui/ErrorMessage";
 
 interface QuoteInputProps {
   onSubmit: (quotes: string[]) => Promise<void>;
@@ -69,7 +70,7 @@ export function QuoteInput({ onSubmit, isLoading }: QuoteInputProps) {
           Hinzufügen
         </Button>
       </div>
-      {error && <p className="text-sm text-error">{error}</p>}
+      {error && <ErrorMessage message={error} />}
       {tooLongLines.length > 0 && !error && (
         <p className="text-sm text-warning">
           {tooLongLines.length} Zitat{tooLongLines.length !== 1 ? "e" : ""} zu lang (max. 500 Zeichen)

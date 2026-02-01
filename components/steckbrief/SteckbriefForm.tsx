@@ -114,6 +114,7 @@ export function SteckbriefForm({
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [showSubmitDialog, setShowSubmitDialog] = useState(false);
   const [showRetractDialog, setShowRetractDialog] = useState(false);
+  const [showSaveRetractDialog, setShowSaveRetractDialog] = useState(false);
 
   // Calculate if there are unsaved changes
   const hasUnsavedChanges = useMemo(() => {
@@ -172,6 +173,15 @@ export function SteckbriefForm({
 
   const handleSaveDraft = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (currentStatus === "SUBMITTED") {
+      setShowSaveRetractDialog(true);
+      return;
+    }
+    await submitForm("draft");
+  };
+
+  const handleConfirmSaveRetract = async () => {
+    setShowSaveRetractDialog(false);
     await submitForm("draft");
   };
 
@@ -461,6 +471,17 @@ export function SteckbriefForm({
         variant="warning"
         onConfirm={handleRetract}
         onCancel={() => setShowRetractDialog(false)}
+        isLoading={isLoading}
+      />
+
+      <ConfirmDialog
+        isOpen={showSaveRetractDialog}
+        title="Steckbrief bearbeiten"
+        message="Dein Steckbrief wurde bereits eingereicht. Durch das Speichern wird der Status auf Entwurf zurückgesetzt und muss erneut eingereicht werden."
+        confirmText="Speichern und zurücksetzen"
+        variant="warning"
+        onConfirm={handleConfirmSaveRetract}
+        onCancel={() => setShowSaveRetractDialog(false)}
         isLoading={isLoading}
       />
     </form>

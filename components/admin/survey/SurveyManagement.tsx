@@ -228,6 +228,9 @@ export function SurveyManagement({ initialQuestions }: SurveyManagementProps) {
           <h3 className="text-md font-medium text-gray-900 mb-4">
             Frage bearbeiten
           </h3>
+          <Alert variant="warning" className="mb-4">
+            Wenn die Antwortoptionen geändert werden, gehen alle bisherigen Schülerantworten zu dieser Frage verloren.
+          </Alert>
           <SurveyForm
             question={editingQuestion}
             onSubmit={handleUpdate}

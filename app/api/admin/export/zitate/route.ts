@@ -35,6 +35,9 @@ export async function GET(request: Request) {
 
 async function exportTeacherQuotes(): Promise<Response> {
   const quotes = await prisma.teacherQuote.findMany({
+    where: {
+      teacher: { active: true },
+    },
     include: {
       teacher: {
         select: { salutation: true, firstName: true, lastName: true, subject: true },
@@ -61,6 +64,9 @@ async function exportTeacherQuotes(): Promise<Response> {
 
 async function exportStudentQuotes(): Promise<Response> {
   const quotes = await prisma.studentQuote.findMany({
+    where: {
+      student: { active: true },
+    },
     include: {
       student: {
         select: { firstName: true, lastName: true },

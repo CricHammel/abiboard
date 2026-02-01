@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { ErrorMessage } from "@/components/ui/ErrorMessage";
+import { Alert } from "@/components/ui/Alert";
 import { Badge } from "@/components/ui/Badge";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { CandidateList } from "./CandidateList";
@@ -236,6 +237,12 @@ export function RankingsPage({ initialData, deadlinePassed = false }: RankingsPa
           style={{ width: `${totalSlots > 0 ? (answeredCount / totalSlots) * 100 : 0}%` }}
         />
       </div>
+
+      {isSubmitted && !deadlinePassed && (
+        <Alert variant="info">
+          Deine Rankings sind eingereicht. Wenn du eine Stimme änderst, wird der Status automatisch auf „Entwurf" zurückgesetzt und muss erneut abgeschickt werden.
+        </Alert>
+      )}
 
       {error && <ErrorMessage message={error} />}
 

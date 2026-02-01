@@ -15,6 +15,12 @@ export async function GET() {
     }
 
     const comments = await prisma.comment.findMany({
+      where: {
+        OR: [
+          { targetStudent: { active: true } },
+          { targetTeacher: { active: true } },
+        ],
+      },
       include: {
         targetStudent: {
           select: { firstName: true, lastName: true },

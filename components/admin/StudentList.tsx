@@ -110,7 +110,7 @@ export function StudentList({
           placeholder="Nach Name oder E-Mail suchen..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="flex-1 px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-light"
+          className="flex-1 px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-light min-h-[44px] text-base"
         />
 
         <select
@@ -120,7 +120,7 @@ export function StudentList({
               e.target.value as "ALL" | "REGISTERED" | "NOT_REGISTERED"
             )
           }
-          className="px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-light"
+          className="px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-light min-h-[44px] text-base"
         >
           <option value="ALL">Alle</option>
           <option value="REGISTERED">Registriert</option>
@@ -147,8 +147,7 @@ export function StudentList({
 
       {/* Results count */}
       <p className="text-sm text-gray-600">
-        {filteredStudents.length}{" "}
-        {filteredStudents.length === 1 ? "Schüler" : "Schüler"} gefunden
+        {filteredStudents.length} Schüler gefunden
       </p>
 
       {/* Desktop Table */}
