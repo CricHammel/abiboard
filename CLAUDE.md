@@ -68,11 +68,11 @@ components/
 ├── student-quotes/      # StudentQuoteList, StudentQuoteDetail
 ├── survey/              # SurveyPage, SurveyQuestionCard
 ├── comments/            # CommentPage, CommentForm, CommentList
-├── admin/               # Admin-specific components per feature
+├── admin/               # Admin-specific components per feature + shared CsvImportPage/CsvImportPreview
 ├── navigation/          # StudentNav, AdminNav, DeadlineIndicator
 └── auth/, settings/, dashboard/, providers/
 
-lib/                     # prisma.ts, auth.ts, validation.ts, file-upload.ts, deadline.ts, tsv-export.ts, steckbrief-validation-dynamic.ts
+lib/                     # prisma.ts, auth.ts, validation.ts, file-upload.ts, deadline.ts, tsv-export.ts, csv-parse.ts, steckbrief-validation-dynamic.ts
 prisma/                  # schema.prisma, seed.ts, migrations/
 ```
 

@@ -9,28 +9,6 @@ interface ImportResult {
   errors: string[];
 }
 
-function parseCSVLine(line: string): string[] {
-  const result: string[] = [];
-  let current = "";
-  let inQuotes = false;
-
-  for (let i = 0; i < line.length; i++) {
-    const char = line[i];
-
-    if (char === '"') {
-      inQuotes = !inQuotes;
-    } else if ((char === "," || char === ";") && !inQuotes) {
-      result.push(current.trim());
-      current = "";
-    } else {
-      current += char;
-    }
-  }
-
-  result.push(current.trim());
-  return result;
-}
-
 function parseType(value: string): RankingQuestionType | null {
   const normalized = value.toLowerCase().trim();
   if (normalized === "schüler" || normalized === "schueler" || normalized === "student") return "STUDENT";
@@ -61,50 +39,12 @@ export async function POST(request: Request) {
       );
     }
 
-    const formData = await request.formData();
-    const file = formData.get("file") as File | null;
+    const body = await request.json();
+    const rows: Record<string, string>[] = body.rows;
 
-    if (!file) {
+    if (!rows || !Array.isArray(rows) || rows.length === 0) {
       return NextResponse.json(
-        { error: "Keine Datei hochgeladen." },
-        { status: 400 }
-      );
-    }
-
-    if (!file.name.endsWith(".csv")) {
-      return NextResponse.json(
-        { error: "Bitte lade eine CSV-Datei hoch." },
-        { status: 400 }
-      );
-    }
-
-    const text = await file.text();
-    const lines = text.split(/\r?\n/).filter((line) => line.trim());
-
-    if (lines.length < 2) {
-      return NextResponse.json(
-        { error: "Die CSV-Datei ist leer oder enthält keine Daten." },
-        { status: 400 }
-      );
-    }
-
-    const header = parseCSVLine(lines[0].toLowerCase());
-    const textIdx = header.findIndex(
-      (h) => h === "text" || h === "frage" || h === "question"
-    );
-    const typeIdx = header.findIndex(
-      (h) => h === "typ" || h === "type" || h === "kategorie"
-    );
-    const genderIdx = header.findIndex(
-      (h) => h === "geschlechtsspezifisch" || h === "gender_specific" || h === "geschlecht"
-    );
-
-    if (textIdx === -1 || typeIdx === -1) {
-      return NextResponse.json(
-        {
-          error:
-            "Die CSV-Datei muss die Spalten 'Text' und 'Typ' enthalten.",
-        },
+        { error: "Keine Daten zum Importieren." },
         { status: 400 }
       );
     }
@@ -129,11 +69,10 @@ export async function POST(request: Request) {
       order: number;
     }[] = [];
 
-    for (let i = 1; i < lines.length; i++) {
-      const values = parseCSVLine(lines[i]);
-
-      const questionText = values[textIdx]?.trim();
-      const typeRaw = values[typeIdx]?.trim();
+    for (let i = 0; i < rows.length; i++) {
+      const row = rows[i];
+      const questionText = row.text?.trim();
+      const typeRaw = row.type?.trim();
 
       if (!questionText || !typeRaw) {
         result.errors.push(`Zeile ${i + 1}: Text oder Typ fehlt.`);
@@ -148,8 +87,8 @@ export async function POST(request: Request) {
         continue;
       }
 
-      const genderSpecific = genderIdx !== -1 && values[genderIdx]
-        ? parseBoolean(values[genderIdx])
+      const genderSpecific = row.genderSpecific?.trim()
+        ? parseBoolean(row.genderSpecific)
         : false;
 
       questionsToCreate.push({
@@ -175,7 +114,7 @@ export async function POST(request: Request) {
       { status: 200 }
     );
   } catch (error) {
-    console.error("Question CSV import error:", error);
+    console.error("Question import error:", error);
     return NextResponse.json(
       { error: "Ein Fehler ist aufgetreten. Bitte versuche es erneut." },
       { status: 500 }

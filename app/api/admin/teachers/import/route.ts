@@ -9,28 +9,6 @@ interface ImportResult {
   errors: string[];
 }
 
-function parseCSVLine(line: string): string[] {
-  const result: string[] = [];
-  let current = "";
-  let inQuotes = false;
-
-  for (let i = 0; i < line.length; i++) {
-    const char = line[i];
-
-    if (char === '"') {
-      inQuotes = !inQuotes;
-    } else if ((char === "," || char === ";") && !inQuotes) {
-      result.push(current.trim());
-      current = "";
-    } else {
-      current += char;
-    }
-  }
-
-  result.push(current.trim());
-  return result;
-}
-
 function parseSalutation(value: string): Salutation | null {
   const normalized = value.toLowerCase().replace(/\./g, "").trim();
   if (normalized === "hr" || normalized === "herr") return "HERR";
@@ -56,53 +34,12 @@ export async function POST(request: Request) {
       );
     }
 
-    const formData = await request.formData();
-    const file = formData.get("file") as File | null;
+    const body = await request.json();
+    const rows: Record<string, string>[] = body.rows;
 
-    if (!file) {
+    if (!rows || !Array.isArray(rows) || rows.length === 0) {
       return NextResponse.json(
-        { error: "Keine Datei hochgeladen." },
-        { status: 400 }
-      );
-    }
-
-    if (!file.name.endsWith(".csv")) {
-      return NextResponse.json(
-        { error: "Bitte lade eine CSV-Datei hoch." },
-        { status: 400 }
-      );
-    }
-
-    const text = await file.text();
-    const lines = text.split(/\r?\n/).filter((line) => line.trim());
-
-    if (lines.length < 2) {
-      return NextResponse.json(
-        { error: "Die CSV-Datei ist leer oder enthält keine Daten." },
-        { status: 400 }
-      );
-    }
-
-    const header = parseCSVLine(lines[0].toLowerCase());
-    const salutationIdx = header.findIndex(
-      (h) => h === "anrede" || h === "salutation"
-    );
-    const lastNameIdx = header.findIndex(
-      (h) => h === "nachname" || h === "lastname" || h === "last_name"
-    );
-    const firstNameIdx = header.findIndex(
-      (h) => h === "vorname" || h === "firstname" || h === "first_name"
-    );
-    const subjectIdx = header.findIndex(
-      (h) => h === "fach" || h === "subject"
-    );
-
-    if (salutationIdx === -1 || lastNameIdx === -1) {
-      return NextResponse.json(
-        {
-          error:
-            "Die CSV-Datei muss die Spalten 'Anrede' und 'Nachname' enthalten.",
-        },
+        { error: "Keine Daten zum Importieren." },
         { status: 400 }
       );
     }
@@ -127,11 +64,10 @@ export async function POST(request: Request) {
       subject?: string;
     }[] = [];
 
-    for (let i = 1; i < lines.length; i++) {
-      const values = parseCSVLine(lines[i]);
-
-      const salutationRaw = values[salutationIdx]?.trim();
-      const lastName = values[lastNameIdx]?.trim();
+    for (let i = 0; i < rows.length; i++) {
+      const row = rows[i];
+      const salutationRaw = row.salutation?.trim();
+      const lastName = row.lastName?.trim();
 
       if (!salutationRaw || !lastName) {
         result.errors.push(`Zeile ${i + 1}: Anrede oder Nachname fehlt.`);
@@ -159,8 +95,8 @@ export async function POST(request: Request) {
         continue;
       }
 
-      const firstName = firstNameIdx !== -1 ? values[firstNameIdx]?.trim() || undefined : undefined;
-      const subject = subjectIdx !== -1 ? values[subjectIdx]?.trim() || undefined : undefined;
+      const firstName = row.firstName?.trim() || undefined;
+      const subject = row.subject?.trim() || undefined;
 
       teachersToCreate.push({ salutation, lastName, firstName, subject });
       existingKeys.add(key);
@@ -182,7 +118,7 @@ export async function POST(request: Request) {
       { status: 200 }
     );
   } catch (error) {
-    console.error("Teacher CSV import error:", error);
+    console.error("Teacher import error:", error);
     return NextResponse.json(
       { error: "Ein Fehler ist aufgetreten. Bitte versuche es erneut." },
       { status: 500 }

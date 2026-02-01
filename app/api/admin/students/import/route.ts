@@ -10,28 +10,6 @@ interface ImportResult {
   errors: string[];
 }
 
-function parseCSVLine(line: string): string[] {
-  const result: string[] = [];
-  let current = "";
-  let inQuotes = false;
-
-  for (let i = 0; i < line.length; i++) {
-    const char = line[i];
-
-    if (char === '"') {
-      inQuotes = !inQuotes;
-    } else if ((char === "," || char === ";") && !inQuotes) {
-      result.push(current.trim());
-      current = "";
-    } else {
-      current += char;
-    }
-  }
-
-  result.push(current.trim());
-  return result;
-}
-
 export async function POST(request: Request) {
   try {
     const session = await auth();
@@ -50,52 +28,12 @@ export async function POST(request: Request) {
       );
     }
 
-    const formData = await request.formData();
-    const file = formData.get("file") as File | null;
+    const body = await request.json();
+    const rows: Record<string, string>[] = body.rows;
 
-    if (!file) {
+    if (!rows || !Array.isArray(rows) || rows.length === 0) {
       return NextResponse.json(
-        { error: "Keine Datei hochgeladen." },
-        { status: 400 }
-      );
-    }
-
-    if (!file.name.endsWith(".csv")) {
-      return NextResponse.json(
-        { error: "Bitte lade eine CSV-Datei hoch." },
-        { status: 400 }
-      );
-    }
-
-    const text = await file.text();
-    const lines = text.split(/\r?\n/).filter((line) => line.trim());
-
-    if (lines.length < 2) {
-      return NextResponse.json(
-        { error: "Die CSV-Datei ist leer oder enthält keine Daten." },
-        { status: 400 }
-      );
-    }
-
-    // Parse header to find column indices
-    const header = parseCSVLine(lines[0].toLowerCase());
-    const firstNameIdx = header.findIndex(
-      (h) => h === "vorname" || h === "firstname" || h === "first_name"
-    );
-    const lastNameIdx = header.findIndex(
-      (h) => h === "nachname" || h === "lastname" || h === "last_name"
-    );
-    const emailIdx = header.findIndex((h) => h === "email" || h === "e-mail");
-    const genderIdx = header.findIndex(
-      (h) => h === "geschlecht" || h === "gender"
-    );
-
-    if (firstNameIdx === -1 || lastNameIdx === -1) {
-      return NextResponse.json(
-        {
-          error:
-            "Die CSV-Datei muss die Spalten 'Vorname' und 'Nachname' enthalten.",
-        },
+        { error: "Keine Daten zum Importieren." },
         { status: 400 }
       );
     }
@@ -119,12 +57,10 @@ export async function POST(request: Request) {
       gender?: "MALE" | "FEMALE";
     }[] = [];
 
-    // Process data rows
-    for (let i = 1; i < lines.length; i++) {
-      const values = parseCSVLine(lines[i]);
-
-      const firstName = values[firstNameIdx]?.trim();
-      const lastName = values[lastNameIdx]?.trim();
+    for (let i = 0; i < rows.length; i++) {
+      const row = rows[i];
+      const firstName = row.firstName?.trim();
+      const lastName = row.lastName?.trim();
 
       if (!firstName || !lastName) {
         result.errors.push(`Zeile ${i + 1}: Vorname oder Nachname fehlt.`);
@@ -133,14 +69,14 @@ export async function POST(request: Request) {
 
       // Generate email if not provided
       let email: string;
-      if (emailIdx !== -1 && values[emailIdx]?.trim()) {
-        email = values[emailIdx].trim().toLowerCase();
+      if (row.email?.trim()) {
+        email = row.email.trim().toLowerCase();
       } else {
         // Generate email from name: vorname.nachname@domain
         const normalizedFirstName = firstName
           .toLowerCase()
           .normalize("NFD")
-          .replace(/[\u0300-\u036f]/g, "") // Remove diacritics
+          .replace(/[\u0300-\u036f]/g, "")
           .replace(/ä/g, "ae")
           .replace(/ö/g, "oe")
           .replace(/ü/g, "ue")
@@ -178,10 +114,10 @@ export async function POST(request: Request) {
         continue;
       }
 
-      // Parse gender if column exists
+      // Parse gender
       let gender: "MALE" | "FEMALE" | undefined;
-      if (genderIdx !== -1) {
-        const genderValue = values[genderIdx]?.trim().toLowerCase();
+      if (row.gender?.trim()) {
+        const genderValue = row.gender.trim().toLowerCase();
         if (genderValue === "m" || genderValue === "männlich" || genderValue === "male") {
           gender = "MALE";
         } else if (genderValue === "w" || genderValue === "weiblich" || genderValue === "female") {
@@ -190,7 +126,7 @@ export async function POST(request: Request) {
       }
 
       studentsToCreate.push({ firstName, lastName, email, gender });
-      existingEmails.add(email); // Track for duplicates within batch
+      existingEmails.add(email);
     }
 
     // Bulk create students
