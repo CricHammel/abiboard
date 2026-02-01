@@ -144,7 +144,7 @@ export function FieldList({
                     <span className="hidden lg:inline">Max. {field.maxLength} Zeichen</span>
                   </>
                 )}
-                {field.maxFiles && (
+                {field.maxFiles && field.type === "multi-image" && (
                   <>
                     <span className="text-gray-300 hidden lg:inline">|</span>
                     <span className="hidden lg:inline">Max. {field.maxFiles} Bilder</span>
@@ -257,7 +257,7 @@ export function FieldList({
                   Max. {field.maxLength}
                 </span>
               )}
-              {field.maxFiles && (
+              {field.maxFiles && field.type === "multi-image" && (
                 <span className="px-2 py-0.5 text-xs bg-gray-100 text-gray-500 rounded">
                   {field.maxFiles} Bilder
                 </span>

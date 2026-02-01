@@ -210,6 +210,7 @@ export function TeacherManagement({ initialTeachers }: TeacherManagementProps) {
           setIsCreating(false);
           setError(null);
           setSuccessMessage(null);
+          setTimeout(() => window.scrollTo({ top: 0, behavior: "smooth" }), 50);
         }}
         onToggleActive={(teacher) =>
           setConfirmDialog({ isOpen: true, teacher })

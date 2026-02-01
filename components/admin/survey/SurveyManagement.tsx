@@ -247,6 +247,7 @@ export function SurveyManagement({ initialQuestions }: SurveyManagementProps) {
           setIsCreating(false);
           setError(null);
           setSuccessMessage(null);
+          setTimeout(() => window.scrollTo({ top: 0, behavior: "smooth" }), 50);
         }}
         onToggleActive={handleToggleActive}
         onReorder={handleReorder}
