@@ -232,7 +232,7 @@ export function StudentList({
                 {student.firstName} {student.lastName}
                 {getGenderBadge(student.gender)}
               </h3>
-              <p className="text-sm text-gray-600">{student.email}</p>
+              <p className="text-sm text-gray-600 truncate">{student.email}</p>
             </div>
 
             <div className="flex flex-wrap gap-2">

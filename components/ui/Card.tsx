@@ -14,6 +14,7 @@ export function Card({ children, className = "" }: CardProps) {
         rounded-xl
         shadow-sm
         p-6 md:p-8
+        overflow-hidden
         ${className}
       `}
     >
