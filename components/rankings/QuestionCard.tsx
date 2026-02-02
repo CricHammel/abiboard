@@ -84,7 +84,7 @@ export function QuestionCard({
               allTeachers={allTeachers}
               onSelect={(person) => onVote(question.id, person, "MALE")}
               disabled={disabled}
-              placeholder="Name eingeben..."
+              placeholder="Name eingeben und auswählen..."
             />
           </div>
           <div>
@@ -97,7 +97,7 @@ export function QuestionCard({
               allTeachers={allTeachers}
               onSelect={(person) => onVote(question.id, person, "FEMALE")}
               disabled={disabled}
-              placeholder="Name eingeben..."
+              placeholder="Name eingeben und auswählen..."
             />
           </div>
         </div>
@@ -115,7 +115,7 @@ export function QuestionCard({
         allTeachers={allTeachers}
         onSelect={(person) => onVote(question.id, person, "ALL")}
         disabled={disabled}
-        placeholder={personType === "student" ? "Schüler suchen..." : "Lehrer suchen..."}
+        placeholder={personType === "student" ? "Schüler suchen und auswählen..." : "Lehrer suchen und auswählen..."}
       />
     </div>
   );

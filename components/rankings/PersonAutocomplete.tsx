@@ -178,7 +178,7 @@ export function PersonAutocomplete({
         onFocus={() => {
           if (query.trim()) setIsOpen(true);
         }}
-        placeholder={placeholder || (personType === "student" ? "Name eingeben..." : "Lehrer suchen...")}
+        placeholder={placeholder || (personType === "student" ? "Name eingeben und auswählen..." : "Lehrer suchen und auswählen...")}
         disabled={disabled}
         className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-light min-h-[44px] text-base disabled:bg-gray-100 disabled:text-gray-500"
       />

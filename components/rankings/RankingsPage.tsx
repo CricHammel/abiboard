@@ -238,6 +238,10 @@ export function RankingsPage({ initialData, deadlinePassed = false }: RankingsPa
         />
       </div>
 
+      <Alert variant="info">
+        Tippe einen Namen ein und wähle die Person aus der Vorschlagsliste aus. Nur ausgewählte Einträge werden als Stimme gezählt.
+      </Alert>
+
       {isSubmitted && !deadlinePassed && (
         <Alert variant="info">
           Deine Rankings sind eingereicht. Wenn du eine Stimme änderst, wird der Status automatisch auf „Entwurf" zurückgesetzt und muss erneut abgeschickt werden.
