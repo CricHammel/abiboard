@@ -22,6 +22,9 @@ export async function GET() {
         ],
       },
       include: {
+        author: {
+          select: { firstName: true, lastName: true },
+        },
         targetStudent: {
           select: { firstName: true, lastName: true },
         },
@@ -32,7 +35,7 @@ export async function GET() {
       orderBy: { createdAt: "asc" },
     });
 
-    const headers = ["Typ", "Empfänger", "Kommentar"];
+    const headers = ["Typ", "Empfänger", "Autor", "Kommentar"];
     const rows = comments.map((comment) => {
       let typ: string;
       let recipient: string;
@@ -49,7 +52,8 @@ export async function GET() {
         recipient = "";
       }
 
-      return [typ, recipient, comment.text];
+      const author = `${comment.author.firstName} ${comment.author.lastName}`;
+      return [typ, recipient, author, comment.text];
     });
 
     // Sort by recipient name
