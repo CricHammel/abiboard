@@ -28,10 +28,7 @@ export async function GET() {
     const students = await prisma.student.findMany({
       where: {
         active: true,
-        NOT: [
-          { userId: null }, // Only students who have registered
-          ...(currentStudent ? [{ id: currentStudent.id }] : []), // Exclude self
-        ],
+        ...(currentStudent ? { NOT: { id: currentStudent.id } } : {}),
       },
       select: {
         id: true,

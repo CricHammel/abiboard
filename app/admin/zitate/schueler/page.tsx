@@ -13,7 +13,6 @@ export default async function AdminSchuelerzitateRoute() {
   const students = await prisma.student.findMany({
     where: {
       active: true,
-      NOT: { userId: null }, // Only registered students
     },
     select: {
       id: true,
