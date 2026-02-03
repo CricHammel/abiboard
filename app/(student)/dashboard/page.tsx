@@ -30,6 +30,7 @@ export default async function StudentDashboard() {
     teacherQuoteCount,
     studentQuoteCount,
     commentCount,
+    photoCount,
   ] = await Promise.all([
     prisma.profile.findUnique({ where: { userId } }),
     prisma.rankingSubmission.findUnique({ where: { userId } }),
@@ -39,6 +40,7 @@ export default async function StudentDashboard() {
     prisma.teacherQuote.count({ where: { userId } }),
     prisma.studentQuote.count({ where: { userId } }),
     prisma.comment.count({ where: { authorId: userId } }),
+    prisma.photo.count({ where: { userId } }),
   ]);
 
   // Status logic
@@ -64,12 +66,15 @@ export default async function StudentDashboard() {
 
   const kommentareStatus: AreaStatus = commentCount > 0 ? "done" : "not_started";
 
+  const fotosStatus: AreaStatus = photoCount > 0 ? "done" : "not_started";
+
   const completedAreas = [
     steckbriefStatus,
     rankingStatus,
     umfragenStatus,
     zitateStatus,
     kommentareStatus,
+    fotosStatus,
   ].filter((s) => s === "done").length;
 
   const areas = [
@@ -174,6 +179,26 @@ export default async function StudentDashboard() {
           ? "Schreibe weitere Kommentare für das Abibuch."
           : "Schreibe Kommentare über Mitschüler und Lehrer.",
     },
+    {
+      name: "Fotos",
+      status: fotosStatus,
+      href: "/fotos",
+      linkText: "Fotos hochladen",
+      icon: (
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+        </svg>
+      ),
+      progress:
+        photoCount > 0
+          ? `${photoCount} ${photoCount === 1 ? "Foto" : "Fotos"} hochgeladen`
+          : "Noch keine Fotos",
+      hint:
+        photoCount > 0
+          ? "Lade weitere Fotos für das Abibuch hoch."
+          : "Lade Fotos für das Abibuch hoch.",
+    },
   ];
 
   return (
@@ -190,14 +215,14 @@ export default async function StudentDashboard() {
       <Card>
         <ProgressBar
           value={completedAreas}
-          max={5}
+          max={6}
           label="Gesamtfortschritt"
-          color={completedAreas === 5 ? "green" : "primary"}
+          color={completedAreas === 6 ? "green" : "primary"}
         />
         <p className="text-sm text-gray-500 mt-2">
-          {completedAreas === 5
+          {completedAreas === 6
             ? "Alles erledigt!"
-            : `${5 - completedAreas} ${5 - completedAreas === 1 ? "Bereich" : "Bereiche"} noch offen`}
+            : `${6 - completedAreas} ${6 - completedAreas === 1 ? "Bereich" : "Bereiche"} noch offen`}
         </p>
       </Card>
 
