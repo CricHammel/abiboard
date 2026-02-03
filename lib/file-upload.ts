@@ -6,6 +6,9 @@ export const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 export const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 export const UPLOAD_DIR = 'public/uploads/profiles';
 
+export const MAX_PHOTO_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+export const PHOTO_UPLOAD_DIR = 'public/uploads/photos';
+
 export interface FileValidationResult {
   valid: boolean;
   error?: string;
@@ -57,6 +60,43 @@ export async function saveImageFile(
 
   // Return relative path from public/
   return `/uploads/profiles/${userId}/${filename}`;
+}
+
+export function validatePhotoFile(file: File): FileValidationResult {
+  if (file.size > MAX_PHOTO_FILE_SIZE) {
+    return {
+      valid: false,
+      error: 'Die Datei ist zu groß. Maximal 10 MB erlaubt.',
+    };
+  }
+
+  if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+    return {
+      valid: false,
+      error: 'Ungültiger Dateityp. Nur JPG, PNG und WebP sind erlaubt.',
+    };
+  }
+
+  return { valid: true };
+}
+
+export async function savePhotoFile(
+  file: File,
+  userId: string,
+  categoryId: string
+): Promise<string> {
+  const userDir = path.join(process.cwd(), PHOTO_UPLOAD_DIR, userId);
+
+  await fs.mkdir(userDir, { recursive: true });
+
+  const filename = generateUniqueFilename(file.name, categoryId);
+  const filepath = path.join(userDir, filename);
+
+  const arrayBuffer = await file.arrayBuffer();
+  const buffer = Buffer.from(arrayBuffer);
+  await fs.writeFile(filepath, buffer);
+
+  return `/uploads/photos/${userId}/${filename}`;
 }
 
 export async function deleteImageFile(imagePath: string): Promise<void> {

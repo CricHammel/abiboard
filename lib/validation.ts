@@ -269,6 +269,50 @@ export const updateCommentSchema = z.object({
   text: commentTextSchema,
 });
 
+// Photo Category Schemas
+export const createPhotoCategorySchema = z.object({
+  name: z
+    .string()
+    .min(1, "Bitte gib einen Namen ein.")
+    .max(100, "Der Name darf maximal 100 Zeichen lang sein."),
+  description: z
+    .string()
+    .max(500, "Die Beschreibung darf maximal 500 Zeichen lang sein.")
+    .optional()
+    .nullable(),
+  maxPerUser: z
+    .number()
+    .int("Muss eine ganze Zahl sein.")
+    .min(1, "Mindestens 1 Foto pro Person.")
+    .max(50, "Maximal 50 Fotos pro Person.")
+    .default(5),
+});
+
+export const updatePhotoCategorySchema = z
+  .object({
+    name: z
+      .string()
+      .min(1, "Bitte gib einen Namen ein.")
+      .max(100, "Der Name darf maximal 100 Zeichen lang sein.")
+      .optional(),
+    description: z
+      .string()
+      .max(500, "Die Beschreibung darf maximal 500 Zeichen lang sein.")
+      .optional()
+      .nullable(),
+    coverImageUrl: z.string().optional().nullable(),
+    maxPerUser: z
+      .number()
+      .int("Muss eine ganze Zahl sein.")
+      .min(1, "Mindestens 1 Foto pro Person.")
+      .max(50, "Maximal 50 Fotos pro Person.")
+      .optional(),
+    active: z.boolean().optional(),
+  })
+  .refine((data) => Object.keys(data).length > 0, {
+    message: "Bitte gib mindestens ein Feld zum Aktualisieren an.",
+  });
+
 // Export Types
 export type CreateTeacherQuotesInput = z.infer<typeof createTeacherQuotesSchema>;
 export type UpdateTeacherQuoteInput = z.infer<typeof updateTeacherQuoteSchema>;
@@ -290,3 +334,5 @@ export type UpdateSurveyQuestionInput = z.infer<typeof updateSurveyQuestionSchem
 export type SurveyAnswerInput = z.infer<typeof surveyAnswerSchema>;
 export type CreateCommentInput = z.infer<typeof createCommentSchema>;
 export type UpdateCommentInput = z.infer<typeof updateCommentSchema>;
+export type CreatePhotoCategoryInput = z.infer<typeof createPhotoCategorySchema>;
+export type UpdatePhotoCategoryInput = z.infer<typeof updatePhotoCategorySchema>;

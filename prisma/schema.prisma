@@ -70,6 +70,7 @@ model User {
   studentQuotes     StudentQuote[]
   surveyAnswers     SurveyAnswer[]
   commentsWritten   Comment[]     @relation("CommentsWritten")
+  photos            Photo[]
 
   @@map("users")
 }
@@ -304,6 +305,36 @@ model AppSettings {
   deadline DateTime?
 
   @@map("app_settings")
+}
+
+model PhotoCategory {
+  id            String   @id @default(cuid())
+  name          String
+  description   String?
+  coverImageUrl String?
+  maxPerUser    Int      @default(5)
+  order         Int
+  active        Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  photos        Photo[]
+
+  @@map("photo_categories")
+}
+
+model Photo {
+  id         String        @id @default(cuid())
+  imageUrl   String
+  categoryId String
+  userId     String
+  createdAt  DateTime      @default(now())
+
+  category   PhotoCategory @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  user       User          @relation(fields: [userId], references: [id])
+
+  @@index([categoryId])
+  @@index([userId])
+  @@map("photos")
 }
 
 model Comment {

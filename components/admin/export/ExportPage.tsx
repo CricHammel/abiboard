@@ -222,6 +222,18 @@ export function ExportPage({ initialDeadline }: ExportPageProps) {
         },
       ],
     },
+    {
+      title: "Fotos",
+      description: "Alle Fotos nach Rubriken sortiert als ZIP.",
+      buttons: [
+        {
+          key: "fotos-zip",
+          label: "ZIP herunterladen",
+          url: "/api/admin/export/fotos",
+          filename: "fotos.zip",
+        },
+      ],
+    },
   ];
 
   return (
