@@ -244,7 +244,7 @@ export function RankingsPage({ initialData, deadlinePassed = false }: RankingsPa
 
       {isSubmitted && !deadlinePassed && (
         <Alert variant="info">
-          Deine Rankings sind eingereicht. Wenn du eine Stimme änderst, wird der Status automatisch auf „Entwurf" zurückgesetzt und muss erneut abgeschickt werden.
+          Deine Rankings sind eingereicht. Wenn du eine Stimme änderst, wird der Status automatisch auf &bdquo;Entwurf&ldquo; zurückgesetzt und muss erneut abgeschickt werden.
         </Alert>
       )}
 
