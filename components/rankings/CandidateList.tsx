@@ -19,12 +19,27 @@ interface TeacherCandidate {
 }
 
 interface CandidateListProps {
-  students: StudentCandidate[];
-  teachers: TeacherCandidate[];
+  type: "student" | "teacher";
+  students?: StudentCandidate[];
+  teachers?: TeacherCandidate[];
 }
 
-export function CandidateList({ students, teachers }: CandidateListProps) {
+function getStudentDisplayName(student: StudentCandidate, allStudents: StudentCandidate[]): string {
+  // Check for duplicate first names - show full last name if duplicates exist
+  const duplicates = allStudents.filter(
+    (s) => s.firstName === student.firstName && s.id !== student.id
+  );
+  if (duplicates.length > 0) {
+    return `${student.firstName} ${student.lastName}`;
+  }
+  return student.firstName;
+}
+
+export function CandidateList({ type, students = [], teachers = [] }: CandidateListProps) {
   const [isOpen, setIsOpen] = useState(false);
+
+  const count = type === "student" ? students.length : teachers.length;
+  const label = type === "student" ? "Schüler" : "Lehrer";
 
   return (
     <div className="border border-gray-200 rounded-lg overflow-hidden">
@@ -33,7 +48,7 @@ export function CandidateList({ students, teachers }: CandidateListProps) {
         className="w-full flex items-center justify-between px-4 py-3 bg-gray-50 hover:bg-gray-100 transition-colors min-h-[44px]"
       >
         <span className="text-sm font-medium text-gray-700">
-          Kandidatenliste ({students.length} Schüler, {teachers.length} Lehrer)
+          Kandidatenliste ({count} {label})
         </span>
         <svg
           className={`w-5 h-5 text-gray-500 transition-transform ${isOpen ? "rotate-180" : ""}`}
@@ -46,31 +61,19 @@ export function CandidateList({ students, teachers }: CandidateListProps) {
       </button>
 
       {isOpen && (
-        <div className="p-4 space-y-4">
-          {/* Students */}
-          <div>
-            <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
-              Schüler
-            </h4>
-            <div className="flex flex-wrap gap-2">
-              {students.map((student) => (
+        <div className="p-4">
+          <div className="flex flex-wrap gap-2">
+            {type === "student" &&
+              students.map((student) => (
                 <span
                   key={student.id}
                   className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-blue-50 text-blue-700"
                 >
-                  {student.firstName}
+                  {getStudentDisplayName(student, students)}
                 </span>
               ))}
-            </div>
-          </div>
-
-          {/* Teachers */}
-          <div>
-            <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
-              Lehrer
-            </h4>
-            <div className="flex flex-wrap gap-2">
-              {teachers.map((teacher) => (
+            {type === "teacher" &&
+              teachers.map((teacher) => (
                 <span
                   key={teacher.id}
                   className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-purple-50 text-purple-700"
@@ -78,7 +81,6 @@ export function CandidateList({ students, teachers }: CandidateListProps) {
                   {formatTeacherName(teacher)}
                 </span>
               ))}
-            </div>
           </div>
         </div>
       )}

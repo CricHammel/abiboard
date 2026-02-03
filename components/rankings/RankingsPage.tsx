@@ -6,6 +6,7 @@ import { ErrorMessage } from "@/components/ui/ErrorMessage";
 import { Alert } from "@/components/ui/Alert";
 import { Badge } from "@/components/ui/Badge";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { TabNav } from "@/components/ui/TabNav";
 import { CandidateList } from "./CandidateList";
 import { QuestionCard } from "./QuestionCard";
 
@@ -66,6 +67,7 @@ export function RankingsPage({ initialData, deadlinePassed = false }: RankingsPa
     isOpen: boolean;
     action: "submit" | "retract";
   }>({ isOpen: false, action: "submit" });
+  const [activeTab, setActiveTab] = useState<"student" | "teacher">("student");
 
   const { questions, students, teachers } = initialData;
   const studentQuestions = questions.filter((q) => q.type === "STUDENT");
@@ -250,43 +252,71 @@ export function RankingsPage({ initialData, deadlinePassed = false }: RankingsPa
 
       {error && <ErrorMessage message={error} />}
 
-      {/* Candidate list for inspiration */}
-      <CandidateList students={students} teachers={teachers} />
+      {/* Tabs for student/teacher rankings */}
+      {questions.length > 0 && (
+        <>
+          <TabNav
+            tabs={[
+              { id: "student", label: `Schüler (${studentQuestions.length})` },
+              { id: "teacher", label: `Lehrer (${teacherQuestions.length})` },
+            ]}
+            activeTab={activeTab}
+            onTabChange={(tab) => setActiveTab(tab as "student" | "teacher")}
+          />
 
-      {/* Student questions */}
-      {studentQuestions.length > 0 && (
-        <div className="space-y-4">
-          <h2 className="text-xl font-semibold text-gray-900">Schüler-Rankings</h2>
-          {studentQuestions.map((question) => (
-            <QuestionCard
-              key={question.id}
-              question={question}
-              votes={votes}
-              allStudents={students}
-              allTeachers={teachers}
-              onVote={handleVote}
-              disabled={deadlinePassed}
-            />
-          ))}
-        </div>
-      )}
+          {/* Candidate list for current tab */}
+          {activeTab === "student" && (
+            <CandidateList type="student" students={students} />
+          )}
+          {activeTab === "teacher" && (
+            <CandidateList type="teacher" teachers={teachers} />
+          )}
 
-      {/* Teacher questions */}
-      {teacherQuestions.length > 0 && (
-        <div className="space-y-4">
-          <h2 className="text-xl font-semibold text-gray-900">Lehrer-Rankings</h2>
-          {teacherQuestions.map((question) => (
-            <QuestionCard
-              key={question.id}
-              question={question}
-              votes={votes}
-              allStudents={students}
-              allTeachers={teachers}
-              onVote={handleVote}
-              disabled={deadlinePassed}
-            />
-          ))}
-        </div>
+          {/* Questions for current tab */}
+          {activeTab === "student" && studentQuestions.length > 0 && (
+            <div className="space-y-4">
+              {studentQuestions.map((question) => (
+                <QuestionCard
+                  key={question.id}
+                  question={question}
+                  votes={votes}
+                  allStudents={students}
+                  allTeachers={teachers}
+                  onVote={handleVote}
+                  disabled={deadlinePassed}
+                />
+              ))}
+            </div>
+          )}
+
+          {activeTab === "teacher" && teacherQuestions.length > 0 && (
+            <div className="space-y-4">
+              {teacherQuestions.map((question) => (
+                <QuestionCard
+                  key={question.id}
+                  question={question}
+                  votes={votes}
+                  allStudents={students}
+                  allTeachers={teachers}
+                  onVote={handleVote}
+                  disabled={deadlinePassed}
+                />
+              ))}
+            </div>
+          )}
+
+          {activeTab === "student" && studentQuestions.length === 0 && (
+            <div className="text-center py-12 text-gray-500">
+              Es sind noch keine Schüler-Ranking-Fragen vorhanden.
+            </div>
+          )}
+
+          {activeTab === "teacher" && teacherQuestions.length === 0 && (
+            <div className="text-center py-12 text-gray-500">
+              Es sind noch keine Lehrer-Ranking-Fragen vorhanden.
+            </div>
+          )}
+        </>
       )}
 
       {questions.length === 0 && (

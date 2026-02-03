@@ -18,6 +18,7 @@ interface QuestionListProps {
   onToggleActive: (question: Question) => void;
   onReorder: (questions: Question[]) => void;
   disabled?: boolean;
+  reorderDisabled?: boolean;
 }
 
 export function QuestionList({
@@ -26,10 +27,13 @@ export function QuestionList({
   onToggleActive,
   onReorder,
   disabled,
+  reorderDisabled,
 }: QuestionListProps) {
   const [localQuestions, setLocalQuestions] = useState<Question[]>(questions);
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [orderChanged, setOrderChanged] = useState(false);
+
+  const canReorder = !disabled && !reorderDisabled;
 
   // Sync local state when questions prop changes
   useEffect(() => {
@@ -37,14 +41,14 @@ export function QuestionList({
   }, [questions]);
 
   const handleDragStart = (index: number) => {
-    if (disabled) return;
+    if (!canReorder) return;
     setDraggedIndex(index);
     setOrderChanged(false);
   };
 
   const handleDragOver = (e: React.DragEvent, index: number) => {
     e.preventDefault();
-    if (draggedIndex === null || draggedIndex === index || disabled) return;
+    if (draggedIndex === null || draggedIndex === index || !canReorder) return;
 
     const newQuestions = [...localQuestions];
     const [draggedItem] = newQuestions.splice(draggedIndex, 1);
@@ -64,7 +68,7 @@ export function QuestionList({
   };
 
   const moveQuestion = (index: number, direction: "up" | "down") => {
-    if (disabled) return;
+    if (!canReorder) return;
     const newIndex = direction === "up" ? index - 1 : index + 1;
     if (newIndex < 0 || newIndex >= localQuestions.length) return;
 
@@ -79,23 +83,28 @@ export function QuestionList({
   if (localQuestions.length === 0) {
     return (
       <div className="text-center py-12 text-gray-500">
-        Keine Fragen vorhanden. Erstelle die erste Frage.
+        Keine Fragen gefunden.
       </div>
     );
   }
 
   return (
     <div className="space-y-2">
+      {reorderDisabled && (
+        <p className="text-xs text-amber-600 mb-2">
+          Reihenfolge ändern nur ohne Filter/Suche möglich.
+        </p>
+      )}
       {localQuestions.map((question, index) => (
         <div
           key={question.id}
-          draggable={!disabled}
+          draggable={canReorder}
           onDragStart={() => handleDragStart(index)}
           onDragOver={(e) => handleDragOver(e, index)}
           onDragEnd={handleDragEnd}
           className={`
             p-4 bg-white border rounded-lg
-            ${!disabled ? "cursor-move" : ""}
+            ${canReorder ? "cursor-move" : ""}
             ${draggedIndex === index ? "opacity-50" : ""}
             ${!question.active ? "opacity-60 bg-gray-50" : ""}
             transition-all
@@ -144,7 +153,7 @@ export function QuestionList({
             <div className="flex flex-col gap-1 lg:hidden flex-shrink-0">
               <button
                 onClick={() => moveQuestion(index, "up")}
-                disabled={disabled || index === 0}
+                disabled={!canReorder || index === 0}
                 className="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-30"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -153,7 +162,7 @@ export function QuestionList({
               </button>
               <button
                 onClick={() => moveQuestion(index, "down")}
-                disabled={disabled || index === localQuestions.length - 1}
+                disabled={!canReorder || index === localQuestions.length - 1}
                 className="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-30"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -204,7 +213,7 @@ export function QuestionList({
               <div className="flex items-center gap-1">
                 <button
                   onClick={() => moveQuestion(index, "up")}
-                  disabled={disabled || index === 0}
+                  disabled={!canReorder || index === 0}
                   className="p-2 text-gray-400 hover:text-gray-600 disabled:opacity-30"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -213,7 +222,7 @@ export function QuestionList({
                 </button>
                 <button
                   onClick={() => moveQuestion(index, "down")}
-                  disabled={disabled || index === localQuestions.length - 1}
+                  disabled={!canReorder || index === localQuestions.length - 1}
                   className="p-2 text-gray-400 hover:text-gray-600 disabled:opacity-30"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

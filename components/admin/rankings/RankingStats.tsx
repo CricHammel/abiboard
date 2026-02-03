@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 
 interface Question {
   id: string;
@@ -46,6 +46,20 @@ export function RankingStats({ initialData }: RankingStatsProps) {
   const [expandedQuestion, setExpandedQuestion] = useState<string | null>(null);
   const [questionResults, setQuestionResults] = useState<Record<string, QuestionResults>>({});
   const [loadingQuestion, setLoadingQuestion] = useState<string | null>(null);
+
+  // Search and filter state for questions
+  const [searchTerm, setSearchTerm] = useState("");
+  const [typeFilter, setTypeFilter] = useState<"ALL" | "STUDENT" | "TEACHER">("ALL");
+
+  const filteredQuestions = useMemo(() => {
+    return questions.filter((q) => {
+      const matchesSearch = q.text.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesType = typeFilter === "ALL" || q.type === typeFilter;
+      return matchesSearch && matchesType;
+    });
+  }, [questions, searchTerm, typeFilter]);
+
+  const isFiltered = searchTerm !== "" || typeFilter !== "ALL";
 
   const toggleQuestion = async (questionId: string) => {
     if (expandedQuestion === questionId) {
@@ -145,7 +159,42 @@ export function RankingStats({ initialData }: RankingStatsProps) {
       {questions.length > 0 && (
         <div className="space-y-3">
           <h2 className="text-xl font-semibold text-gray-900">Ergebnisse pro Frage</h2>
-          {questions.map((question) => (
+
+          {/* Search and filters */}
+          <div className="flex flex-col sm:flex-row gap-3">
+            <div className="flex-1">
+              <input
+                type="text"
+                placeholder="Fragen durchsuchen..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-light min-h-[44px]"
+              />
+            </div>
+            <select
+              value={typeFilter}
+              onChange={(e) => setTypeFilter(e.target.value as "ALL" | "STUDENT" | "TEACHER")}
+              className="px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-light min-h-[44px]"
+            >
+              <option value="ALL">Alle Typen</option>
+              <option value="STUDENT">Schüler</option>
+              <option value="TEACHER">Lehrer</option>
+            </select>
+          </div>
+
+          {isFiltered && (
+            <p className="text-sm text-gray-500">
+              {filteredQuestions.length} von {questions.length} Fragen
+            </p>
+          )}
+
+          {filteredQuestions.length === 0 && isFiltered && (
+            <div className="text-center py-8 text-gray-500">
+              Keine Fragen gefunden.
+            </div>
+          )}
+
+          {filteredQuestions.map((question) => (
             <div key={question.id} className="border border-gray-200 rounded-lg overflow-hidden">
               <button
                 onClick={() => toggleQuestion(question.id)}

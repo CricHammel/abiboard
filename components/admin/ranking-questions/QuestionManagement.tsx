@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/Button";
 import { ErrorMessage } from "@/components/ui/ErrorMessage";
 import { Alert } from "@/components/ui/Alert";
@@ -27,6 +27,25 @@ export function QuestionManagement({ initialQuestions }: QuestionManagementProps
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
+  // Search and filter state
+  const [searchTerm, setSearchTerm] = useState("");
+  const [typeFilter, setTypeFilter] = useState<"ALL" | "STUDENT" | "TEACHER">("ALL");
+  const [statusFilter, setStatusFilter] = useState<"ALL" | "ACTIVE" | "INACTIVE">("ALL");
+
+  const filteredQuestions = useMemo(() => {
+    return questions.filter((q) => {
+      const matchesSearch = q.text.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesType = typeFilter === "ALL" || q.type === typeFilter;
+      const matchesStatus =
+        statusFilter === "ALL" ||
+        (statusFilter === "ACTIVE" && q.active) ||
+        (statusFilter === "INACTIVE" && !q.active);
+      return matchesSearch && matchesType && matchesStatus;
+    });
+  }, [questions, searchTerm, typeFilter, statusFilter]);
+
+  const isFiltered = searchTerm !== "" || typeFilter !== "ALL" || statusFilter !== "ALL";
 
   const handleCreate = async (data: {
     text: string;
@@ -187,9 +206,42 @@ export function QuestionManagement({ initialQuestions }: QuestionManagementProps
         <Alert variant="success">{successMessage}</Alert>
       )}
 
+      {/* Search and filters */}
+      <div className="flex flex-col sm:flex-row gap-3">
+        <div className="flex-1">
+          <input
+            type="text"
+            placeholder="Fragen durchsuchen..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-light min-h-[44px]"
+          />
+        </div>
+        <select
+          value={typeFilter}
+          onChange={(e) => setTypeFilter(e.target.value as "ALL" | "STUDENT" | "TEACHER")}
+          className="px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-light min-h-[44px]"
+        >
+          <option value="ALL">Alle Typen</option>
+          <option value="STUDENT">Schüler</option>
+          <option value="TEACHER">Lehrer</option>
+        </select>
+        <select
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value as "ALL" | "ACTIVE" | "INACTIVE")}
+          className="px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-light min-h-[44px]"
+        >
+          <option value="ALL">Alle Status</option>
+          <option value="ACTIVE">Aktiv</option>
+          <option value="INACTIVE">Inaktiv</option>
+        </select>
+      </div>
+
       <div className="flex justify-between items-center">
         <h2 className="text-lg font-semibold text-gray-900">
-          {questions.length} Fragen
+          {isFiltered
+            ? `${filteredQuestions.length} von ${questions.length} Fragen`
+            : `${questions.length} Fragen`}
         </h2>
         <Button
           onClick={() => {
@@ -233,7 +285,7 @@ export function QuestionManagement({ initialQuestions }: QuestionManagementProps
       )}
 
       <QuestionList
-        questions={questions}
+        questions={filteredQuestions}
         onEdit={(question) => {
           setEditingQuestion(question);
           setIsCreating(false);
@@ -244,6 +296,7 @@ export function QuestionManagement({ initialQuestions }: QuestionManagementProps
         onToggleActive={handleToggleActive}
         onReorder={handleReorder}
         disabled={isLoading || isCreating || !!editingQuestion}
+        reorderDisabled={isFiltered}
       />
     </div>
   );
