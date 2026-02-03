@@ -16,10 +16,11 @@
 - Propose structure/approach BEFORE implementing, wait for approval
 - No over-engineering — implement only what's requested
 - UI must follow design system in `DESIGN.md` (mobile-first, 44px touch targets, WCAG AA)
+- Always use `npm run build` and `npx eslint` to verify the code works (you can shorten/filter the output if it eats up too much context)
 
 ### Git
 - Commit after each meaningful change, descriptive messages in English
-- Never use `cd` — always work from root directory
+- Never use `cd` — you can be sure that you always work from root directory (if not, use `pwd` to see your current directory)
 - Use `git reset HEAD~1` for soft undo, `git reset --hard HEAD~1` for hard undo
 - Always verify with `git log` before resetting
 
@@ -49,6 +50,7 @@ npx prisma migrate dev --name <name>  # Create migration
 npx prisma generate      # Regenerate client
 npx prisma studio        # DB GUI
 npx prisma db seed       # Seed data
+npx eslint .             # Run ESLint
 ```
 
 ## Project Structure
