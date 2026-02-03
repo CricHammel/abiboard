@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { FieldType } from "@prisma/client";
 import { SteckbriefForm } from "@/components/steckbrief/SteckbriefForm";
+import { ContactInfoForm } from "@/components/steckbrief/ContactInfoForm";
 import { Card } from "@/components/ui/Card";
 import { Alert } from "@/components/ui/Alert";
 import { toFieldDefinition } from "@/lib/steckbrief-validation-dynamic";
@@ -97,6 +98,15 @@ export default async function SteckbriefPage() {
           deadlinePassed={deadlinePassed}
         />
       </Card>
+
+      <ContactInfoForm
+        initialData={{
+          contactEmail: profile.contactEmail || "",
+          contactPhone: profile.contactPhone || "",
+          contactInsta: profile.contactInsta || "",
+        }}
+        deadlinePassed={deadlinePassed}
+      />
     </div>
   );
 }

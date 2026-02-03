@@ -234,6 +234,18 @@ export function ExportPage({ initialDeadline }: ExportPageProps) {
         },
       ],
     },
+    {
+      title: "Kontaktdaten",
+      description: "Private Kontaktdaten für das Abibuch (E-Mail, Telefon, Instagram).",
+      buttons: [
+        {
+          key: "kontaktdaten",
+          label: "TSV herunterladen",
+          url: "/api/admin/export/kontaktdaten",
+          filename: "kontaktdaten.tsv",
+        },
+      ],
+    },
   ];
 
   return (
