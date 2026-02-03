@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth";
 import { buildTsv, tsvResponse } from "@/lib/tsv-export";
 import { NextResponse } from "next/server";
 import { isDeadlinePassed } from "@/lib/deadline";
+import { formatTeacherName } from "@/lib/format";
 
 export async function GET() {
   try {
@@ -87,9 +88,7 @@ export async function GET() {
           if (vote.student) {
             name = `${vote.student.firstName} ${vote.student.lastName}`;
           } else if (vote.teacher) {
-            const sal = vote.teacher.salutation === "HERR" ? "Hr." : "Fr.";
-            name = `${sal} ${vote.teacher.lastName}`;
-            if (vote.teacher.subject) name += ` (${vote.teacher.subject})`;
+            name = formatTeacherName(vote.teacher);
           }
           aggregated[key] = { name, count: 0, genderTarget: vote.genderTarget };
         }

@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { buildTsv, tsvResponse } from "@/lib/tsv-export";
 import { NextResponse } from "next/server";
+import { formatTeacherName } from "@/lib/format";
 
 export async function GET() {
   try {
@@ -29,7 +30,7 @@ export async function GET() {
           select: { firstName: true, lastName: true },
         },
         targetTeacher: {
-          select: { salutation: true, firstName: true, lastName: true },
+          select: { salutation: true, lastName: true, subject: true },
         },
       },
       orderBy: { createdAt: "asc" },
@@ -45,8 +46,7 @@ export async function GET() {
         recipient = `${comment.targetStudent.firstName} ${comment.targetStudent.lastName}`;
       } else if (comment.targetTeacher) {
         typ = "Lehrer/in";
-        const sal = comment.targetTeacher.salutation === "HERR" ? "Hr." : "Fr.";
-        recipient = `${sal} ${comment.targetTeacher.lastName}`;
+        recipient = formatTeacherName(comment.targetTeacher);
       } else {
         typ = "Unbekannt";
         recipient = "";

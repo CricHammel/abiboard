@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { formatTeacherName } from "@/lib/format";
 
 interface StudentCandidate {
   id: string;
@@ -74,8 +75,7 @@ export function CandidateList({ students, teachers }: CandidateListProps) {
                   key={teacher.id}
                   className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-purple-50 text-purple-700"
                 >
-                  {teacher.salutation === "HERR" ? "Hr." : "Fr."} {teacher.lastName}
-                  {teacher.subject && ` (${teacher.subject})`}
+                  {formatTeacherName(teacher)}
                 </span>
               ))}
             </div>

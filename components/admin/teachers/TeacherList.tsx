@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/Button";
+import { formatTeacherName } from "@/lib/format";
 
 interface Teacher {
   id: string;
@@ -43,10 +44,7 @@ export function TeacherList({
   }, [teachers, searchTerm, hideInactive]);
 
   const formatName = (teacher: Teacher) => {
-    const salutation = teacher.salutation === "HERR" ? "Hr." : "Fr.";
-    return teacher.firstName
-      ? `${salutation} ${teacher.firstName} ${teacher.lastName}`
-      : `${salutation} ${teacher.lastName}`;
+    return formatTeacherName(teacher, { includeSubject: false });
   };
 
   return (

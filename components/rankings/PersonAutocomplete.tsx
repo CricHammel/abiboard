@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
+import { formatTeacherName } from "@/lib/format";
 
 interface StudentOption {
   id: string;
@@ -34,20 +35,18 @@ interface PersonAutocompleteProps {
 }
 
 function getStudentDisplayName(student: StudentOption, allStudents?: StudentOption[]): string {
-  // Check for duplicate first names
+  // Check for duplicate first names - show full last name if duplicates exist
   const duplicates = allStudents?.filter(
     (s) => s.firstName === student.firstName && s.id !== student.id
   );
   if (duplicates && duplicates.length > 0) {
-    return `${student.firstName} ${student.lastName.charAt(0)}.`;
+    return `${student.firstName} ${student.lastName}`;
   }
   return student.firstName;
 }
 
 function getTeacherDisplayName(teacher: TeacherOption): string {
-  const salutation = teacher.salutation === "HERR" ? "Hr." : "Fr.";
-  const name = `${salutation} ${teacher.lastName}`;
-  return teacher.subject ? `${name} (${teacher.subject})` : name;
+  return formatTeacherName(teacher);
 }
 
 export function PersonAutocomplete({

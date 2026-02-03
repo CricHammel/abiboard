@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/Button";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { formatTeacherName } from "@/lib/format";
 
 interface Quote {
   id: string;
@@ -17,8 +18,7 @@ interface Quote {
 
 interface Teacher {
   id: string;
-  salutation: string;
-  firstName: string | null;
+  salutation: "HERR" | "FRAU";
   lastName: string;
   subject: string | null;
 }
@@ -38,7 +38,7 @@ export function TeacherQuoteAdminDetail({ teacher, initialQuotes, backPath = "/a
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
-  const teacherDisplayName = `${teacher.salutation === "HERR" ? "Herr" : "Frau"} ${teacher.firstName ? `${teacher.firstName} ` : ""}${teacher.lastName}`;
+  const teacherDisplayName = formatTeacherName(teacher);
 
   const handleStartEdit = (quote: Quote) => {
     setEditingId(quote.id);
@@ -134,9 +134,6 @@ export function TeacherQuoteAdminDetail({ teacher, initialQuotes, backPath = "/a
           Zurück
         </Link>
         <h1 className="text-2xl font-bold text-gray-900">{teacherDisplayName}</h1>
-        {teacher.subject && (
-          <p className="text-gray-500 mt-1">{teacher.subject}</p>
-        )}
         <p className="text-sm text-gray-500 mt-1">{quotes.length} Zitat{quotes.length !== 1 ? "e" : ""}</p>
       </div>
 

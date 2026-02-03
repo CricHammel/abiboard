@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { QuoteInput } from "./QuoteInput";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { formatTeacherName } from "@/lib/format";
 
 interface Quote {
   id: string;
@@ -14,8 +15,7 @@ interface Quote {
 
 interface Teacher {
   id: string;
-  salutation: string;
-  firstName: string | null;
+  salutation: "HERR" | "FRAU";
   lastName: string;
   subject: string | null;
 }
@@ -42,7 +42,7 @@ export function TeacherQuoteDetail({ teacher, initialQuotes, backPath = "/zitate
   const ownQuotes = quotes.filter((q) => q.isOwn);
   const otherQuotes = quotes.filter((q) => !q.isOwn);
 
-  const teacherDisplayName = `${teacher.salutation === "HERR" ? "Herr" : "Frau"} ${teacher.firstName ? `${teacher.firstName} ` : ""}${teacher.lastName}`;
+  const teacherDisplayName = formatTeacherName(teacher);
 
   const handleAddQuotes = async (quoteTexts: string[]) => {
     setIsSubmitting(true);
@@ -118,9 +118,6 @@ export function TeacherQuoteDetail({ teacher, initialQuotes, backPath = "/zitate
           Zurück
         </Link>
         <h1 className="text-2xl font-bold text-gray-900">{teacherDisplayName}</h1>
-        {teacher.subject && (
-          <p className="text-gray-500 mt-1">{teacher.subject}</p>
-        )}
       </div>
 
       {/* Messages */}

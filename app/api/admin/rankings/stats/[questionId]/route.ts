@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
+import { formatTeacherName } from "@/lib/format";
 
 export async function GET(
   request: Request,
@@ -77,9 +78,7 @@ export async function GET(
           name = `${vote.student.firstName} ${vote.student.lastName}`;
           personType = "student";
         } else if (vote.teacher) {
-          const salutation = vote.teacher.salutation === "HERR" ? "Hr." : "Fr.";
-          name = `${salutation} ${vote.teacher.lastName}`;
-          if (vote.teacher.subject) name += ` (${vote.teacher.subject})`;
+          name = formatTeacherName(vote.teacher);
           personType = "teacher";
         }
 

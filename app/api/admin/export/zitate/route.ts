@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { buildTsv, tsvResponse } from "@/lib/tsv-export";
 import { NextResponse } from "next/server";
+import { formatTeacherName } from "@/lib/format";
 
 export async function GET(request: Request) {
   try {
@@ -49,13 +50,9 @@ async function exportTeacherQuotes(): Promise<Response> {
     ],
   });
 
-  const headers = ["Lehrer", "Anrede", "Fach", "Zitat"];
+  const headers = ["Lehrer", "Zitat"];
   const rows = quotes.map((q) => {
-    const sal = q.teacher.salutation === "HERR" ? "Herr" : "Frau";
-    const name = q.teacher.firstName
-      ? `${q.teacher.firstName} ${q.teacher.lastName}`
-      : q.teacher.lastName;
-    return [name, sal, q.teacher.subject || "", q.text];
+    return [formatTeacherName(q.teacher), q.text];
   });
 
   const tsv = buildTsv(headers, rows);
