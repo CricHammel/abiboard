@@ -7,11 +7,13 @@ import { Alert } from "@/components/ui/Alert";
 import { QuestionList } from "./QuestionList";
 import { QuestionForm } from "./QuestionForm";
 
+type AnswerMode = "SINGLE" | "GENDER_SPECIFIC" | "DUO";
+
 interface Question {
   id: string;
   text: string;
   type: "STUDENT" | "TEACHER";
-  genderSpecific: boolean;
+  answerMode: AnswerMode;
   order: number;
   active: boolean;
 }
@@ -50,7 +52,7 @@ export function QuestionManagement({ initialQuestions }: QuestionManagementProps
   const handleCreate = async (data: {
     text: string;
     type: "STUDENT" | "TEACHER";
-    genderSpecific: boolean;
+    answerMode: AnswerMode;
   }) => {
     setIsLoading(true);
     setError(null);
@@ -86,7 +88,7 @@ export function QuestionManagement({ initialQuestions }: QuestionManagementProps
   const handleUpdate = async (data: {
     text: string;
     type: "STUDENT" | "TEACHER";
-    genderSpecific: boolean;
+    answerMode: AnswerMode;
   }) => {
     if (!editingQuestion) return;
 

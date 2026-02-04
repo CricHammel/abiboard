@@ -29,11 +29,13 @@ type PersonOption =
   | { type: "student"; data: StudentOption }
   | { type: "teacher"; data: TeacherOption };
 
+type AnswerMode = "SINGLE" | "GENDER_SPECIFIC" | "DUO";
+
 interface Question {
   id: string;
   text: string;
   type: "STUDENT" | "TEACHER";
-  genderSpecific: boolean;
+  answerMode: AnswerMode;
   order: number;
 }
 
@@ -43,6 +45,8 @@ interface Vote {
   genderTarget: "MALE" | "FEMALE" | "ALL";
   student?: StudentOption | null;
   teacher?: TeacherOption | null;
+  student2?: StudentOption | null;
+  teacher2?: TeacherOption | null;
 }
 
 interface RankingsPageProps {
@@ -77,48 +81,49 @@ export function RankingsPage({ initialData, deadlinePassed = false }: RankingsPa
 
   // Count answered questions
   const answeredCount = new Set(votes.map((v) => `${v.questionId}-${v.genderTarget}`)).size;
-  const totalSlots = questions.reduce((acc, q) => acc + (q.genderSpecific ? 2 : 1), 0);
+  const totalSlots = questions.reduce((acc, q) => acc + (q.answerMode === "GENDER_SPECIFIC" ? 2 : 1), 0);
 
   const handleVote = async (
     questionId: string,
     person: PersonOption | null,
-    genderTarget: "MALE" | "FEMALE" | "ALL"
+    genderTarget: "MALE" | "FEMALE" | "ALL",
+    person2?: PersonOption | null
   ) => {
     setError(null);
 
-    if (!person) {
-      // Delete vote
-      try {
-        const response = await fetch(
-          `/api/rankings/vote/${questionId}?genderTarget=${genderTarget}`,
-          { method: "DELETE" }
-        );
-        const data = await response.json();
-        setVotes((prev) =>
-          prev.filter(
-            (v) => !(v.questionId === questionId && v.genderTarget === genderTarget)
-          )
-        );
-        // Auto-retract: update status if server changed it
-        if (data.status) {
-          setStatus(data.status);
-        }
-      } catch {
-        setError("Fehler beim Löschen der Stimme.");
-      }
+    // Find the question to check if it's Duo mode
+    const question = questions.find((q) => q.id === questionId);
+    const isDuo = question?.answerMode === "DUO";
+
+    // For non-Duo: delete if person is null
+    if (!person && !isDuo) {
+      await handleDeleteVote(questionId, genderTarget);
+      return;
+    }
+
+    // For Duo mode, require both persons (partial selections are handled in DuoQuestionCard)
+    if (isDuo && (!person || !person2)) {
       return;
     }
 
     // Save vote
     try {
-      const body: Record<string, string> = {
+      const body: Record<string, string | null> = {
         questionId,
         genderTarget,
       };
-      if (person.type === "student") {
+      if (person?.type === "student") {
         body.studentId = person.data.id;
-      } else {
+      } else if (person?.type === "teacher") {
         body.teacherId = person.data.id;
+      }
+      // Add second person for Duo mode
+      if (isDuo && person2) {
+        if (person2.type === "student") {
+          body.studentId2 = person2.data.id;
+        } else if (person2.type === "teacher") {
+          body.teacherId2 = person2.data.id;
+        }
       }
 
       const response = await fetch("/api/rankings", {
@@ -147,6 +152,31 @@ export function RankingsPage({ initialData, deadlinePassed = false }: RankingsPa
       }
     } catch {
       setError("Fehler beim Speichern der Stimme.");
+    }
+  };
+
+  const handleDeleteVote = async (
+    questionId: string,
+    genderTarget: "MALE" | "FEMALE" | "ALL"
+  ) => {
+    setError(null);
+    try {
+      const response = await fetch(
+        `/api/rankings/vote/${questionId}?genderTarget=${genderTarget}`,
+        { method: "DELETE" }
+      );
+      const data = await response.json();
+      setVotes((prev) =>
+        prev.filter(
+          (v) => !(v.questionId === questionId && v.genderTarget === genderTarget)
+        )
+      );
+      // Auto-retract: update status if server changed it
+      if (data.status) {
+        setStatus(data.status);
+      }
+    } catch {
+      setError("Fehler beim Löschen der Stimme.");
     }
   };
 
@@ -283,6 +313,7 @@ export function RankingsPage({ initialData, deadlinePassed = false }: RankingsPa
                   allStudents={students}
                   allTeachers={teachers}
                   onVote={handleVote}
+                  onDeleteVote={handleDeleteVote}
                   disabled={deadlinePassed}
                 />
               ))}
@@ -299,6 +330,7 @@ export function RankingsPage({ initialData, deadlinePassed = false }: RankingsPa
                   allStudents={students}
                   allTeachers={teachers}
                   onVote={handleVote}
+                  onDeleteVote={handleDeleteVote}
                   disabled={deadlinePassed}
                 />
               ))}

@@ -32,6 +32,8 @@ export async function GET() {
         include: {
           student: { select: { id: true, firstName: true, lastName: true, gender: true } },
           teacher: { select: { id: true, salutation: true, firstName: true, lastName: true, subject: true } },
+          student2: { select: { id: true, firstName: true, lastName: true, gender: true } },
+          teacher2: { select: { id: true, salutation: true, firstName: true, lastName: true, subject: true } },
         },
       }),
       prisma.rankingSubmission.findFirst({
@@ -69,6 +71,8 @@ const voteSchema = z.object({
   questionId: z.string(),
   studentId: z.string().optional().nullable(),
   teacherId: z.string().optional().nullable(),
+  studentId2: z.string().optional().nullable(),
+  teacherId2: z.string().optional().nullable(),
   genderTarget: z.enum(["MALE", "FEMALE", "ALL"]),
 });
 
@@ -107,7 +111,7 @@ export async function PATCH(request: Request) {
       );
     }
 
-    const { questionId, studentId, teacherId, genderTarget } = validation.data;
+    let { questionId, studentId, teacherId, studentId2, teacherId2, genderTarget } = validation.data;
 
     // Validate question exists and is active
     const question = await prisma.rankingQuestion.findFirst({
@@ -121,73 +125,135 @@ export async function PATCH(request: Request) {
       );
     }
 
-    // Validate genderTarget matches question
-    if (question.genderSpecific && genderTarget === "ALL") {
+    // Validate genderTarget matches answerMode
+    if (question.answerMode === "GENDER_SPECIFIC" && genderTarget === "ALL") {
       return NextResponse.json(
         { error: "Diese Frage erfordert eine geschlechtsspezifische Antwort." },
         { status: 400 }
       );
     }
-    if (!question.genderSpecific && genderTarget !== "ALL") {
+    if (question.answerMode !== "GENDER_SPECIFIC" && genderTarget !== "ALL") {
       return NextResponse.json(
         { error: "Diese Frage ist nicht geschlechtsspezifisch." },
         { status: 400 }
       );
     }
 
-    // Validate person exists and matches type
-    if (question.type === "STUDENT") {
-      if (!studentId) {
-        return NextResponse.json(
-          { error: "Bitte wähle einen Schüler aus." },
-          { status: 400 }
-        );
-      }
-      const student = await prisma.student.findFirst({
-        where: { id: studentId, active: true },
-      });
-      if (!student) {
-        return NextResponse.json(
-          { error: "Schüler nicht gefunden." },
-          { status: 404 }
-        );
-      }
-      // Validate gender for gender-specific questions
-      if (question.genderSpecific && student.gender) {
-        const expectedGender = genderTarget === "MALE" ? "MALE" : "FEMALE";
-        if (student.gender !== expectedGender) {
+    // Duo mode validation
+    if (question.answerMode === "DUO") {
+      if (question.type === "STUDENT") {
+        if (!studentId || !studentId2) {
           return NextResponse.json(
-            { error: "Das Geschlecht des Schülers passt nicht zur Frage." },
+            { error: "Bitte wähle zwei Schüler aus." },
             { status: 400 }
+          );
+        }
+        if (studentId === studentId2) {
+          return NextResponse.json(
+            { error: "Bitte wähle zwei verschiedene Schüler aus." },
+            { status: 400 }
+          );
+        }
+        // Normalize IDs (sort to ensure Max+Lisa = Lisa+Max)
+        if (studentId > studentId2) {
+          [studentId, studentId2] = [studentId2, studentId];
+        }
+        // Validate both students exist
+        const students = await prisma.student.findMany({
+          where: { id: { in: [studentId, studentId2] }, active: true },
+        });
+        if (students.length !== 2) {
+          return NextResponse.json(
+            { error: "Einer oder beide Schüler wurden nicht gefunden." },
+            { status: 404 }
+          );
+        }
+      } else {
+        if (!teacherId || !teacherId2) {
+          return NextResponse.json(
+            { error: "Bitte wähle zwei Lehrer aus." },
+            { status: 400 }
+          );
+        }
+        if (teacherId === teacherId2) {
+          return NextResponse.json(
+            { error: "Bitte wähle zwei verschiedene Lehrer aus." },
+            { status: 400 }
+          );
+        }
+        // Normalize IDs
+        if (teacherId > teacherId2) {
+          [teacherId, teacherId2] = [teacherId2, teacherId];
+        }
+        // Validate both teachers exist
+        const teachers = await prisma.teacher.findMany({
+          where: { id: { in: [teacherId, teacherId2] }, active: true },
+        });
+        if (teachers.length !== 2) {
+          return NextResponse.json(
+            { error: "Einer oder beide Lehrer wurden nicht gefunden." },
+            { status: 404 }
           );
         }
       }
     } else {
-      if (!teacherId) {
-        return NextResponse.json(
-          { error: "Bitte wähle einen Lehrer aus." },
-          { status: 400 }
-        );
-      }
-      const teacher = await prisma.teacher.findFirst({
-        where: { id: teacherId, active: true },
-      });
-      if (!teacher) {
-        return NextResponse.json(
-          { error: "Lehrer nicht gefunden." },
-          { status: 404 }
-        );
-      }
-      // Validate gender for gender-specific questions
-      if (question.genderSpecific) {
-        const expectedSalutation = genderTarget === "MALE" ? "HERR" : "FRAU";
-        if (teacher.salutation !== expectedSalutation) {
+      // Single or Gender-Specific mode: validate single person
+      if (question.type === "STUDENT") {
+        if (!studentId) {
           return NextResponse.json(
-            { error: "Das Geschlecht des Lehrers passt nicht zur Frage." },
+            { error: "Bitte wähle einen Schüler aus." },
             { status: 400 }
           );
         }
+        const student = await prisma.student.findFirst({
+          where: { id: studentId, active: true },
+        });
+        if (!student) {
+          return NextResponse.json(
+            { error: "Schüler nicht gefunden." },
+            { status: 404 }
+          );
+        }
+        // Validate gender for gender-specific questions
+        if (question.answerMode === "GENDER_SPECIFIC" && student.gender) {
+          const expectedGender = genderTarget === "MALE" ? "MALE" : "FEMALE";
+          if (student.gender !== expectedGender) {
+            return NextResponse.json(
+              { error: "Das Geschlecht des Schülers passt nicht zur Frage." },
+              { status: 400 }
+            );
+          }
+        }
+      } else {
+        if (!teacherId) {
+          return NextResponse.json(
+            { error: "Bitte wähle einen Lehrer aus." },
+            { status: 400 }
+          );
+        }
+        const teacher = await prisma.teacher.findFirst({
+          where: { id: teacherId, active: true },
+        });
+        if (!teacher) {
+          return NextResponse.json(
+            { error: "Lehrer nicht gefunden." },
+            { status: 404 }
+          );
+        }
+        // Validate gender for gender-specific questions
+        if (question.answerMode === "GENDER_SPECIFIC") {
+          const expectedSalutation = genderTarget === "MALE" ? "HERR" : "FRAU";
+          if (teacher.salutation !== expectedSalutation) {
+            return NextResponse.json(
+              { error: "Das Geschlecht des Lehrers passt nicht zur Frage." },
+              { status: 400 }
+            );
+          }
+        }
       }
+      // Clear second person for non-Duo modes
+      studentId2 = null;
+      teacherId2 = null;
     }
 
     // Upsert vote
@@ -205,14 +271,20 @@ export async function PATCH(request: Request) {
         genderTarget,
         studentId: question.type === "STUDENT" ? studentId : null,
         teacherId: question.type === "TEACHER" ? teacherId : null,
+        studentId2: question.type === "STUDENT" ? studentId2 : null,
+        teacherId2: question.type === "TEACHER" ? teacherId2 : null,
       },
       update: {
         studentId: question.type === "STUDENT" ? studentId : null,
         teacherId: question.type === "TEACHER" ? teacherId : null,
+        studentId2: question.type === "STUDENT" ? studentId2 : null,
+        teacherId2: question.type === "TEACHER" ? teacherId2 : null,
       },
       include: {
         student: { select: { id: true, firstName: true, lastName: true, gender: true } },
         teacher: { select: { id: true, salutation: true, firstName: true, lastName: true, subject: true } },
+        student2: { select: { id: true, firstName: true, lastName: true, gender: true } },
+        teacher2: { select: { id: true, salutation: true, firstName: true, lastName: true, subject: true } },
       },
     });
 

@@ -4,11 +4,13 @@ import { useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 
+type AnswerMode = "SINGLE" | "GENDER_SPECIFIC" | "DUO";
+
 interface Question {
   id: string;
   text: string;
   type: "STUDENT" | "TEACHER";
-  genderSpecific: boolean;
+  answerMode: AnswerMode;
   order: number;
   active: boolean;
 }
@@ -18,7 +20,7 @@ interface QuestionFormProps {
   onSubmit: (data: {
     text: string;
     type: "STUDENT" | "TEACHER";
-    genderSpecific: boolean;
+    answerMode: AnswerMode;
   }) => void;
   onCancel: () => void;
   isLoading?: boolean;
@@ -34,8 +36,8 @@ export function QuestionForm({
   const [type, setType] = useState<"STUDENT" | "TEACHER">(
     question?.type || "STUDENT"
   );
-  const [genderSpecific, setGenderSpecific] = useState(
-    question?.genderSpecific ?? false
+  const [answerMode, setAnswerMode] = useState<AnswerMode>(
+    question?.answerMode ?? "SINGLE"
   );
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -51,7 +53,7 @@ export function QuestionForm({
     onSubmit({
       text: text.trim(),
       type,
-      genderSpecific,
+      answerMode,
     });
   };
 
@@ -87,21 +89,24 @@ export function QuestionForm({
           </select>
         </div>
 
-        <div className="flex items-center pt-6">
-          <input
-            type="checkbox"
-            id="genderSpecific"
-            checked={genderSpecific}
-            onChange={(e) => setGenderSpecific(e.target.checked)}
-            className="w-4 h-4 text-primary border-gray-300 rounded focus:ring-2 focus:ring-primary-light"
-            disabled={isLoading}
-          />
+        <div>
           <label
-            htmlFor="genderSpecific"
-            className="ml-2 text-sm text-gray-700 cursor-pointer"
+            htmlFor="answerMode"
+            className="block text-sm font-medium text-gray-700 mb-1"
           >
-            Geschlechtsspezifisch (je eine Antwort für m/w)
+            Antwort-Modus *
           </label>
+          <select
+            id="answerMode"
+            value={answerMode}
+            onChange={(e) => setAnswerMode(e.target.value as AnswerMode)}
+            className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-light min-h-[44px] text-base"
+            disabled={isLoading}
+          >
+            <option value="SINGLE">Einzeln (eine Person)</option>
+            <option value="GENDER_SPECIFIC">Geschlechtsspezifisch (je m/w)</option>
+            <option value="DUO">Duo (zwei Personen)</option>
+          </select>
         </div>
       </div>
 

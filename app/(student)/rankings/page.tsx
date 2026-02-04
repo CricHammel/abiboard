@@ -22,6 +22,8 @@ export default async function RankingsRoute() {
       include: {
         student: { select: { id: true, firstName: true, lastName: true, gender: true } },
         teacher: { select: { id: true, salutation: true, firstName: true, lastName: true, subject: true } },
+        student2: { select: { id: true, firstName: true, lastName: true, gender: true } },
+        teacher2: { select: { id: true, salutation: true, firstName: true, lastName: true, subject: true } },
       },
     }),
     prisma.rankingSubmission.findFirst({

@@ -52,27 +52,57 @@ export async function GET(
       include: {
         student: { select: { id: true, firstName: true, lastName: true, gender: true } },
         teacher: { select: { id: true, salutation: true, firstName: true, lastName: true, subject: true } },
+        student2: { select: { id: true, firstName: true, lastName: true, gender: true } },
+        teacher2: { select: { id: true, salutation: true, firstName: true, lastName: true, subject: true } },
       },
     });
 
-    // Aggregate votes by person and genderTarget
+    // Aggregate votes by person/pair and genderTarget
     const aggregated: Record<string, {
       personId: string;
+      personId2?: string;
       personType: "student" | "teacher";
       name: string;
       genderTarget: string;
       count: number;
+      isDuo?: boolean;
       student?: { id: string; firstName: string; lastName: string; gender: string | null };
       teacher?: { id: string; salutation: string; firstName: string | null; lastName: string; subject: string | null };
+      student2?: { id: string; firstName: string; lastName: string; gender: string | null };
+      teacher2?: { id: string; salutation: string; firstName: string | null; lastName: string; subject: string | null };
     }> = {};
 
     for (const vote of votes) {
-      const personId = vote.studentId || vote.teacherId || "";
-      const key = `${personId}-${vote.genderTarget}`;
+      // Check if this is a Duo vote
+      const isDuo = !!(vote.studentId2 || vote.teacherId2);
 
-      if (!aggregated[key]) {
-        let name = "";
-        let personType: "student" | "teacher" = "student";
+      let key: string;
+      let personId: string;
+      let personId2: string | undefined;
+      let name: string;
+      let personType: "student" | "teacher" = "student";
+
+      if (isDuo) {
+        // Duo mode: create key from both IDs (already sorted in API)
+        if (vote.student && vote.student2) {
+          personId = vote.studentId!;
+          personId2 = vote.studentId2!;
+          key = `${personId}-${personId2}-${vote.genderTarget}`;
+          name = `${vote.student.firstName} ${vote.student.lastName} & ${vote.student2.firstName} ${vote.student2.lastName}`;
+          personType = "student";
+        } else if (vote.teacher && vote.teacher2) {
+          personId = vote.teacherId!;
+          personId2 = vote.teacherId2!;
+          key = `${personId}-${personId2}-${vote.genderTarget}`;
+          name = `${formatTeacherName(vote.teacher)} & ${formatTeacherName(vote.teacher2)}`;
+          personType = "teacher";
+        } else {
+          continue; // Skip invalid votes
+        }
+      } else {
+        // Single/Gender-Specific mode
+        personId = vote.studentId || vote.teacherId || "";
+        key = `${personId}-${vote.genderTarget}`;
 
         if (vote.student) {
           name = `${vote.student.firstName} ${vote.student.lastName}`;
@@ -80,16 +110,24 @@ export async function GET(
         } else if (vote.teacher) {
           name = formatTeacherName(vote.teacher);
           personType = "teacher";
+        } else {
+          continue; // Skip invalid votes
         }
+      }
 
+      if (!aggregated[key]) {
         aggregated[key] = {
           personId,
+          ...(personId2 && { personId2 }),
           personType,
           name,
           genderTarget: vote.genderTarget,
           count: 0,
+          isDuo,
           ...(vote.student && { student: vote.student }),
           ...(vote.teacher && { teacher: vote.teacher }),
+          ...(vote.student2 && { student2: vote.student2 }),
+          ...(vote.teacher2 && { teacher2: vote.teacher2 }),
         };
       }
 
@@ -99,13 +137,13 @@ export async function GET(
     // Sort by count descending
     const results = Object.values(aggregated).sort((a, b) => b.count - a.count);
 
-    // Split by genderTarget if gender-specific
-    if (question.genderSpecific) {
+    // Split by genderTarget/answerMode
+    if (question.answerMode === "GENDER_SPECIFIC") {
       const maleResults = results.filter((r) => r.genderTarget === "MALE");
       const femaleResults = results.filter((r) => r.genderTarget === "FEMALE");
       return NextResponse.json({
         question,
-        genderSpecific: true,
+        answerMode: question.answerMode,
         results: { male: maleResults, female: femaleResults },
         totalVoters: submittedIds.length,
       });
@@ -113,7 +151,7 @@ export async function GET(
 
     return NextResponse.json({
       question,
-      genderSpecific: false,
+      answerMode: question.answerMode,
       results: results.filter((r) => r.genderTarget === "ALL"),
       totalVoters: submittedIds.length,
     });

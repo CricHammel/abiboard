@@ -2,11 +2,13 @@
 
 import { useState, useMemo } from "react";
 
+type AnswerMode = "SINGLE" | "GENDER_SPECIFIC" | "DUO";
+
 interface Question {
   id: string;
   text: string;
   type: "STUDENT" | "TEACHER";
-  genderSpecific: boolean;
+  answerMode: AnswerMode;
   order: number;
 }
 
@@ -26,7 +28,7 @@ interface ResultEntry {
 
 interface QuestionResults {
   question: Question;
-  genderSpecific: boolean;
+  answerMode: AnswerMode;
   results: ResultEntry[] | { male: ResultEntry[]; female: ResultEntry[] };
   totalVoters: number;
 }
@@ -209,9 +211,14 @@ export function RankingStats({ initialData }: RankingStatsProps) {
                   }`}>
                     {question.type === "STUDENT" ? "Schüler" : "Lehrer"}
                   </span>
-                  {question.genderSpecific && (
+                  {question.answerMode === "GENDER_SPECIFIC" && (
                     <span className="text-xs px-1.5 py-0.5 rounded bg-pink-50 text-pink-600">
                       m/w
+                    </span>
+                  )}
+                  {question.answerMode === "DUO" && (
+                    <span className="text-xs px-1.5 py-0.5 rounded bg-orange-50 text-orange-600">
+                      Duo
                     </span>
                   )}
                 </div>
@@ -253,9 +260,9 @@ export function RankingStats({ initialData }: RankingStatsProps) {
 }
 
 function QuestionResultsView({ data }: { data: QuestionResults }) {
-  const { genderSpecific, results, totalVoters } = data;
+  const { answerMode, results, totalVoters } = data;
 
-  if (genderSpecific && !Array.isArray(results)) {
+  if (answerMode === "GENDER_SPECIFIC" && !Array.isArray(results)) {
     return (
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>

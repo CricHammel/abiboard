@@ -26,6 +26,7 @@ interface PersonAutocompleteProps {
   personType: "student" | "teacher";
   gender?: "MALE" | "FEMALE";
   excludeUserId?: string;
+  excludePersonId?: string;
   selectedPerson?: PersonOption | null;
   allStudents?: StudentOption[];
   allTeachers?: TeacherOption[];
@@ -53,6 +54,7 @@ export function PersonAutocomplete({
   personType,
   gender,
   excludeUserId,
+  excludePersonId,
   selectedPerson,
   allStudents,
   allTeachers,
@@ -89,6 +91,7 @@ export function PersonAutocomplete({
       const params = new URLSearchParams({ q: searchQuery });
       if (gender) params.set("gender", gender);
       if (excludeUserId && personType === "student") params.set("excludeUserId", excludeUserId);
+      if (excludePersonId) params.set("excludeId", excludePersonId);
 
       const endpoint = personType === "student"
         ? `/api/rankings/search/students?${params}`
@@ -98,12 +101,22 @@ export function PersonAutocomplete({
       const data = await response.json();
 
       if (personType === "student" && data.students) {
+        let students = data.students as StudentOption[];
+        // Client-side filter for excludePersonId (in case API doesn't support it)
+        if (excludePersonId) {
+          students = students.filter((s) => s.id !== excludePersonId);
+        }
         setResults(
-          data.students.map((s: StudentOption) => ({ type: "student" as const, data: s }))
+          students.map((s: StudentOption) => ({ type: "student" as const, data: s }))
         );
       } else if (personType === "teacher" && data.teachers) {
+        let teachers = data.teachers as TeacherOption[];
+        // Client-side filter for excludePersonId (in case API doesn't support it)
+        if (excludePersonId) {
+          teachers = teachers.filter((t) => t.id !== excludePersonId);
+        }
         setResults(
-          data.teachers.map((t: TeacherOption) => ({ type: "teacher" as const, data: t }))
+          teachers.map((t: TeacherOption) => ({ type: "teacher" as const, data: t }))
         );
       }
     } catch {
@@ -111,7 +124,7 @@ export function PersonAutocomplete({
     } finally {
       setIsSearching(false);
     }
-  }, [personType, gender, excludeUserId]);
+  }, [personType, gender, excludeUserId, excludePersonId]);
 
   const handleInputChange = (value: string) => {
     setQuery(value);

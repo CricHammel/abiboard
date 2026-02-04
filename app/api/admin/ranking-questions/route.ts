@@ -64,7 +64,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const { text, type, genderSpecific } = validation.data;
+    const { text, type, answerMode } = validation.data;
 
     // Auto-assign order (last + 1)
     const lastQuestion = await prisma.rankingQuestion.findFirst({
@@ -77,7 +77,7 @@ export async function POST(request: Request) {
       data: {
         text,
         type,
-        genderSpecific: genderSpecific ?? false,
+        answerMode: answerMode ?? "SINGLE",
         order: nextOrder,
       },
     });

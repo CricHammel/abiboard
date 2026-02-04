@@ -45,6 +45,12 @@ enum RankingQuestionType {
   TEACHER
 }
 
+enum AnswerMode {
+  SINGLE           // One person (replaces genderSpecific=false)
+  GENDER_SPECIFIC  // One person per gender m/f (replaces genderSpecific=true)
+  DUO              // Two different persons of the same type
+}
+
 enum RankingStatus {
   DRAFT
   SUBMITTED
@@ -88,7 +94,8 @@ model Student {
   userId    String?  @unique
   user      User?    @relation(fields: [userId], references: [id])
 
-  rankingVotes     RankingVote[]
+  rankingVotes     RankingVote[]  @relation("RankingVoteStudent1")
+  rankingVotes2    RankingVote[]  @relation("RankingVoteStudent2")
   commentsReceived Comment[]      @relation("CommentsReceivedStudent")
   quotesAbout      StudentQuote[] @relation("QuotesAbout")
 
@@ -177,7 +184,8 @@ model Teacher {
   createdAt  DateTime   @default(now())
   updatedAt  DateTime   @updatedAt
 
-  rankingVotes     RankingVote[]
+  rankingVotes     RankingVote[]  @relation("RankingVoteTeacher1")
+  rankingVotes2    RankingVote[]  @relation("RankingVoteTeacher2")
   teacherQuotes    TeacherQuote[]
   commentsReceived Comment[]      @relation("CommentsReceivedTeacher")
 
@@ -185,14 +193,14 @@ model Teacher {
 }
 
 model RankingQuestion {
-  id             String              @id @default(cuid())
-  text           String
-  type           RankingQuestionType
-  genderSpecific Boolean             @default(false)
-  order          Int
-  active         Boolean             @default(true)
-  createdAt      DateTime            @default(now())
-  updatedAt      DateTime            @updatedAt
+  id         String              @id @default(cuid())
+  text       String
+  type       RankingQuestionType
+  answerMode AnswerMode          @default(SINGLE)
+  order      Int
+  active     Boolean             @default(true)
+  createdAt  DateTime            @default(now())
+  updatedAt  DateTime            @updatedAt
 
   votes RankingVote[]
 
@@ -206,13 +214,17 @@ model RankingVote {
   genderTarget GenderTarget @default(ALL)
   studentId    String?
   teacherId    String?
+  studentId2   String?
+  teacherId2   String?
   createdAt    DateTime     @default(now())
   updatedAt    DateTime     @updatedAt
 
   voter    User            @relation(fields: [voterId], references: [id])
   question RankingQuestion @relation(fields: [questionId], references: [id])
-  student  Student?        @relation(fields: [studentId], references: [id])
-  teacher  Teacher?        @relation(fields: [teacherId], references: [id])
+  student  Student?        @relation("RankingVoteStudent1", fields: [studentId], references: [id])
+  teacher  Teacher?        @relation("RankingVoteTeacher1", fields: [teacherId], references: [id])
+  student2 Student?        @relation("RankingVoteStudent2", fields: [studentId2], references: [id])
+  teacher2 Teacher?        @relation("RankingVoteTeacher2", fields: [teacherId2], references: [id])
 
   @@unique([voterId, questionId, genderTarget])
   @@map("ranking_votes")

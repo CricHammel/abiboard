@@ -60,6 +60,8 @@ export async function GET() {
       include: {
         student: { select: { firstName: true, lastName: true } },
         teacher: { select: { salutation: true, firstName: true, lastName: true, subject: true } },
+        student2: { select: { firstName: true, lastName: true } },
+        teacher2: { select: { salutation: true, firstName: true, lastName: true, subject: true } },
       },
     });
 
@@ -76,20 +78,39 @@ export async function GET() {
     for (const question of questions) {
       const questionVotes = votesByQuestion[question.id] || [];
 
-      // Aggregate by person + genderTarget
+      // Aggregate by person/pair + genderTarget
       const aggregated: Record<string, { name: string; count: number; genderTarget: string }> = {};
 
       for (const vote of questionVotes) {
-        const personId = vote.studentId || vote.teacherId || "";
-        const key = `${personId}-${vote.genderTarget}`;
+        // Check if this is a Duo vote
+        const isDuo = !!(vote.studentId2 || vote.teacherId2);
+        let key: string;
+        let name = "";
 
-        if (!aggregated[key]) {
-          let name = "";
+        if (isDuo) {
+          // Duo mode: create key from both IDs
+          if (vote.student && vote.student2) {
+            key = `${vote.studentId}-${vote.studentId2}-${vote.genderTarget}`;
+            name = `${vote.student.firstName} ${vote.student.lastName} & ${vote.student2.firstName} ${vote.student2.lastName}`;
+          } else if (vote.teacher && vote.teacher2) {
+            key = `${vote.teacherId}-${vote.teacherId2}-${vote.genderTarget}`;
+            name = `${formatTeacherName(vote.teacher)} & ${formatTeacherName(vote.teacher2)}`;
+          } else {
+            continue;
+          }
+        } else {
+          // Single/Gender-Specific mode
+          const personId = vote.studentId || vote.teacherId || "";
+          key = `${personId}-${vote.genderTarget}`;
+
           if (vote.student) {
             name = `${vote.student.firstName} ${vote.student.lastName}`;
           } else if (vote.teacher) {
             name = formatTeacherName(vote.teacher);
           }
+        }
+
+        if (!aggregated[key]) {
           aggregated[key] = { name, count: 0, genderTarget: vote.genderTarget };
         }
         aggregated[key].count++;
@@ -97,7 +118,7 @@ export async function GET() {
 
       const results = Object.values(aggregated).sort((a, b) => b.count - a.count);
 
-      if (question.genderSpecific) {
+      if (question.answerMode === "GENDER_SPECIFIC") {
         // Male results
         const maleResults = results.filter((r) => r.genderTarget === "MALE").slice(0, 5);
         for (let i = 0; i < maleResults.length; i++) {
@@ -112,12 +133,21 @@ export async function GET() {
           const pct = Math.round((r.count / totalVoters) * 1000) / 10;
           rows.push([question.text, "Weiblich", String(i + 1), r.name, String(r.count), `${pct}%`]);
         }
+      } else if (question.answerMode === "DUO") {
+        // Duo results
+        const duoResults = results.filter((r) => r.genderTarget === "ALL").slice(0, 5);
+        for (let i = 0; i < duoResults.length; i++) {
+          const r = duoResults[i];
+          const pct = Math.round((r.count / totalVoters) * 1000) / 10;
+          rows.push([question.text, "Duo", String(i + 1), r.name, String(r.count), `${pct}%`]);
+        }
       } else {
+        // Single results
         const allResults = results.filter((r) => r.genderTarget === "ALL").slice(0, 5);
         for (let i = 0; i < allResults.length; i++) {
           const r = allResults[i];
           const pct = Math.round((r.count / totalVoters) * 1000) / 10;
-          rows.push([question.text, "Alle", String(i + 1), r.name, String(r.count), `${pct}%`]);
+          rows.push([question.text, "Einzeln", String(i + 1), r.name, String(r.count), `${pct}%`]);
         }
       }
     }

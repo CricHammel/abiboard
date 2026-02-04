@@ -162,14 +162,14 @@ export const createQuestionSchema = z.object({
   type: z.enum(["STUDENT", "TEACHER"], {
     message: "Bitte wähle einen Typ aus.",
   }),
-  genderSpecific: z.boolean().optional(),
+  answerMode: z.enum(["SINGLE", "GENDER_SPECIFIC", "DUO"]).optional(),
 });
 
 export const updateQuestionSchema = z
   .object({
     text: z.string().min(1, "Bitte gib einen Fragetext ein.").optional(),
     type: z.enum(["STUDENT", "TEACHER"]).optional(),
-    genderSpecific: z.boolean().optional(),
+    answerMode: z.enum(["SINGLE", "GENDER_SPECIFIC", "DUO"]).optional(),
     active: z.boolean().optional(),
   })
   .refine((data) => Object.keys(data).length > 0, {

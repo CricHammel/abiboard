@@ -47,14 +47,14 @@ export async function PATCH(
       );
     }
 
-    const { text, type, genderSpecific, active } = validation.data;
+    const { text, type, answerMode, active } = validation.data;
 
     const updated = await prisma.rankingQuestion.update({
       where: { id },
       data: {
         ...(text && { text }),
         ...(type && { type }),
-        ...(genderSpecific !== undefined && { genderSpecific }),
+        ...(answerMode !== undefined && { answerMode }),
         ...(active !== undefined && { active }),
       },
     });

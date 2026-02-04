@@ -16,9 +16,9 @@ const columns: ColumnDef[] = [
     required: true,
   },
   {
-    key: "genderSpecific",
-    label: "Geschlechtsspezifisch",
-    csvHeaders: ["geschlechtsspezifisch", "gender_specific"],
+    key: "answerMode",
+    label: "Antwort-Modus",
+    csvHeaders: ["answermode", "answer_mode", "modus", "geschlechtsspezifisch", "gender_specific"],
     required: false,
   },
 ];
@@ -37,11 +37,11 @@ const formatInfo = (
         <strong>Typ</strong> (Pflicht) – Schüler oder Lehrer
       </li>
       <li>
-        <strong>Geschlechtsspezifisch</strong> (Optional) – ja oder nein
+        <strong>Antwort-Modus</strong> (Optional) – SINGLE, GENDER_SPECIFIC (oder m/w), DUO
       </li>
     </ul>
     <p className="text-sm text-gray-500 mt-3">
-      Beispiel: <code>Text;Typ;Geschlechtsspezifisch</code>
+      Beispiel: <code>Text;Typ;Modus</code>
     </p>
   </div>
 );

@@ -3,11 +3,13 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/Button";
 
+type AnswerMode = "SINGLE" | "GENDER_SPECIFIC" | "DUO";
+
 interface Question {
   id: string;
   text: string;
   type: "STUDENT" | "TEACHER";
-  genderSpecific: boolean;
+  answerMode: AnswerMode;
   order: number;
   active: boolean;
 }
@@ -136,9 +138,14 @@ export function QuestionList({
                 }`}>
                   {question.type === "STUDENT" ? "Schüler" : "Lehrer"}
                 </span>
-                {question.genderSpecific && (
+                {question.answerMode === "GENDER_SPECIFIC" && (
                   <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-pink-100 text-pink-700">
                     m/w
+                  </span>
+                )}
+                {question.answerMode === "DUO" && (
+                  <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-orange-100 text-orange-700">
+                    Duo
                   </span>
                 )}
                 {!question.active && (
@@ -241,9 +248,14 @@ export function QuestionList({
               }`}>
                 {question.type === "STUDENT" ? "Schüler" : "Lehrer"}
               </span>
-              {question.genderSpecific && (
+              {question.answerMode === "GENDER_SPECIFIC" && (
                 <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-pink-100 text-pink-700">
                   m/w
+                </span>
+              )}
+              {question.answerMode === "DUO" && (
+                <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-orange-100 text-orange-700">
+                  Duo
                 </span>
               )}
               {!question.active && (

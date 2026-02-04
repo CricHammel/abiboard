@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
-import { RankingQuestionType } from "@prisma/client";
+import { RankingQuestionType, AnswerMode } from "@prisma/client";
 
 interface ImportResult {
   success: number;
@@ -16,9 +16,19 @@ function parseType(value: string): RankingQuestionType | null {
   return null;
 }
 
-function parseBoolean(value: string): boolean {
+function parseAnswerMode(value: string): AnswerMode {
   const normalized = value.toLowerCase().trim();
-  return normalized === "ja" || normalized === "yes" || normalized === "true" || normalized === "1";
+  if (normalized === "gender_specific" || normalized === "genderspecific" || normalized === "m/w" || normalized === "geschlechtsspezifisch") {
+    return "GENDER_SPECIFIC";
+  }
+  if (normalized === "duo" || normalized === "paar" || normalized === "zwei") {
+    return "DUO";
+  }
+  // Legacy support: "ja/yes/true/1" means gender-specific
+  if (normalized === "ja" || normalized === "yes" || normalized === "true" || normalized === "1") {
+    return "GENDER_SPECIFIC";
+  }
+  return "SINGLE";
 }
 
 export async function POST(request: Request) {
@@ -65,7 +75,7 @@ export async function POST(request: Request) {
     const questionsToCreate: {
       text: string;
       type: RankingQuestionType;
-      genderSpecific: boolean;
+      answerMode: AnswerMode;
       order: number;
     }[] = [];
 
@@ -87,14 +97,14 @@ export async function POST(request: Request) {
         continue;
       }
 
-      const genderSpecific = row.genderSpecific?.trim()
-        ? parseBoolean(row.genderSpecific)
-        : false;
+      // Support both old "genderSpecific" and new "answerMode" column names
+      const answerModeRaw = row.answerMode?.trim() || row.genderSpecific?.trim() || "";
+      const answerMode = parseAnswerMode(answerModeRaw);
 
       questionsToCreate.push({
         text: questionText,
         type,
-        genderSpecific,
+        answerMode,
         order: nextOrder++,
       });
     }
