@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { CommentPage } from "@/components/comments/CommentPage";
 import { Alert } from "@/components/ui/Alert";
 import { isDeadlinePassed } from "@/lib/deadline";
+import { formatTeacherName } from "@/lib/format";
 
 export default async function KommentarePage() {
   const session = await auth();
@@ -56,7 +57,7 @@ export default async function KommentarePage() {
       : comment.targetTeacher
         ? {
             id: comment.targetTeacher.id,
-            name: `${comment.targetTeacher.salutation === "HERR" ? "Hr." : "Fr."} ${comment.targetTeacher.lastName}`,
+            name: formatTeacherName(comment.targetTeacher, { shortForm: true, includeSubject: false }),
           }
         : null,
   }));

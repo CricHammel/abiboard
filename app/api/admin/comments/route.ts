@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
+import { formatTeacherName } from "@/lib/format";
 
 // GET /api/admin/comments - List all comments with author info
 export async function GET() {
@@ -57,7 +58,7 @@ export async function GET() {
         : comment.targetTeacher
           ? {
               id: comment.targetTeacher.id,
-              name: `${comment.targetTeacher.salutation === "HERR" ? "Hr." : "Fr."} ${comment.targetTeacher.lastName}`,
+              name: formatTeacherName(comment.targetTeacher, { shortForm: true, includeSubject: false }),
             }
           : null,
     }));

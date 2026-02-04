@@ -3,6 +3,7 @@ import { Card } from "@/components/ui/Card";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { CollapsibleList } from "@/components/dashboard/CollapsibleList";
 import { prisma } from "@/lib/prisma";
+import { formatTeacherName } from "@/lib/format";
 
 function relativeTime(date: Date): string {
   const now = new Date();
@@ -181,7 +182,7 @@ export default async function AdminDashboard() {
   }
 
   for (const q of recentTeacherQuotes) {
-    const teacherName = `${q.teacher.salutation === "HERR" ? "Herr" : "Frau"} ${q.teacher.lastName}`;
+    const teacherName = formatTeacherName(q.teacher, { includeSubject: false });
     activities.push({
       id: `tquote-${q.id}`,
       type: "zitat",
@@ -203,7 +204,7 @@ export default async function AdminDashboard() {
     const targetName = c.targetStudent
       ? `${c.targetStudent.firstName} ${c.targetStudent.lastName}`
       : c.targetTeacher
-        ? `${c.targetTeacher.salutation === "HERR" ? "Herr" : "Frau"} ${c.targetTeacher.lastName}`
+        ? formatTeacherName(c.targetTeacher, { includeSubject: false })
         : "unbekannt";
     activities.push({
       id: `comment-${c.id}`,

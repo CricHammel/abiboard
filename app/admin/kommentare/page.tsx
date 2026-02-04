@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { CommentAdminPage } from "@/components/admin/comments/CommentAdminPage";
+import { formatTeacherName } from "@/lib/format";
 
 export default async function AdminKommentarePage() {
   const session = await auth();
@@ -47,7 +48,7 @@ export default async function AdminKommentarePage() {
       : comment.targetTeacher
         ? {
             id: comment.targetTeacher.id,
-            name: `${comment.targetTeacher.salutation === "HERR" ? "Hr." : "Fr."} ${comment.targetTeacher.lastName}`,
+            name: formatTeacherName(comment.targetTeacher, { shortForm: true, includeSubject: false }),
           }
         : null,
   }));

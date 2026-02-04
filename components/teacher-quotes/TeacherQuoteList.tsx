@@ -2,11 +2,11 @@
 
 import { useState, useMemo } from "react";
 import Link from "next/link";
+import { formatTeacherName } from "@/lib/format";
 
 interface Teacher {
   id: string;
-  salutation: string;
-  firstName: string | null;
+  salutation: "HERR" | "FRAU";
   lastName: string;
   subject: string | null;
   _count: { teacherQuotes: number };
@@ -31,7 +31,6 @@ export function TeacherQuoteList({ teachers, basePath = "/zitate/lehrer" }: Teac
       result = result.filter((t) => {
         const searchable = [
           t.salutation === "HERR" ? "herr" : "frau",
-          t.firstName?.toLowerCase() || "",
           t.lastName.toLowerCase(),
           t.subject?.toLowerCase() || "",
         ].join(" ");
@@ -89,9 +88,7 @@ export function TeacherQuoteList({ teachers, basePath = "/zitate/lehrer" }: Teac
             >
               <div>
                 <p className="font-semibold text-gray-900">
-                  {teacher.salutation === "HERR" ? "Herr" : "Frau"}{" "}
-                  {teacher.firstName && `${teacher.firstName} `}
-                  {teacher.lastName}
+                  {formatTeacherName(teacher, { includeSubject: false })}
                 </p>
                 {teacher.subject && (
                   <p className="text-sm text-gray-500">{teacher.subject}</p>

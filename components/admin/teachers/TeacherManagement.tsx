@@ -7,6 +7,7 @@ import { Alert } from "@/components/ui/Alert";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { TeacherList } from "./TeacherList";
 import { TeacherForm } from "./TeacherForm";
+import { formatTeacherName } from "@/lib/format";
 
 interface Teacher {
   id: string;
@@ -191,8 +192,7 @@ export function TeacherManagement({ initialTeachers }: TeacherManagementProps) {
       {editingTeacher && (
         <div className="border border-gray-200 rounded-lg p-4 bg-gray-50">
           <h3 className="text-md font-medium text-gray-900 mb-4">
-            Lehrer bearbeiten: {editingTeacher.salutation === "HERR" ? "Hr." : "Fr."}{" "}
-            {editingTeacher.lastName}
+            Lehrer bearbeiten: {formatTeacherName(editingTeacher, { shortForm: true, includeSubject: false })}
           </h3>
           <TeacherForm
             teacher={editingTeacher}
@@ -227,8 +227,8 @@ export function TeacherManagement({ initialTeachers }: TeacherManagementProps) {
         }
         message={
           confirmDialog.teacher?.active
-            ? `Möchtest du ${confirmDialog.teacher.salutation === "HERR" ? "Hr." : "Fr."} ${confirmDialog.teacher.lastName} wirklich deaktivieren?`
-            : `Möchtest du ${confirmDialog.teacher?.salutation === "HERR" ? "Hr." : "Fr."} ${confirmDialog.teacher?.lastName} wirklich aktivieren?`
+            ? `Möchtest du ${formatTeacherName(confirmDialog.teacher, { shortForm: true, includeSubject: false })} wirklich deaktivieren?`
+            : `Möchtest du ${confirmDialog.teacher ? formatTeacherName(confirmDialog.teacher, { shortForm: true, includeSubject: false }) : ""} wirklich aktivieren?`
         }
         confirmText={
           confirmDialog.teacher?.active ? "Deaktivieren" : "Aktivieren"

@@ -4,6 +4,7 @@ import { auth } from "@/lib/auth";
 import { createCommentSchema } from "@/lib/validation";
 import { Prisma } from "@prisma/client";
 import { isDeadlinePassed } from "@/lib/deadline";
+import { formatTeacherName } from "@/lib/format";
 
 // GET /api/comments - List own written comments
 export async function GET() {
@@ -53,7 +54,7 @@ export async function GET() {
         : comment.targetTeacher
           ? {
               id: comment.targetTeacher.id,
-              name: `${comment.targetTeacher.salutation === "HERR" ? "Hr." : "Fr."} ${comment.targetTeacher.lastName}`,
+              name: formatTeacherName(comment.targetTeacher, { shortForm: true, includeSubject: false }),
             }
           : null,
     }));
