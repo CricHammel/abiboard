@@ -166,6 +166,12 @@ export function RankingsPage({ initialData, deadlinePassed = false }: RankingsPa
         { method: "DELETE" }
       );
       const data = await response.json();
+
+      if (!response.ok) {
+        setError(data.error || "Fehler beim Löschen der Stimme.");
+        return;
+      }
+
       setVotes((prev) =>
         prev.filter(
           (v) => !(v.questionId === questionId && v.genderTarget === genderTarget)

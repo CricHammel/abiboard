@@ -57,14 +57,18 @@ export async function DELETE(
       where: { userId: session.user.id },
     });
 
+    let currentStatus: "DRAFT" | "SUBMITTED" = "DRAFT";
+
     if (submission?.status === "SUBMITTED") {
       await prisma.rankingSubmission.update({
         where: { userId: session.user.id },
         data: { status: "DRAFT", submittedAt: null },
       });
+    } else if (submission) {
+      currentStatus = submission.status;
     }
 
-    return NextResponse.json({ message: "Stimme gelöscht.", status: "DRAFT" });
+    return NextResponse.json({ message: "Stimme gelöscht.", status: currentStatus });
   } catch (error) {
     console.error("Vote delete error:", error);
     return NextResponse.json(
