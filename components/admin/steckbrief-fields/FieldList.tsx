@@ -153,8 +153,8 @@ export function FieldList({
               </div>
             </div>
 
-            {/* Move Buttons (Tablet only, since drag doesn't work on touch) */}
-            <div className="flex flex-col gap-1 lg:hidden flex-shrink-0">
+            {/* Move Buttons */}
+            <div className="flex flex-col gap-1 flex-shrink-0">
               <button
                 onClick={() => moveField(index, "up")}
                 disabled={disabled || index === 0}
@@ -198,21 +198,9 @@ export function FieldList({
 
           {/* Mobile Layout (< md) */}
           <div className="md:hidden space-y-3">
-            {/* Header with drag handle and move buttons */}
+            {/* Header with move buttons */}
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                {/* Drag Handle */}
-                <div className="text-gray-400">
-                  <svg
-                    className="w-5 h-5"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                  >
-                    <path d="M7 2a2 2 0 1 0 0 4 2 2 0 0 0 0-4zM7 8a2 2 0 1 0 0 4 2 2 0 0 0 0-4zM7 14a2 2 0 1 0 0 4 2 2 0 0 0 0-4zM13 2a2 2 0 1 0 0 4 2 2 0 0 0 0-4zM13 8a2 2 0 1 0 0 4 2 2 0 0 0 0-4zM13 14a2 2 0 1 0 0 4 2 2 0 0 0 0-4z" />
-                  </svg>
-                </div>
-                <span className="font-medium text-gray-900">{field.label}</span>
-              </div>
+              <span className="font-medium text-gray-900">{field.label}</span>
 
               {/* Move Buttons */}
               <div className="flex items-center gap-1">
