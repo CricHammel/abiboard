@@ -26,60 +26,9 @@ interface AuditLog {
   oldValues: Record<string, unknown> | null;
   newValues: Record<string, unknown> | null;
   error: string | null;
-  createdAt: string;
-}
-
-interface GroupedLog {
-  logs: AuditLog[];
   count: number;
-  firstLog: AuditLog;
-  lastLog: AuditLog;
-}
-
-// Group consecutive logs with same (alias, action, entity)
-function groupConsecutiveLogs(logs: AuditLog[]): GroupedLog[] {
-  if (logs.length === 0) return [];
-
-  const groups: GroupedLog[] = [];
-  let currentGroup: AuditLog[] = [logs[0]];
-
-  for (let i = 1; i < logs.length; i++) {
-    const current = logs[i];
-    const prev = logs[i - 1];
-
-    // Group if same alias, action, entity, and both successful
-    const shouldGroup =
-      current.alias === prev.alias &&
-      current.action === prev.action &&
-      current.entity === prev.entity &&
-      current.success === prev.success &&
-      // Only group if no specific entityName (bulk operations like REORDER)
-      !current.entityName &&
-      !prev.entityName;
-
-    if (shouldGroup) {
-      currentGroup.push(current);
-    } else {
-      // Save current group and start new one
-      groups.push({
-        logs: currentGroup,
-        count: currentGroup.length,
-        firstLog: currentGroup[0],
-        lastLog: currentGroup[currentGroup.length - 1],
-      });
-      currentGroup = [current];
-    }
-  }
-
-  // Don't forget the last group
-  groups.push({
-    logs: currentGroup,
-    count: currentGroup.length,
-    firstLog: currentGroup[0],
-    lastLog: currentGroup[currentGroup.length - 1],
-  });
-
-  return groups;
+  createdAt: string;
+  updatedAt: string;
 }
 
 const ENTITIES = [
@@ -216,13 +165,12 @@ export default function AktivitaetenPage() {
           </div>
         ) : (
           <div className="space-y-1">
-            {groupConsecutiveLogs(logs).map((group) => {
-              const log = group.firstLog;
+            {logs.map((log) => {
               const entityLabel = ENTITY_LABELS[log.entity] || log.entity;
               const displayAction = getDisplayAction(log.action, log.oldValues, log.newValues);
               const actionLabel = ACTION_LABELS[displayAction as AuditAction] || displayAction;
               const isError = !log.success;
-              const isGrouped = group.count > 1;
+              const isGrouped = log.count > 1;
 
               return (
                 <button
@@ -262,19 +210,21 @@ export default function AktivitaetenPage() {
                       )}
                       {" "}
                       <span className="text-gray-500">
-                        {isGrouped ? `${group.count}× ` : ""}{actionLabel}
+                        {isGrouped ? `${log.count}× ` : ""}{actionLabel}
                       </span>
                       {isError && log.error && (
                         <span className="text-red-600 ml-1">— {log.error}</span>
                       )}
                     </p>
                     <p className="text-xs text-gray-500 mt-0.5">
-                      {formatRelativeTime(new Date(log.createdAt))}
-                      {isGrouped && (
-                        <span>
+                      {isGrouped ? (
+                        <>
+                          {formatRelativeTime(new Date(log.updatedAt))}
                           {" bis "}
-                          {formatRelativeTime(new Date(group.lastLog.createdAt))}
-                        </span>
+                          {formatRelativeTime(new Date(log.createdAt))}
+                        </>
+                      ) : (
+                        formatRelativeTime(new Date(log.createdAt))
                       )}
                       {" · "}
                       {new Date(log.createdAt).toLocaleString("de-DE")}

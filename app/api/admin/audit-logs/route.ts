@@ -43,7 +43,7 @@ export async function GET(request: Request) {
     const [logs, total] = await Promise.all([
       prisma.auditLog.findMany({
         where,
-        orderBy: { createdAt: "desc" },
+        orderBy: { updatedAt: "desc" },
         take: Math.min(limit, 100),
         skip: offset,
       }),

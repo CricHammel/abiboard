@@ -388,9 +388,12 @@ model AuditLog {
   oldValues  Json?    // Previous values
   newValues  Json?    // New values
   error      String?  // Error message if success=false
+  count      Int      @default(1) // Number of grouped actions
   createdAt  DateTime @default(now())
+  updatedAt  DateTime @default(now()) @updatedAt // Last time this group was updated
 
   @@index([createdAt])
+  @@index([updatedAt])
   @@index([entity])
   @@map("audit_logs")
 }

@@ -102,6 +102,7 @@ export function AdminAliasSettings() {
     setError(null);
 
     const maxAgeSeconds = ALIAS_TIMEOUT_MS / 1000;
+    // eslint-disable-next-line react-hooks/purity -- This is in an event handler, not during render
     const now = Date.now();
     setCookie(ADMIN_ALIAS_COOKIE, aliasName, maxAgeSeconds);
     setCookie(ADMIN_ALIAS_TIMESTAMP_COOKIE, now.toString(), maxAgeSeconds);

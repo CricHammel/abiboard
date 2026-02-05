@@ -138,8 +138,12 @@ export const ADMIN_ALIAS_TIMESTAMP_COOKIE = "admin_alias_timestamp";
 // Timeout for alias prompt (2 hours in milliseconds)
 export const ALIAS_TIMEOUT_MS = 2 * 60 * 60 * 1000;
 
+// Time window for grouping similar actions (5 minutes)
+const GROUPING_WINDOW_MS = 5 * 60 * 1000;
+
 /**
  * Log an admin action to the audit log
+ * Groups consecutive similar actions (same alias, action, entity, no entityName) within 5 minutes
  */
 export async function logAdminAction(
   params: LogAdminActionParams
@@ -157,6 +161,41 @@ export async function logAdminAction(
   } = params;
 
   try {
+    // Check if we can group with a recent similar entry
+    // Only group if: same alias, action, entity, both successful, no entityName
+    const canGroup = success && !entityName && !entityId;
+
+    if (canGroup) {
+      const cutoffTime = new Date(Date.now() - GROUPING_WINDOW_MS);
+
+      // Find a recent groupable entry
+      const recentLog = await prisma.auditLog.findFirst({
+        where: {
+          alias: alias || null,
+          action,
+          entity,
+          entityName: null,
+          entityId: null,
+          success: true,
+          updatedAt: { gte: cutoffTime },
+        },
+        orderBy: { updatedAt: "desc" },
+      });
+
+      if (recentLog) {
+        // Increment count on existing entry
+        await prisma.auditLog.update({
+          where: { id: recentLog.id },
+          data: {
+            count: recentLog.count + 1,
+            updatedAt: new Date(),
+          },
+        });
+        return;
+      }
+    }
+
+    // Create new entry
     await prisma.auditLog.create({
       data: {
         alias: alias || null,
