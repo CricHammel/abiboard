@@ -29,6 +29,68 @@ type ActivityItem = {
   timestamp: Date;
 };
 
+type AuditLogType = {
+  id: string;
+  alias: string | null;
+  action: string;
+  entity: string;
+  entityId: string | null;
+  entityName: string | null;
+  success: boolean;
+  oldValues: unknown;
+  newValues: unknown;
+  error: string | null;
+  createdAt: Date;
+};
+
+type GroupedAuditLog = {
+  logs: AuditLogType[];
+  count: number;
+  firstLog: AuditLogType;
+  lastLog: AuditLogType;
+};
+
+function groupConsecutiveAuditLogs(logs: AuditLogType[]): GroupedAuditLog[] {
+  if (logs.length === 0) return [];
+
+  const groups: GroupedAuditLog[] = [];
+  let currentGroup: AuditLogType[] = [logs[0]];
+
+  for (let i = 1; i < logs.length; i++) {
+    const current = logs[i];
+    const prev = logs[i - 1];
+
+    const shouldGroup =
+      current.alias === prev.alias &&
+      current.action === prev.action &&
+      current.entity === prev.entity &&
+      current.success === prev.success &&
+      !current.entityName &&
+      !prev.entityName;
+
+    if (shouldGroup) {
+      currentGroup.push(current);
+    } else {
+      groups.push({
+        logs: currentGroup,
+        count: currentGroup.length,
+        firstLog: currentGroup[0],
+        lastLog: currentGroup[currentGroup.length - 1],
+      });
+      currentGroup = [current];
+    }
+  }
+
+  groups.push({
+    logs: currentGroup,
+    count: currentGroup.length,
+    firstLog: currentGroup[0],
+    lastLog: currentGroup[currentGroup.length - 1],
+  });
+
+  return groups;
+}
+
 export default async function AdminDashboard() {
   const session = await auth();
 
@@ -355,7 +417,8 @@ export default async function AdminDashboard() {
           </p>
         ) : (
           <div className="space-y-2">
-            {recentAuditLogs.map((log) => {
+            {groupConsecutiveAuditLogs(recentAuditLogs).map((group) => {
+              const log = group.firstLog;
               const entityLabel = ENTITY_LABELS[log.entity] || log.entity;
               const displayAction = getDisplayAction(
                 log.action,
@@ -364,6 +427,7 @@ export default async function AdminDashboard() {
               );
               const actionLabel = ACTION_LABELS[displayAction as AuditAction] || displayAction;
               const isError = !log.success;
+              const isGrouped = group.count > 1;
 
               return (
                 <div
@@ -397,13 +461,14 @@ export default async function AdminDashboard() {
                       </span>
                       {log.entityName && `: ${log.entityName}`}
                       {" "}
-                      {actionLabel}
+                      {isGrouped ? `${group.count}× ` : ""}{actionLabel}
                       {isError && log.error && (
                         <span className="text-red-600"> — {log.error}</span>
                       )}
                     </p>
                     <p className="text-xs text-gray-500">
                       {relativeTime(log.createdAt)}
+                      {isGrouped && ` bis ${relativeTime(group.lastLog.createdAt)}`}
                     </p>
                   </div>
                 </div>
