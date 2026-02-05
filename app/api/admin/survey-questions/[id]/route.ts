@@ -2,13 +2,16 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { updateSurveyQuestionSchema } from "@/lib/validation";
+import { logAdminAction, getAdminAlias } from "@/lib/audit-log";
 
 export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const alias = getAdminAlias(request);
+  const { id } = await params;
+
   try {
-    const { id } = await params;
     const session = await auth();
 
     if (!session?.user?.id) {
@@ -94,12 +97,30 @@ export async function PATCH(
       },
     });
 
+    await logAdminAction({
+      alias,
+      action: "UPDATE",
+      entity: "SurveyQuestion",
+      entityId: id,
+      entityName: updated?.text || existing.text,
+      oldValues: { text: existing.text, active: existing.active },
+      newValues: { text, active, optionsChanged: !!options },
+    });
+
     return NextResponse.json(
       { message: "Frage erfolgreich aktualisiert.", question: updated },
       { status: 200 }
     );
   } catch (error) {
     console.error("Survey question update error:", error);
+    await logAdminAction({
+      alias,
+      action: "UPDATE",
+      entity: "SurveyQuestion",
+      entityId: id,
+      success: false,
+      error: error instanceof Error ? error.message : "Unbekannter Fehler",
+    });
     return NextResponse.json(
       { error: "Ein Fehler ist aufgetreten. Bitte versuche es erneut." },
       { status: 500 }

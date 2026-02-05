@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { createSurveyQuestionSchema } from "@/lib/validation";
+import { logAdminAction, getAdminAlias } from "@/lib/audit-log";
 
 export async function GET() {
   try {
@@ -41,6 +42,8 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  const alias = getAdminAlias(request);
+
   try {
     const session = await auth();
 
@@ -63,6 +66,13 @@ export async function POST(request: Request) {
 
     if (!validation.success) {
       const firstError = validation.error.issues[0];
+      await logAdminAction({
+        alias,
+        action: "CREATE",
+        entity: "SurveyQuestion",
+        success: false,
+        error: firstError?.message || "Ungültige Eingabedaten",
+      });
       return NextResponse.json(
         { error: firstError?.message || "Ungültige Eingabedaten." },
         { status: 400 }
@@ -97,12 +107,28 @@ export async function POST(request: Request) {
       },
     });
 
+    await logAdminAction({
+      alias,
+      action: "CREATE",
+      entity: "SurveyQuestion",
+      entityId: question.id,
+      entityName: text,
+      newValues: { text, optionsCount: options.length },
+    });
+
     return NextResponse.json(
       { message: "Frage erfolgreich erstellt.", question },
       { status: 201 }
     );
   } catch (error) {
     console.error("Survey question creation error:", error);
+    await logAdminAction({
+      alias,
+      action: "CREATE",
+      entity: "SurveyQuestion",
+      success: false,
+      error: error instanceof Error ? error.message : "Unbekannter Fehler",
+    });
     return NextResponse.json(
       { error: "Ein Fehler ist aufgetreten. Bitte versuche es erneut." },
       { status: 500 }

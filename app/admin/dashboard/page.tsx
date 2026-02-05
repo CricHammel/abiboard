@@ -2,8 +2,11 @@ import { auth } from "@/lib/auth";
 import { Card } from "@/components/ui/Card";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { CollapsibleList } from "@/components/dashboard/CollapsibleList";
+import { StudentActivityFeed } from "@/components/dashboard/StudentActivityFeed";
 import { prisma } from "@/lib/prisma";
 import { formatTeacherName } from "@/lib/format";
+import { ENTITY_LABELS, ACTION_LABELS, AuditAction, getDisplayAction, ENTITY_ICON_PATHS, ACTION_ICON_PATHS, ACTION_ICON_COLORS } from "@/lib/audit-log";
+import Link from "next/link";
 
 function relativeTime(date: Date): string {
   const now = new Date();
@@ -24,29 +27,6 @@ type ActivityItem = {
   type: "steckbrief" | "ranking" | "zitat" | "kommentar";
   text: string;
   timestamp: Date;
-};
-
-const activityIcons: Record<ActivityItem["type"], React.ReactNode> = {
-  steckbrief: (
-    <svg className="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-    </svg>
-  ),
-  ranking: (
-    <svg className="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12" />
-    </svg>
-  ),
-  zitat: (
-    <svg className="w-5 h-5 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-    </svg>
-  ),
-  kommentar: (
-    <svg className="w-5 h-5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-    </svg>
-  ),
 };
 
 export default async function AdminDashboard() {
@@ -75,6 +55,7 @@ export default async function AdminDashboard() {
     recentTeacherQuotes,
     recentStudentQuotes,
     recentComments,
+    recentAuditLogs,
   ] = await Promise.all([
     prisma.user.count({ where: studentFilter }),
     prisma.student.count({ where: { active: true } }),
@@ -152,6 +133,10 @@ export default async function AdminDashboard() {
       orderBy: { createdAt: "desc" },
       take: 5,
     }),
+    prisma.auditLog.findMany({
+      orderBy: { createdAt: "desc" },
+      take: 10,
+    }),
   ]);
 
   const surveyCompleteCount = surveyAnswerGroups.filter(
@@ -215,7 +200,7 @@ export default async function AdminDashboard() {
   }
 
   activities.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
-  const recentActivities = activities.slice(0, 10);
+  const recentActivities = activities.slice(0, 15);
 
   const totalQuotes = totalTeacherQuotes + totalStudentQuotes;
 
@@ -337,34 +322,93 @@ export default async function AdminDashboard() {
         </div>
       </Card>
 
-      {/* Activity Feed */}
+      {/* Student Activity Feed */}
       <Card>
         <h2 className="text-xl font-semibold text-gray-900 mb-4">
-          Letzte Aktivitäten
+          Schüler-Aktivitäten
         </h2>
+        <StudentActivityFeed
+          activities={recentActivities.map((a) => ({
+            ...a,
+            timestamp: a.timestamp.toISOString(),
+          }))}
+        />
+      </Card>
 
-        {recentActivities.length === 0 ? (
+      {/* Admin Activity Log */}
+      <Card>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-xl font-semibold text-gray-900">
+            Admin-Aktivitäten
+          </h2>
+          <Link
+            href="/admin/aktivitaeten"
+            className="text-sm text-primary hover:text-primary-dark"
+          >
+            Alle anzeigen
+          </Link>
+        </div>
+
+        {recentAuditLogs.length === 0 ? (
           <p className="text-sm text-gray-500 py-4 text-center">
-            Noch keine Aktivitäten vorhanden.
+            Noch keine Admin-Aktivitäten vorhanden.
           </p>
         ) : (
-          <div className="space-y-3">
-            {recentActivities.map((activity) => (
-              <div
-                key={activity.id}
-                className="flex items-start gap-3 py-2"
-              >
-                <span className="mt-0.5 shrink-0">
-                  {activityIcons[activity.type]}
-                </span>
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm text-gray-900">{activity.text}</p>
-                  <p className="text-xs text-gray-500">
-                    {relativeTime(activity.timestamp)}
-                  </p>
+          <div className="space-y-2">
+            {recentAuditLogs.map((log) => {
+              const entityLabel = ENTITY_LABELS[log.entity] || log.entity;
+              const displayAction = getDisplayAction(
+                log.action,
+                log.oldValues as Record<string, unknown> | null,
+                log.newValues as Record<string, unknown> | null
+              );
+              const actionLabel = ACTION_LABELS[displayAction as AuditAction] || displayAction;
+              const isError = !log.success;
+
+              return (
+                <div
+                  key={log.id}
+                  className={`flex items-start gap-3 py-2 px-2 rounded ${
+                    isError ? "bg-red-50" : ""
+                  }`}
+                >
+                  <span className={`mt-0.5 shrink-0 w-5 flex justify-center ${isError ? "text-red-500" : ACTION_ICON_COLORS[displayAction] || "text-gray-500"}`}>
+                    {isError ? (
+                      <span className="font-mono text-sm">!</span>
+                    ) : ACTION_ICON_PATHS[displayAction] ? (
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={ACTION_ICON_PATHS[displayAction]} />
+                      </svg>
+                    ) : (
+                      <span className="font-mono text-sm">~</span>
+                    )}
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className={`text-sm ${isError ? "text-red-700" : "text-gray-900"}`}>
+                      <span className="font-medium">{log.alias || "—"}</span>
+                      {" | "}
+                      <span>
+                        {ENTITY_ICON_PATHS[log.entity] && (
+                          <svg className="w-3.5 h-3.5 text-gray-400 inline -mt-0.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={ENTITY_ICON_PATHS[log.entity]} />
+                          </svg>
+                        )}
+                        {entityLabel}
+                      </span>
+                      {log.entityName && `: ${log.entityName}`}
+                      {" "}
+                      {actionLabel}
+                      {isError && log.error && (
+                        <span className="text-red-600"> — {log.error}</span>
+                      )}
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      {relativeTime(log.createdAt)}
+                    </p>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </Card>

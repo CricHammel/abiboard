@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { z } from "zod";
+import { logAdminAction, getAdminAlias } from "@/lib/audit-log";
 
 // Validation schema for reordering fields
 const reorderSchema = z.object({
@@ -15,6 +16,8 @@ const reorderSchema = z.object({
 
 // PATCH: Bulk update field order
 export async function PATCH(request: Request) {
+  const alias = getAdminAlias(request);
+
   try {
     const session = await auth();
 
@@ -59,12 +62,25 @@ export async function PATCH(request: Request) {
       orderBy: { order: "asc" },
     });
 
+    await logAdminAction({
+      alias,
+      action: "REORDER",
+      entity: "SteckbriefField",
+    });
+
     return NextResponse.json({
       message: "Reihenfolge erfolgreich aktualisiert.",
       fields,
     });
   } catch (error) {
     console.error("Error reordering steckbrief fields:", error);
+    await logAdminAction({
+      alias,
+      action: "REORDER",
+      entity: "SteckbriefField",
+      success: false,
+      error: error instanceof Error ? error.message : "Unbekannter Fehler",
+    });
     return NextResponse.json(
       { error: "Ein Fehler ist aufgetreten." },
       { status: 500 }

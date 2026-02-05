@@ -2,12 +2,16 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { updateCommentSchema } from "@/lib/validation";
+import { logAdminAction, getAdminAlias } from "@/lib/audit-log";
 
 // PATCH /api/admin/comments/[commentId] - Edit any comment
 export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ commentId: string }> }
 ) {
+  const alias = getAdminAlias(request);
+  const { commentId } = await params;
+
   try {
     const session = await auth();
 
@@ -24,8 +28,6 @@ export async function PATCH(
         { status: 403 }
       );
     }
-
-    const { commentId } = await params;
 
     const comment = await prisma.comment.findUnique({
       where: { id: commentId },
@@ -53,6 +55,15 @@ export async function PATCH(
       data: { text: result.data.text },
     });
 
+    await logAdminAction({
+      alias,
+      action: "UPDATE",
+      entity: "Comment",
+      entityId: commentId,
+      oldValues: { text: comment.text },
+      newValues: { text: result.data.text },
+    });
+
     return NextResponse.json({
       message: "Kommentar aktualisiert.",
       comment: {
@@ -63,6 +74,14 @@ export async function PATCH(
     });
   } catch (error) {
     console.error("Admin comment PATCH error:", error);
+    await logAdminAction({
+      alias,
+      action: "UPDATE",
+      entity: "Comment",
+      entityId: commentId,
+      success: false,
+      error: error instanceof Error ? error.message : "Unbekannter Fehler",
+    });
     return NextResponse.json(
       { error: "Ein Fehler ist aufgetreten." },
       { status: 500 }
@@ -75,6 +94,9 @@ export async function DELETE(
   request: Request,
   { params }: { params: Promise<{ commentId: string }> }
 ) {
+  const alias = getAdminAlias(request);
+  const { commentId } = await params;
+
   try {
     const session = await auth();
 
@@ -92,8 +114,6 @@ export async function DELETE(
       );
     }
 
-    const { commentId } = await params;
-
     const comment = await prisma.comment.findUnique({
       where: { id: commentId },
     });
@@ -109,9 +129,25 @@ export async function DELETE(
       where: { id: commentId },
     });
 
+    await logAdminAction({
+      alias,
+      action: "DELETE",
+      entity: "Comment",
+      entityId: commentId,
+      oldValues: { text: comment.text },
+    });
+
     return NextResponse.json({ message: "Kommentar gelöscht." });
   } catch (error) {
     console.error("Admin comment DELETE error:", error);
+    await logAdminAction({
+      alias,
+      action: "DELETE",
+      entity: "Comment",
+      entityId: commentId,
+      success: false,
+      error: error instanceof Error ? error.message : "Unbekannter Fehler",
+    });
     return NextResponse.json(
       { error: "Ein Fehler ist aufgetreten." },
       { status: 500 }

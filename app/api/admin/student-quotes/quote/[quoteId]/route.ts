@@ -2,11 +2,13 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { updateStudentQuoteSchema } from "@/lib/validation";
+import { logAdminAction, getAdminAlias } from "@/lib/audit-log";
 
 export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ quoteId: string }> }
 ) {
+  const alias = getAdminAlias(request);
   const session = await auth();
   if (!session?.user?.id) {
     return NextResponse.json(
@@ -51,11 +53,28 @@ export async function PATCH(
       data: { text: validation.data.text.trim() },
     });
 
+    await logAdminAction({
+      alias,
+      action: "UPDATE",
+      entity: "StudentQuote",
+      entityId: quoteId,
+      oldValues: { text: existing.text },
+      newValues: { text: validation.data.text.trim() },
+    });
+
     return NextResponse.json(
       { message: "Zitat aktualisiert.", quote: updated },
       { status: 200 }
     );
-  } catch {
+  } catch (error) {
+    await logAdminAction({
+      alias,
+      action: "UPDATE",
+      entity: "StudentQuote",
+      entityId: quoteId,
+      success: false,
+      error: error instanceof Error ? error.message : "Unbekannter Fehler",
+    });
     return NextResponse.json(
       { error: "Ein Fehler ist aufgetreten. Bitte versuche es erneut." },
       { status: 500 }
@@ -67,6 +86,7 @@ export async function DELETE(
   request: Request,
   { params }: { params: Promise<{ quoteId: string }> }
 ) {
+  const alias = getAdminAlias(request);
   const session = await auth();
   if (!session?.user?.id) {
     return NextResponse.json(
@@ -100,11 +120,27 @@ export async function DELETE(
       where: { id: quoteId },
     });
 
+    await logAdminAction({
+      alias,
+      action: "DELETE",
+      entity: "StudentQuote",
+      entityId: quoteId,
+      oldValues: { text: existing.text },
+    });
+
     return NextResponse.json(
       { message: "Zitat gelöscht." },
       { status: 200 }
     );
-  } catch {
+  } catch (error) {
+    await logAdminAction({
+      alias,
+      action: "DELETE",
+      entity: "StudentQuote",
+      entityId: quoteId,
+      success: false,
+      error: error instanceof Error ? error.message : "Unbekannter Fehler",
+    });
     return NextResponse.json(
       { error: "Ein Fehler ist aufgetreten. Bitte versuche es erneut." },
       { status: 500 }

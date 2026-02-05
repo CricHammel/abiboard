@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
+import { logAdminAction, getAdminAlias } from "@/lib/audit-log";
 
 export async function GET() {
   try {
@@ -25,6 +26,8 @@ export async function GET() {
 }
 
 export async function PATCH(request: Request) {
+  const alias = getAdminAlias(request);
+
   try {
     const session = await auth();
 
@@ -42,6 +45,14 @@ export async function PATCH(request: Request) {
     if (deadline !== null) {
       const date = new Date(deadline);
       if (isNaN(date.getTime())) {
+        await logAdminAction({
+          alias,
+          action: "SETTINGS",
+          entity: "AppSettings",
+          entityName: "Abgabefrist",
+          success: false,
+          error: "Ungültiges Datum",
+        });
         return NextResponse.json(
           { error: "Ungültiges Datum." },
           { status: 400 }
@@ -49,8 +60,9 @@ export async function PATCH(request: Request) {
       }
     }
 
-    // Upsert: create if not exists, update if exists
+    // Get current deadline for logging
     const existing = await prisma.appSettings.findFirst();
+    const oldDeadline = existing?.deadline?.toISOString() ?? null;
 
     if (existing) {
       await prisma.appSettings.update({
@@ -63,12 +75,29 @@ export async function PATCH(request: Request) {
       });
     }
 
+    await logAdminAction({
+      alias,
+      action: "SETTINGS",
+      entity: "AppSettings",
+      entityName: "Abgabefrist",
+      oldValues: { deadline: oldDeadline },
+      newValues: { deadline: deadline ?? null },
+    });
+
     return NextResponse.json({
       deadline: deadline ?? null,
       message: deadline ? "Abgabefrist gespeichert." : "Abgabefrist entfernt.",
     });
   } catch (error) {
     console.error("Update deadline error:", error);
+    await logAdminAction({
+      alias,
+      action: "SETTINGS",
+      entity: "AppSettings",
+      entityName: "Abgabefrist",
+      success: false,
+      error: error instanceof Error ? error.message : "Unbekannter Fehler",
+    });
     return NextResponse.json({ error: "Ein Fehler ist aufgetreten." }, { status: 500 });
   }
 }

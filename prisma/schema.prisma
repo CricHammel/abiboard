@@ -376,3 +376,29 @@ model Comment {
   @@index([targetTeacherId])
   @@map("comments")
 }
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  alias      String?  // Admin nickname or null for "Unbekannt"
+  action     String   // CREATE, UPDATE, DELETE, IMPORT, REORDER, SETTINGS
+  entity     String   // Student, Teacher, RankingQuestion, etc.
+  entityId   String?  // ID of affected object
+  entityName String?  // Human-readable name (e.g. "Max Mustermann")
+  success    Boolean  @default(true)
+  oldValues  Json?    // Previous values
+  newValues  Json?    // New values
+  error      String?  // Error message if success=false
+  createdAt  DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([entity])
+  @@map("audit_logs")
+}
+
+model AdminAlias {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  createdAt DateTime @default(now())
+
+  @@map("admin_aliases")
+}

@@ -2,13 +2,16 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { updateUserSchema } from "@/lib/validation";
+import { logAdminAction, getAdminAlias } from "@/lib/audit-log";
 
 export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ userId: string }> }
 ) {
+  const alias = getAdminAlias(request);
+  const { userId } = await params;
+
   try {
-    const { userId } = await params;
 
     // Check authentication and admin role
     const session = await auth();
@@ -32,6 +35,14 @@ export async function PATCH(
     const validation = updateUserSchema.safeParse(body);
 
     if (!validation.success) {
+      await logAdminAction({
+        alias,
+        action: "UPDATE",
+        entity: "User",
+        entityId: userId,
+        success: false,
+        error: "Ungültige Eingabedaten",
+      });
       return NextResponse.json(
         { error: "Ungültige Eingabedaten." },
         { status: 400 }
@@ -40,6 +51,12 @@ export async function PATCH(
 
     const { email, firstName, lastName, role, active } = validation.data;
 
+    // Get current user for logging old values
+    const currentUser = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { email: true, firstName: true, lastName: true, role: true, active: true },
+    });
+
     // If email is being changed, check uniqueness
     if (email) {
       const existingUser = await prisma.user.findUnique({
@@ -47,6 +64,14 @@ export async function PATCH(
       });
 
       if (existingUser && existingUser.id !== userId) {
+        await logAdminAction({
+          alias,
+          action: "UPDATE",
+          entity: "User",
+          entityId: userId,
+          success: false,
+          error: "E-Mail bereits verwendet",
+        });
         return NextResponse.json(
           { error: "Diese E-Mail-Adresse wird bereits verwendet." },
           { status: 400 }
@@ -76,6 +101,16 @@ export async function PATCH(
       },
     });
 
+    await logAdminAction({
+      alias,
+      action: "UPDATE",
+      entity: "User",
+      entityId: userId,
+      entityName: `${updatedUser.firstName} ${updatedUser.lastName}`,
+      oldValues: currentUser || undefined,
+      newValues: { email, firstName, lastName, role, active },
+    });
+
     return NextResponse.json(
       {
         message: "Benutzer erfolgreich aktualisiert.",
@@ -85,6 +120,14 @@ export async function PATCH(
     );
   } catch (error) {
     console.error("User update error:", error);
+    await logAdminAction({
+      alias,
+      action: "UPDATE",
+      entity: "User",
+      entityId: userId,
+      success: false,
+      error: error instanceof Error ? error.message : "Unbekannter Fehler",
+    });
     return NextResponse.json(
       { error: "Ein Fehler ist aufgetreten. Bitte versuche es erneut." },
       { status: 500 }

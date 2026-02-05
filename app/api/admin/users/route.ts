@@ -2,9 +2,12 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { createUserSchema } from "@/lib/validation";
+import { logAdminAction, getAdminAlias } from "@/lib/audit-log";
 import bcrypt from "bcryptjs";
 
 export async function POST(request: Request) {
+  const alias = getAdminAlias(request);
+
   try {
     // Check authentication and admin role
     const session = await auth();
@@ -29,6 +32,13 @@ export async function POST(request: Request) {
     const validation = createUserSchema.safeParse(body);
 
     if (!validation.success) {
+      await logAdminAction({
+        alias,
+        action: "CREATE",
+        entity: "User",
+        success: false,
+        error: "Ungültige Eingabedaten",
+      });
       return NextResponse.json(
         { error: "Ungültige Eingabedaten." },
         { status: 400 }
@@ -43,6 +53,13 @@ export async function POST(request: Request) {
     });
 
     if (existingUser) {
+      await logAdminAction({
+        alias,
+        action: "CREATE",
+        entity: "User",
+        success: false,
+        error: "E-Mail bereits verwendet",
+      });
       return NextResponse.json(
         { error: "Diese E-Mail-Adresse wird bereits verwendet." },
         { status: 400 }
@@ -80,6 +97,15 @@ export async function POST(request: Request) {
       },
     });
 
+    await logAdminAction({
+      alias,
+      action: "CREATE",
+      entity: "User",
+      entityId: user.id,
+      entityName: `${user.firstName} ${user.lastName}`,
+      newValues: { email, firstName, lastName, role },
+    });
+
     return NextResponse.json(
       {
         message: "Benutzer erfolgreich erstellt.",
@@ -89,6 +115,13 @@ export async function POST(request: Request) {
     );
   } catch (error) {
     console.error("User creation error:", error);
+    await logAdminAction({
+      alias,
+      action: "CREATE",
+      entity: "User",
+      success: false,
+      error: error instanceof Error ? error.message : "Unbekannter Fehler",
+    });
     return NextResponse.json(
       { error: "Ein Fehler ist aufgetreten. Bitte versuche es erneut." },
       { status: 500 }

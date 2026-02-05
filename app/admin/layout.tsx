@@ -2,6 +2,7 @@ import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { LogoutButton } from "@/components/auth/LogoutButton";
 import { AdminNav } from "@/components/navigation/AdminNav";
+import { AdminAliasModal } from "@/components/admin/AdminAliasModal";
 
 export default async function AdminLayout({
   children,
@@ -68,6 +69,7 @@ export default async function AdminLayout({
       </div>
 
       <AdminNav variant="mobile" />
+      <AdminAliasModal />
     </div>
   );
 }

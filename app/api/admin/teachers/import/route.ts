@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { Salutation } from "@prisma/client";
+import { logAdminAction, getAdminAlias } from "@/lib/audit-log";
 
 interface ImportResult {
   success: number;
@@ -17,6 +18,8 @@ function parseSalutation(value: string): Salutation | null {
 }
 
 export async function POST(request: Request) {
+  const alias = getAdminAlias(request);
+
   try {
     const session = await auth();
 
@@ -110,6 +113,18 @@ export async function POST(request: Request) {
       result.success = teachersToCreate.length;
     }
 
+    await logAdminAction({
+      alias,
+      action: "IMPORT",
+      entity: "Teacher",
+      entityName: `${result.success} importiert`,
+      newValues: {
+        imported: result.success,
+        skipped: result.skipped,
+        errors: result.errors.length,
+      },
+    });
+
     return NextResponse.json(
       {
         message: `Import abgeschlossen: ${result.success} Lehrer hinzugefügt, ${result.skipped} übersprungen.`,
@@ -119,6 +134,13 @@ export async function POST(request: Request) {
     );
   } catch (error) {
     console.error("Teacher import error:", error);
+    await logAdminAction({
+      alias,
+      action: "IMPORT",
+      entity: "Teacher",
+      success: false,
+      error: error instanceof Error ? error.message : "Unbekannter Fehler",
+    });
     return NextResponse.json(
       { error: "Ein Fehler ist aufgetreten. Bitte versuche es erneut." },
       { status: 500 }

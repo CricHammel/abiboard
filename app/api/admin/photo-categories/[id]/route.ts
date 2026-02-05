@@ -2,13 +2,16 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { updatePhotoCategorySchema } from "@/lib/validation";
+import { logAdminAction, getAdminAlias } from "@/lib/audit-log";
 
 export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const alias = getAdminAlias(request);
+  const { id } = await params;
+
   try {
-    const { id } = await params;
     const session = await auth();
 
     if (!session?.user?.id) {
@@ -64,12 +67,35 @@ export async function PATCH(
       },
     });
 
+    await logAdminAction({
+      alias,
+      action: "UPDATE",
+      entity: "PhotoCategory",
+      entityId: id,
+      entityName: `Rubrik "${updated.name}"`,
+      oldValues: {
+        name: existing.name,
+        description: existing.description,
+        maxPerUser: existing.maxPerUser,
+        active: existing.active,
+      },
+      newValues: { name, description, maxPerUser, active },
+    });
+
     return NextResponse.json(
       { message: "Rubrik erfolgreich aktualisiert.", category: updated },
       { status: 200 }
     );
   } catch (error) {
     console.error("Photo category update error:", error);
+    await logAdminAction({
+      alias,
+      action: "UPDATE",
+      entity: "PhotoCategory",
+      entityId: id,
+      success: false,
+      error: error instanceof Error ? error.message : "Unbekannter Fehler",
+    });
     return NextResponse.json(
       { error: "Ein Fehler ist aufgetreten. Bitte versuche es erneut." },
       { status: 500 }

@@ -2,6 +2,7 @@ import { auth } from "@/lib/auth";
 import { Card } from "@/components/ui/Card";
 import { ProfileSettingsForm } from "@/components/settings/ProfileSettingsForm";
 import { PasswordChangeForm } from "@/components/settings/PasswordChangeForm";
+import { AdminAliasSettings } from "@/components/admin/AdminAliasSettings";
 import { redirect } from "next/navigation";
 
 export default async function AdminSettingsPage() {
@@ -19,6 +20,13 @@ export default async function AdminSettingsPage() {
           Verwalte deine persönlichen Daten und Sicherheitseinstellungen.
         </p>
       </div>
+
+      <Card>
+        <h2 className="text-xl font-semibold text-gray-900 mb-4">
+          Admin-Kürzel
+        </h2>
+        <AdminAliasSettings />
+      </Card>
 
       <Card>
         <h2 className="text-xl font-semibold text-gray-900 mb-4">

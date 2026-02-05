@@ -2,13 +2,16 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { updateQuestionSchema } from "@/lib/validation";
+import { logAdminAction, getAdminAlias } from "@/lib/audit-log";
 
 export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const alias = getAdminAlias(request);
+  const { id } = await params;
+
   try {
-    const { id } = await params;
     const session = await auth();
 
     if (!session?.user?.id) {
@@ -30,6 +33,14 @@ export async function PATCH(
 
     if (!validation.success) {
       const firstError = validation.error.issues[0];
+      await logAdminAction({
+        alias,
+        action: "UPDATE",
+        entity: "RankingQuestion",
+        entityId: id,
+        success: false,
+        error: firstError?.message || "Ungültige Eingabedaten",
+      });
       return NextResponse.json(
         { error: firstError?.message || "Ungültige Eingabedaten." },
         { status: 400 }
@@ -59,12 +70,35 @@ export async function PATCH(
       },
     });
 
+    await logAdminAction({
+      alias,
+      action: "UPDATE",
+      entity: "RankingQuestion",
+      entityId: id,
+      entityName: updated.text,
+      oldValues: {
+        text: existing.text,
+        type: existing.type,
+        answerMode: existing.answerMode,
+        active: existing.active,
+      },
+      newValues: { text, type, answerMode, active },
+    });
+
     return NextResponse.json(
       { message: "Frage erfolgreich aktualisiert.", question: updated },
       { status: 200 }
     );
   } catch (error) {
     console.error("Question update error:", error);
+    await logAdminAction({
+      alias,
+      action: "UPDATE",
+      entity: "RankingQuestion",
+      entityId: id,
+      success: false,
+      error: error instanceof Error ? error.message : "Unbekannter Fehler",
+    });
     return NextResponse.json(
       { error: "Ein Fehler ist aufgetreten. Bitte versuche es erneut." },
       { status: 500 }
@@ -76,8 +110,10 @@ export async function DELETE(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const alias = getAdminAlias(request);
+  const { id } = await params;
+
   try {
-    const { id } = await params;
     const session = await auth();
 
     if (!session?.user?.id) {
@@ -110,12 +146,30 @@ export async function DELETE(
       data: { active: false },
     });
 
+    await logAdminAction({
+      alias,
+      action: "DELETE",
+      entity: "RankingQuestion",
+      entityId: id,
+      entityName: existing.text,
+      oldValues: { active: true },
+      newValues: { active: false },
+    });
+
     return NextResponse.json(
       { message: "Frage erfolgreich deaktiviert." },
       { status: 200 }
     );
   } catch (error) {
     console.error("Question delete error:", error);
+    await logAdminAction({
+      alias,
+      action: "DELETE",
+      entity: "RankingQuestion",
+      entityId: id,
+      success: false,
+      error: error instanceof Error ? error.message : "Unbekannter Fehler",
+    });
     return NextResponse.json(
       { error: "Ein Fehler ist aufgetreten. Bitte versuche es erneut." },
       { status: 500 }

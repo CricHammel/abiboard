@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { z } from "zod";
+import { logAdminAction, getAdminAlias } from "@/lib/audit-log";
 
 // Validation schema for updating a field
 // Note: key and type cannot be changed after creation
@@ -70,6 +71,9 @@ export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ fieldId: string }> }
 ) {
+  const alias = getAdminAlias(request);
+  const { fieldId } = await params;
+
   try {
     const session = await auth();
 
@@ -86,8 +90,6 @@ export async function PATCH(
         { status: 403 }
       );
     }
-
-    const { fieldId } = await params;
 
     // Check if field exists
     const existingField = await prisma.steckbriefField.findUnique({
@@ -106,6 +108,15 @@ export async function PATCH(
 
     if (!validation.success) {
       const errorMessage = validation.error.issues[0]?.message || "Ungültige Eingabedaten.";
+      await logAdminAction({
+        alias,
+        action: "UPDATE",
+        entity: "SteckbriefField",
+        entityId: fieldId,
+        entityName: existingField.label,
+        success: false,
+        error: errorMessage,
+      });
       return NextResponse.json({ error: errorMessage }, { status: 400 });
     }
 
@@ -128,12 +139,36 @@ export async function PATCH(
       data: updateData,
     });
 
+    await logAdminAction({
+      alias,
+      action: "UPDATE",
+      entity: "SteckbriefField",
+      entityId: fieldId,
+      entityName: field.label,
+      oldValues: {
+        label: existingField.label,
+        placeholder: existingField.placeholder,
+        maxLength: existingField.maxLength,
+        required: existingField.required,
+        active: existingField.active,
+      },
+      newValues: data,
+    });
+
     return NextResponse.json({
       message: "Feld erfolgreich aktualisiert.",
       field,
     });
   } catch (error) {
     console.error("Error updating steckbrief field:", error);
+    await logAdminAction({
+      alias,
+      action: "UPDATE",
+      entity: "SteckbriefField",
+      entityId: fieldId,
+      success: false,
+      error: error instanceof Error ? error.message : "Unbekannter Fehler",
+    });
     return NextResponse.json(
       { error: "Ein Fehler ist aufgetreten." },
       { status: 500 }

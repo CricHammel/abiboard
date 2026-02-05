@@ -2,13 +2,16 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { deleteImageFile } from "@/lib/file-upload";
+import { logAdminAction, getAdminAlias } from "@/lib/audit-log";
 
 export async function DELETE(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const alias = getAdminAlias(request);
+  const { id } = await params;
+
   try {
-    const { id } = await params;
     const session = await auth();
 
     if (!session?.user?.id) {
@@ -65,12 +68,28 @@ export async function DELETE(
       });
     }
 
+    await logAdminAction({
+      alias,
+      action: "DELETE",
+      entity: "Photo",
+      entityId: id,
+      entityName: "Foto",
+    });
+
     return NextResponse.json(
       { message: "Foto erfolgreich gelöscht." },
       { status: 200 }
     );
   } catch (error) {
     console.error("Photo deletion error:", error);
+    await logAdminAction({
+      alias,
+      action: "DELETE",
+      entity: "Photo",
+      entityId: id,
+      success: false,
+      error: error instanceof Error ? error.message : "Unbekannter Fehler",
+    });
     return NextResponse.json(
       { error: "Ein Fehler ist aufgetreten. Bitte versuche es erneut." },
       { status: 500 }

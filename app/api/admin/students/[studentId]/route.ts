@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { updateStudentSchema } from "@/lib/validation";
+import { logAdminAction, getAdminAlias } from "@/lib/audit-log";
 
 export async function GET(
   request: Request,
@@ -62,8 +63,10 @@ export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ studentId: string }> }
 ) {
+  const alias = getAdminAlias(request);
+  const { studentId } = await params;
+
   try {
-    const { studentId } = await params;
 
     const session = await auth();
 
@@ -87,6 +90,14 @@ export async function PATCH(
 
     if (!validation.success) {
       const firstError = validation.error.issues[0];
+      await logAdminAction({
+        alias,
+        action: "UPDATE",
+        entity: "Student",
+        entityId: studentId,
+        success: false,
+        error: firstError?.message || "Ungültige Eingabedaten",
+      });
       return NextResponse.json(
         { error: firstError?.message || "Ungültige Eingabedaten." },
         { status: 400 }
@@ -115,6 +126,15 @@ export async function PATCH(
       });
 
       if (studentWithEmail && studentWithEmail.id !== studentId) {
+        await logAdminAction({
+          alias,
+          action: "UPDATE",
+          entity: "Student",
+          entityId: studentId,
+          entityName: `${existingStudent.firstName} ${existingStudent.lastName}`,
+          success: false,
+          error: "E-Mail bereits verwendet",
+        });
         return NextResponse.json(
           { error: "Diese E-Mail-Adresse wird bereits verwendet." },
           { status: 400 }
@@ -144,6 +164,22 @@ export async function PATCH(
       },
     });
 
+    await logAdminAction({
+      alias,
+      action: "UPDATE",
+      entity: "Student",
+      entityId: studentId,
+      entityName: `${updatedStudent.firstName} ${updatedStudent.lastName}`,
+      oldValues: {
+        firstName: existingStudent.firstName,
+        lastName: existingStudent.lastName,
+        email: existingStudent.email,
+        gender: existingStudent.gender,
+        active: existingStudent.active,
+      },
+      newValues: { firstName, lastName, email, gender, active },
+    });
+
     return NextResponse.json(
       {
         message: "Schüler erfolgreich aktualisiert.",
@@ -153,6 +189,14 @@ export async function PATCH(
     );
   } catch (error) {
     console.error("Student update error:", error);
+    await logAdminAction({
+      alias,
+      action: "UPDATE",
+      entity: "Student",
+      entityId: studentId,
+      success: false,
+      error: error instanceof Error ? error.message : "Unbekannter Fehler",
+    });
     return NextResponse.json(
       { error: "Ein Fehler ist aufgetreten. Bitte versuche es erneut." },
       { status: 500 }

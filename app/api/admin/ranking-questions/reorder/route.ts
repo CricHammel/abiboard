@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { z } from "zod";
+import { logAdminAction, getAdminAlias } from "@/lib/audit-log";
 
 const reorderSchema = z.object({
   questionOrders: z.array(
@@ -13,6 +14,8 @@ const reorderSchema = z.object({
 });
 
 export async function PATCH(request: Request) {
+  const alias = getAdminAlias(request);
+
   try {
     const session = await auth();
 
@@ -55,12 +58,25 @@ export async function PATCH(request: Request) {
       orderBy: { order: "asc" },
     });
 
+    await logAdminAction({
+      alias,
+      action: "REORDER",
+      entity: "RankingQuestion",
+    });
+
     return NextResponse.json({
       message: "Reihenfolge erfolgreich aktualisiert.",
       questions,
     });
   } catch (error) {
     console.error("Error reordering questions:", error);
+    await logAdminAction({
+      alias,
+      action: "REORDER",
+      entity: "RankingQuestion",
+      success: false,
+      error: error instanceof Error ? error.message : "Unbekannter Fehler",
+    });
     return NextResponse.json(
       { error: "Ein Fehler ist aufgetreten." },
       { status: 500 }

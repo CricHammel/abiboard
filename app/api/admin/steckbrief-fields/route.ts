@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { z } from "zod";
+import { logAdminAction, getAdminAlias } from "@/lib/audit-log";
 
 // Validation schema for creating a new field
 const createFieldSchema = z.object({
@@ -63,6 +64,8 @@ export async function GET() {
 
 // POST: Create a new field
 export async function POST(request: Request) {
+  const alias = getAdminAlias(request);
+
   try {
     const session = await auth();
 
@@ -85,6 +88,13 @@ export async function POST(request: Request) {
 
     if (!validation.success) {
       const errorMessage = validation.error.issues[0]?.message || "Ungültige Eingabedaten.";
+      await logAdminAction({
+        alias,
+        action: "CREATE",
+        entity: "SteckbriefField",
+        success: false,
+        error: errorMessage,
+      });
       return NextResponse.json({ error: errorMessage }, { status: 400 });
     }
 
@@ -96,6 +106,13 @@ export async function POST(request: Request) {
     });
 
     if (existingField) {
+      await logAdminAction({
+        alias,
+        action: "CREATE",
+        entity: "SteckbriefField",
+        success: false,
+        error: "Key existiert bereits",
+      });
       return NextResponse.json(
         { error: "Ein Feld mit diesem Key existiert bereits." },
         { status: 400 }
@@ -125,12 +142,28 @@ export async function POST(request: Request) {
       },
     });
 
+    await logAdminAction({
+      alias,
+      action: "CREATE",
+      entity: "SteckbriefField",
+      entityId: field.id,
+      entityName: field.label,
+      newValues: { key: data.key, type: data.type, label: data.label, required: data.required },
+    });
+
     return NextResponse.json(
       { message: "Feld erfolgreich erstellt.", field },
       { status: 201 }
     );
   } catch (error) {
     console.error("Error creating steckbrief field:", error);
+    await logAdminAction({
+      alias,
+      action: "CREATE",
+      entity: "SteckbriefField",
+      success: false,
+      error: error instanceof Error ? error.message : "Unbekannter Fehler",
+    });
     return NextResponse.json(
       { error: "Ein Fehler ist aufgetreten." },
       { status: 500 }
