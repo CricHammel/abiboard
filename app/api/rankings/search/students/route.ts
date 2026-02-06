@@ -18,19 +18,26 @@ export async function GET(request: Request) {
     const gender = url.searchParams.get("gender");
     const excludeUserId = url.searchParams.get("excludeUserId");
 
-    // Split query into words and search each separately (union results)
+    // Split query into words - every word must match at least one field (AND logic)
     const words = query.split(/\s+/).filter((w) => w.length > 0);
 
     const students = await prisma.student.findMany({
       where: {
         active: true,
         ...(gender && { gender: gender as "MALE" | "FEMALE" }),
-        ...(excludeUserId && { userId: { not: excludeUserId } }),
+        ...(excludeUserId && {
+          OR: [
+            { userId: { not: excludeUserId } },
+            { userId: null },
+          ],
+        }),
         ...(words.length > 0 && {
-          OR: words.flatMap((word) => [
-            { firstName: { contains: word, mode: "insensitive" as const } },
-            { lastName: { contains: word, mode: "insensitive" as const } },
-          ]),
+          AND: words.map((word) => ({
+            OR: [
+              { firstName: { contains: word, mode: "insensitive" as const } },
+              { lastName: { contains: word, mode: "insensitive" as const } },
+            ],
+          })),
         }),
       },
       select: { id: true, firstName: true, lastName: true, gender: true },
