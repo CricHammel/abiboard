@@ -61,6 +61,7 @@ export default async function SteckbriefPage() {
     switch (field.type) {
       case FieldType.TEXT:
       case FieldType.TEXTAREA:
+      case FieldType.DATE:
         values[field.key] = value.textValue || "";
         break;
       case FieldType.SINGLE_IMAGE:

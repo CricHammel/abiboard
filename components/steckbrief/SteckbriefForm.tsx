@@ -25,6 +25,7 @@ function initializeFieldState(
   switch (field.type) {
     case "text":
     case "textarea":
+    case "date":
       return (value as string) || "";
     case "single-image":
       return {
@@ -50,6 +51,7 @@ function hasValueChanged(
   switch (field.type) {
     case "text":
     case "textarea":
+    case "date":
       return current !== saved;
     case "single-image": {
       const curr = current as { preview: string | null; file: File | null };
@@ -93,6 +95,7 @@ export function SteckbriefForm({
         switch (field.type) {
           case "text":
           case "textarea":
+          case "date":
             state[field.key] = (initialValues[field.key] as string) || "";
             break;
           case "single-image":
@@ -152,6 +155,7 @@ export function SteckbriefForm({
       switch (field.type) {
         case "text":
         case "textarea":
+        case "date":
           newState[key] = value;
           break;
         case "single-image":
@@ -237,6 +241,7 @@ export function SteckbriefForm({
         switch (field.type) {
           case "text":
           case "textarea":
+          case "date":
             formDataToSend.append(field.key, (value as string) || "");
             break;
 
@@ -346,6 +351,7 @@ export function SteckbriefForm({
       switch (field.type) {
         case "text":
         case "textarea":
+        case "date":
           newFormState[field.key] = (serverValue as string) || "";
           newSavedState[field.key] = (serverValue as string) || "";
           break;
@@ -377,6 +383,7 @@ export function SteckbriefForm({
     switch (field.type) {
       case "text":
       case "textarea":
+      case "date":
         return value;
       case "single-image": {
         const imgState = value as {

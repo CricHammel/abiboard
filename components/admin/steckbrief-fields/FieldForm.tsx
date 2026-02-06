@@ -15,6 +15,7 @@ interface FieldFormProps {
 const FIELD_TYPES = [
   { value: "text", label: "Text (einzeilig)" },
   { value: "textarea", label: "Textfeld (mehrzeilig)" },
+  { value: "date", label: "Datum" },
   { value: "single-image", label: "Einzelbild" },
   { value: "multi-image", label: "Mehrere Bilder" },
 ];

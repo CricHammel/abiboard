@@ -68,6 +68,7 @@ export async function GET() {
       switch (field.type) {
         case FieldType.TEXT:
         case FieldType.TEXTAREA:
+        case FieldType.DATE:
           values[field.key] = value.textValue || "";
           break;
         case FieldType.SINGLE_IMAGE:
@@ -155,7 +156,7 @@ export async function PATCH(request: Request) {
     // Extract text field values and validate
     const textData: Record<string, string> = {};
     for (const field of fields) {
-      if (field.type === FieldType.TEXT || field.type === FieldType.TEXTAREA) {
+      if (field.type === FieldType.TEXT || field.type === FieldType.TEXTAREA || field.type === FieldType.DATE) {
         const value = formData.get(field.key) as string;
         textData[field.key] = value || "";
       }
@@ -183,7 +184,8 @@ export async function PATCH(request: Request) {
 
       switch (field.type) {
         case FieldType.TEXT:
-        case FieldType.TEXTAREA: {
+        case FieldType.TEXTAREA:
+        case FieldType.DATE: {
           const textValue = textData[field.key] || "";
           valueUpserts.push({
             fieldId: field.id,
@@ -349,6 +351,7 @@ export async function PATCH(request: Request) {
       switch (f.type) {
         case FieldType.TEXT:
         case FieldType.TEXTAREA:
+        case FieldType.DATE:
           updatedValues[f.key] = value.textValue || "";
           break;
         case FieldType.SINGLE_IMAGE:

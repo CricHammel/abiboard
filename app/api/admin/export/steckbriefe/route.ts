@@ -87,6 +87,14 @@ export async function GET() {
 
         if (field.type === "TEXT" || field.type === "TEXTAREA") {
           row.push(value?.textValue || "");
+        } else if (field.type === "DATE") {
+          const raw = value?.textValue || "";
+          if (raw && /^\d{4}-\d{2}-\d{2}$/.test(raw)) {
+            const [y, m, d] = raw.split("-");
+            row.push(`${d}.${m}.${y}`);
+          } else {
+            row.push(raw);
+          }
         } else if (field.type === "SINGLE_IMAGE") {
           if (value?.imageValue) {
             const ext = path.extname(value.imageValue) || ".jpg";

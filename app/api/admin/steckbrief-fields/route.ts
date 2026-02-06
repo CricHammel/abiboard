@@ -14,7 +14,7 @@ const createFieldSchema = z.object({
       /^[a-z][a-zA-Z0-9]*$/,
       "Key muss mit einem Kleinbuchstaben beginnen und darf nur Buchstaben und Zahlen enthalten."
     ),
-  type: z.enum(["TEXT", "TEXTAREA", "SINGLE_IMAGE", "MULTI_IMAGE"], {
+  type: z.enum(["TEXT", "TEXTAREA", "SINGLE_IMAGE", "MULTI_IMAGE", "DATE"], {
     message: "Ungültiger Feldtyp.",
   }),
   label: z

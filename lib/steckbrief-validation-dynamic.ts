@@ -32,6 +32,15 @@ export function createDynamicValidationSchema(fields: SteckbriefField[]) {
         break;
       }
 
+      case FieldType.DATE: {
+        validator = z
+          .string()
+          .regex(/^\d{4}-\d{2}-\d{2}$/, `${field.label}: Ungültiges Datumsformat.`)
+          .optional()
+          .or(z.literal(""));
+        break;
+      }
+
       case FieldType.SINGLE_IMAGE:
         // Image validation happens separately via file upload utilities
         // Here we just validate the URL string if provided
@@ -77,6 +86,7 @@ export function validateRequiredFields(
     switch (field.type) {
       case FieldType.TEXT:
       case FieldType.TEXTAREA:
+      case FieldType.DATE:
         if (!value || (typeof value === "string" && value.trim() === "")) {
           errors.push(`${field.label} ist ein Pflichtfeld.`);
         }
@@ -105,7 +115,7 @@ export function validateRequiredFields(
 export interface FieldDefinition {
   id: string;
   key: string;
-  type: "text" | "textarea" | "single-image" | "multi-image";
+  type: "text" | "textarea" | "single-image" | "multi-image" | "date";
   label: string;
   placeholder?: string | null;
   maxLength?: number | null;
@@ -125,6 +135,7 @@ export function mapFieldType(type: FieldType): FieldDefinition["type"] {
     TEXTAREA: "textarea",
     SINGLE_IMAGE: "single-image",
     MULTI_IMAGE: "multi-image",
+    DATE: "date",
   };
   return mapping[type];
 }

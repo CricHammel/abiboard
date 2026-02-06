@@ -15,6 +15,7 @@ interface FieldListProps {
 const FIELD_TYPE_LABELS: Record<string, string> = {
   text: "Text",
   textarea: "Textfeld",
+  date: "Datum",
   "single-image": "Einzelbild",
   "multi-image": "Mehrere Bilder",
 };
