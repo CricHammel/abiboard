@@ -211,10 +211,10 @@ const navItems: NavItem[] = [
   },
 ];
 
-// Items shown directly in mobile bottom nav (first 3)
-const mobileMainItems = navItems.slice(0, 3);
+// Items shown directly in mobile bottom nav (first 4)
+const mobileMainItems = navItems.slice(0, 4);
 // Items shown in "More" menu on mobile (rest)
-const mobileMoreItems = navItems.slice(3);
+const mobileMoreItems = navItems.slice(4);
 
 export function AdminNav({ variant = "both" }: { variant?: "desktop" | "mobile" | "both" }) {
   const pathname = usePathname();
