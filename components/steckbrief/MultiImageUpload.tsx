@@ -12,6 +12,7 @@ interface MultiImageUploadProps {
   onChange: (data: { existing: string[], new: File[] }) => void;
   error?: string;
   disabled?: boolean;
+  required?: boolean;
 }
 
 export function MultiImageUpload({
@@ -21,6 +22,7 @@ export function MultiImageUpload({
   onChange,
   error,
   disabled,
+  required,
 }: MultiImageUploadProps) {
   // Separate state for existing (saved) images and new files
   const [existingImages, setExistingImages] = useState<string[]>(currentImages);
@@ -121,6 +123,7 @@ export function MultiImageUpload({
     <div className="mb-4">
       <label className="block text-sm font-medium text-gray-600 mb-2">
         {label}
+        {required && <span className="text-error ml-1">*</span>}
       </label>
 
       {/* Image Grid */}

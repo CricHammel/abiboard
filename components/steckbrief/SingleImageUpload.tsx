@@ -11,6 +11,7 @@ interface SingleImageUploadProps {
   onChange: (file: File | null) => void;
   error?: string;
   disabled?: boolean;
+  required?: boolean;
 }
 
 export function SingleImageUpload({
@@ -19,6 +20,7 @@ export function SingleImageUpload({
   onChange,
   error,
   disabled,
+  required,
 }: SingleImageUploadProps) {
   const [preview, setPreview] = useState<string | null>(currentImage || null);
   const [showRemoveDialog, setShowRemoveDialog] = useState(false);
@@ -59,6 +61,7 @@ export function SingleImageUpload({
       <div className="mb-4">
         <label className="block text-sm font-medium text-gray-600 mb-2">
           {label}
+          {required && <span className="text-error ml-1">*</span>}
         </label>
 
         <div className="space-y-3">

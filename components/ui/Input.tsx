@@ -3,6 +3,7 @@ import React from "react";
 interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   label: string;
   error?: string;
+  showRequired?: boolean;
 }
 
 export function Input({
@@ -10,6 +11,7 @@ export function Input({
   error,
   id,
   className = "",
+  showRequired,
   ...props
 }: InputProps) {
   const inputId = id || label.toLowerCase().replace(/\s+/g, "-");
@@ -21,6 +23,7 @@ export function Input({
         className="block text-sm font-medium text-gray-600 mb-2"
       >
         {label}
+        {showRequired && <span className="text-error ml-1">*</span>}
       </label>
       <input
         id={inputId}

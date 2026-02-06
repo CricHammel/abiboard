@@ -32,6 +32,7 @@ export function FieldRenderer({
           error={error}
           disabled={disabled}
           maxLength={field.maxLength ?? undefined}
+          showRequired={field.required}
         />
       );
 
@@ -40,6 +41,7 @@ export function FieldRenderer({
         <div className="mb-4">
           <label className="block text-sm font-medium text-gray-600 mb-2">
             {field.label}
+            {field.required && <span className="text-error ml-1">*</span>}
           </label>
           <textarea
             value={value || ''}
@@ -78,6 +80,7 @@ export function FieldRenderer({
         <div className="mb-4">
           <label className="block text-sm font-medium text-gray-600 mb-2">
             {field.label}
+            {field.required && <span className="text-error ml-1">*</span>}
           </label>
           <input
             type="date"
@@ -115,6 +118,7 @@ export function FieldRenderer({
           onChange={onChange}
           error={error}
           disabled={disabled}
+          required={field.required}
         />
       );
 
@@ -127,6 +131,7 @@ export function FieldRenderer({
           onChange={onChange}
           error={error}
           disabled={disabled}
+          required={field.required}
         />
       );
 
