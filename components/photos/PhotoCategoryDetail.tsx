@@ -63,6 +63,22 @@ export function PhotoCategoryDetail({
     const file = e.target.files?.[0];
     if (!file) return;
 
+    // Client-side validation
+    const maxSize = 10 * 1024 * 1024; // 10MB
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+
+    if (file.size > maxSize) {
+      setError('Die Datei ist zu groß. Maximal 10 MB erlaubt.');
+      if (fileInputRef.current) fileInputRef.current.value = '';
+      return;
+    }
+
+    if (!allowedTypes.includes(file.type)) {
+      setError('Ungültiger Dateityp. Nur JPG, PNG und WebP sind erlaubt.');
+      if (fileInputRef.current) fileInputRef.current.value = '';
+      return;
+    }
+
     setIsUploading(true);
     setError(null);
     setSuccessMessage(null);

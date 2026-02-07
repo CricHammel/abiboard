@@ -50,23 +50,46 @@ export function MultiImageUpload({
     setExistingImages(currentImages);
   }, [currentImages]);
 
+  const [fileError, setFileError] = useState<string | null>(null);
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFiles = Array.from(e.target.files || []);
     const currentCount = existingImages.length + newFiles.length;
     const availableSlots = maxFiles - currentCount;
 
     if (selectedFiles.length > availableSlots) {
-      return; // Silently ignore extra files
+      setFileError(`Du kannst nur noch ${availableSlots} ${availableSlots === 1 ? 'Bild' : 'Bilder'} hinzufügen.`);
+      e.target.value = '';
+      return;
     }
 
     // Validate files
+    const maxSize = 5 * 1024 * 1024; // 5MB
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+    const rejected: string[] = [];
+
     const validFiles = selectedFiles.filter(file => {
-      const maxSize = 5 * 1024 * 1024; // 5MB
-      return file.size <= maxSize && 
-        (file.type === 'image/jpeg' || file.type === 'image/png' || file.type === 'image/webp');
+      if (file.size > maxSize) {
+        rejected.push(`„${file.name}" ist zu groß (max. 5 MB).`);
+        return false;
+      }
+      if (!allowedTypes.includes(file.type)) {
+        rejected.push(`„${file.name}" hat einen ungültigen Dateityp.`);
+        return false;
+      }
+      return true;
     });
 
-    if (validFiles.length === 0) return;
+    if (rejected.length > 0) {
+      setFileError(rejected.join(' '));
+    } else {
+      setFileError(null);
+    }
+
+    if (validFiles.length === 0) {
+      e.target.value = '';
+      return;
+    }
 
     // Create previews for new files
     const previews: string[] = [];
@@ -196,7 +219,7 @@ export function MultiImageUpload({
         />
       )}
 
-      {error && <ErrorMessage message={error} className="mt-2" />}
+      {(error || fileError) && <ErrorMessage message={error || fileError!} className="mt-2" />}
 
       <p className="mt-2 text-xs text-gray-500">
         {remainingSlots > 0

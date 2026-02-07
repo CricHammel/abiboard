@@ -24,6 +24,7 @@ export function SingleImageUpload({
 }: SingleImageUploadProps) {
   const [preview, setPreview] = useState<string | null>(currentImage || null);
   const [showRemoveDialog, setShowRemoveDialog] = useState(false);
+  const [fileError, setFileError] = useState<string | null>(null);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -35,10 +36,21 @@ export function SingleImageUpload({
 
     // Client-side validation
     const maxSize = 5 * 1024 * 1024; // 5MB
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+
     if (file.size > maxSize) {
-      onChange(null);
+      setFileError('Die Datei ist zu groß. Maximal 5 MB erlaubt.');
+      e.target.value = '';
       return;
     }
+
+    if (!allowedTypes.includes(file.type)) {
+      setFileError('Ungültiger Dateityp. Nur JPG, PNG und WebP sind erlaubt.');
+      e.target.value = '';
+      return;
+    }
+
+    setFileError(null);
 
     // Create preview
     const reader = new FileReader();
@@ -103,7 +115,7 @@ export function SingleImageUpload({
           />
         </div>
 
-        {error && <ErrorMessage message={error} className="mt-2" />}
+        {(error || fileError) && <ErrorMessage message={error || fileError!} className="mt-2" />}
 
         <p className="mt-2 text-xs text-gray-500">
           Max. 5 MB • JPG, PNG oder WebP
