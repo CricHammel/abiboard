@@ -78,6 +78,7 @@ model User {
   surveyAnswers     SurveyAnswer[]
   commentsWritten   Comment[]     @relation("CommentsWritten")
   photos            Photo[]
+  activities        StudentActivity[]
 
   @@map("users")
 }
@@ -397,6 +398,23 @@ model AuditLog {
   @@index([updatedAt])
   @@index([entity])
   @@map("audit_logs")
+}
+
+model StudentActivity {
+  id         String   @id @default(cuid())
+  userId     String
+  action     String   // SUBMIT, RETRACT, CREATE, COMPLETE
+  entity     String   // Steckbrief, Rankings, TeacherQuote, StudentQuote, Comment, Photo, Survey
+  entityName String?  // e.g. "Hr. Müller", "Max Mustermann", "Abistreich"
+  count      Int      @default(1)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @default(now()) @updatedAt
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([createdAt])
+  @@index([updatedAt])
+  @@map("student_activities")
 }
 
 model AdminAlias {

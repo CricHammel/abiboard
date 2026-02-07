@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { isDeadlinePassed } from "@/lib/deadline";
+import { logStudentActivity } from "@/lib/student-activity";
 import { z } from "zod";
 
 export async function GET() {
@@ -293,13 +294,22 @@ export async function PATCH(request: Request) {
       where: { userId: session.user.id },
     });
 
+    const wasSubmitted = existingSubmission?.status === "SUBMITTED";
     const submission = await prisma.rankingSubmission.upsert({
       where: { userId: session.user.id },
       create: { userId: session.user.id, status: "DRAFT" },
-      update: existingSubmission?.status === "SUBMITTED"
+      update: wasSubmitted
         ? { status: "DRAFT", submittedAt: null }
         : {},
     });
+
+    if (wasSubmitted) {
+      await logStudentActivity({
+        userId: session.user.id,
+        action: "RETRACT",
+        entity: "Rankings",
+      });
+    }
 
     return NextResponse.json({ vote, status: submission.status });
   } catch (error) {

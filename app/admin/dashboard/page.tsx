@@ -4,7 +4,7 @@ import { ProgressBar } from "@/components/ui/ProgressBar";
 import { CollapsibleList } from "@/components/dashboard/CollapsibleList";
 import { StudentActivityFeed } from "@/components/dashboard/StudentActivityFeed";
 import { prisma } from "@/lib/prisma";
-import { formatTeacherName } from "@/lib/format";
+import { getStudentActivityText } from "@/lib/student-activity";
 import { ENTITY_LABELS, ACTION_LABELS, AuditAction, getDisplayAction, ENTITY_ICON_PATHS, ACTION_ICON_PATHS, ACTION_ICON_COLORS } from "@/lib/audit-log";
 import Link from "next/link";
 
@@ -21,14 +21,6 @@ function relativeTime(date: Date): string {
   if (diffDays < 30) return `vor ${diffDays} ${diffDays === 1 ? "Tag" : "Tagen"}`;
   return `vor ${Math.floor(diffDays / 30)} ${Math.floor(diffDays / 30) === 1 ? "Monat" : "Monaten"}`;
 }
-
-type ActivityItem = {
-  id: string;
-  type: "steckbrief" | "ranking" | "zitat" | "kommentar";
-  text: string;
-  timestamp: Date;
-};
-
 
 export default async function AdminDashboard() {
   const session = await auth();
@@ -51,11 +43,7 @@ export default async function AdminDashboard() {
     totalTeacherQuotes,
     totalStudentQuotes,
     totalComments,
-    recentProfiles,
-    recentRankingSubs,
-    recentTeacherQuotes,
-    recentStudentQuotes,
-    recentComments,
+    recentStudentActivities,
     recentAuditLogs,
   ] = await Promise.all([
     prisma.user.count({ where: studentFilter }),
@@ -97,42 +85,10 @@ export default async function AdminDashboard() {
     prisma.studentQuote.count(),
     prisma.comment.count(),
 
-    prisma.profile.findMany({
-      where: { status: "SUBMITTED" },
-      include: { user: { select: { firstName: true, lastName: true } } },
+    prisma.studentActivity.findMany({
       orderBy: { updatedAt: "desc" },
       take: 5,
-    }),
-    prisma.rankingSubmission.findMany({
-      where: { status: "SUBMITTED" },
       include: { user: { select: { firstName: true, lastName: true } } },
-      orderBy: { submittedAt: "desc" },
-      take: 5,
-    }),
-    prisma.teacherQuote.findMany({
-      include: {
-        user: { select: { firstName: true, lastName: true } },
-        teacher: { select: { lastName: true, salutation: true } },
-      },
-      orderBy: { createdAt: "desc" },
-      take: 5,
-    }),
-    prisma.studentQuote.findMany({
-      include: {
-        user: { select: { firstName: true, lastName: true } },
-        student: { select: { firstName: true, lastName: true } },
-      },
-      orderBy: { createdAt: "desc" },
-      take: 5,
-    }),
-    prisma.comment.findMany({
-      include: {
-        author: { select: { firstName: true, lastName: true } },
-        targetStudent: { select: { firstName: true, lastName: true } },
-        targetTeacher: { select: { lastName: true, salutation: true } },
-      },
-      orderBy: { createdAt: "desc" },
-      take: 5,
     }),
     prisma.auditLog.findMany({
       orderBy: { updatedAt: "desc" },
@@ -144,64 +100,14 @@ export default async function AdminDashboard() {
     (g) => g._count.questionId >= totalSurveyQuestions && totalSurveyQuestions > 0
   ).length;
 
-  // Build activity feed
-  const activities: ActivityItem[] = [];
-
-  for (const p of recentProfiles) {
-    activities.push({
-      id: `steckbrief-${p.id}`,
-      type: "steckbrief",
-      text: `${p.user.firstName} ${p.user.lastName} hat den Steckbrief eingereicht`,
-      timestamp: p.updatedAt,
-    });
-  }
-
-  for (const r of recentRankingSubs) {
-    if (r.submittedAt) {
-      activities.push({
-        id: `ranking-${r.id}`,
-        type: "ranking",
-        text: `${r.user.firstName} ${r.user.lastName} hat die Rankings eingereicht`,
-        timestamp: r.submittedAt,
-      });
-    }
-  }
-
-  for (const q of recentTeacherQuotes) {
-    const teacherName = formatTeacherName(q.teacher, { includeSubject: false });
-    activities.push({
-      id: `tquote-${q.id}`,
-      type: "zitat",
-      text: `${q.user.firstName} ${q.user.lastName} hat ein Zitat über ${teacherName} hinzugefügt`,
-      timestamp: q.createdAt,
-    });
-  }
-
-  for (const q of recentStudentQuotes) {
-    activities.push({
-      id: `squote-${q.id}`,
-      type: "zitat",
-      text: `${q.user.firstName} ${q.user.lastName} hat ein Zitat über ${q.student.firstName} ${q.student.lastName} hinzugefügt`,
-      timestamp: q.createdAt,
-    });
-  }
-
-  for (const c of recentComments) {
-    const targetName = c.targetStudent
-      ? `${c.targetStudent.firstName} ${c.targetStudent.lastName}`
-      : c.targetTeacher
-        ? formatTeacherName(c.targetTeacher, { includeSubject: false })
-        : "unbekannt";
-    activities.push({
-      id: `comment-${c.id}`,
-      type: "kommentar",
-      text: `${c.author.firstName} ${c.author.lastName} hat einen Kommentar über ${targetName} geschrieben`,
-      timestamp: c.createdAt,
-    });
-  }
-
-  activities.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
-  const recentActivities = activities.slice(0, 15);
+  // Build activity feed from StudentActivity table
+  const recentActivities = recentStudentActivities.map((a) => ({
+    id: a.id,
+    entity: a.entity,
+    action: a.action,
+    text: `${a.user.firstName} ${a.user.lastName} ${getStudentActivityText(a.action, a.entity, a.entityName, a.count)}`,
+    timestamp: a.updatedAt.toISOString(),
+  }));
 
   const totalQuotes = totalTeacherQuotes + totalStudentQuotes;
 
@@ -325,15 +231,18 @@ export default async function AdminDashboard() {
 
       {/* Student Activity Feed */}
       <Card>
-        <h2 className="text-xl font-semibold text-gray-900 mb-4">
-          Schüler-Aktivitäten
-        </h2>
-        <StudentActivityFeed
-          activities={recentActivities.map((a) => ({
-            ...a,
-            timestamp: a.timestamp.toISOString(),
-          }))}
-        />
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-xl font-semibold text-gray-900">
+            Schüler-Aktivitäten
+          </h2>
+          <Link
+            href="/admin/schueler-aktivitaeten"
+            className="text-sm text-primary hover:text-primary-dark"
+          >
+            Alle anzeigen
+          </Link>
+        </div>
+        <StudentActivityFeed activities={recentActivities} />
       </Card>
 
       {/* Admin Activity Log */}

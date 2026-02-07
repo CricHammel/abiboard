@@ -5,6 +5,7 @@ import { createCommentSchema } from "@/lib/validation";
 import { Prisma } from "@prisma/client";
 import { isDeadlinePassed } from "@/lib/deadline";
 import { formatTeacherName } from "@/lib/format";
+import { logStudentActivity } from "@/lib/student-activity";
 
 // GET /api/comments - List own written comments
 export async function GET() {
@@ -108,10 +109,11 @@ export async function POST(request: Request) {
     const { text, targetType, targetId } = result.data;
 
     // Validate target exists and is active
+    let targetName = "";
     if (targetType === "STUDENT") {
       const targetStudent = await prisma.student.findUnique({
         where: { id: targetId },
-        select: { id: true, active: true, userId: true },
+        select: { id: true, active: true, userId: true, firstName: true, lastName: true },
       });
 
       if (!targetStudent || !targetStudent.active) {
@@ -128,10 +130,11 @@ export async function POST(request: Request) {
           { status: 400 }
         );
       }
+      targetName = `${targetStudent.firstName} ${targetStudent.lastName}`;
     } else {
       const targetTeacher = await prisma.teacher.findUnique({
         where: { id: targetId },
-        select: { id: true, active: true },
+        select: { id: true, active: true, salutation: true, firstName: true, lastName: true },
       });
 
       if (!targetTeacher || !targetTeacher.active) {
@@ -140,6 +143,7 @@ export async function POST(request: Request) {
           { status: 404 }
         );
       }
+      targetName = formatTeacherName(targetTeacher, { includeSubject: false });
     }
 
     // Create comment
@@ -150,6 +154,13 @@ export async function POST(request: Request) {
         targetStudentId: targetType === "STUDENT" ? targetId : null,
         targetTeacherId: targetType === "TEACHER" ? targetId : null,
       },
+    });
+
+    await logStudentActivity({
+      userId: session.user.id,
+      action: "CREATE",
+      entity: "Comment",
+      entityName: targetName,
     });
 
     return NextResponse.json({

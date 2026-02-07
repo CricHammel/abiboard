@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { surveyAnswerSchema } from "@/lib/validation";
 import { isDeadlinePassed } from "@/lib/deadline";
+import { logStudentActivity } from "@/lib/student-activity";
 
 export async function PATCH(
   request: Request,
@@ -103,6 +104,23 @@ export async function PATCH(
         optionId,
       },
     });
+
+    // Log completion when all questions are answered (once per user)
+    const [totalActive, answeredCount, existingCompletion] = await Promise.all([
+      prisma.surveyQuestion.count({ where: { active: true } }),
+      prisma.surveyAnswer.count({ where: { userId: session.user.id } }),
+      prisma.studentActivity.findFirst({
+        where: { userId: session.user.id, action: "COMPLETE", entity: "Survey" },
+      }),
+    ]);
+
+    if (answeredCount >= totalActive && totalActive > 0 && !existingCompletion) {
+      await logStudentActivity({
+        userId: session.user.id,
+        action: "COMPLETE",
+        entity: "Survey",
+      });
+    }
 
     return NextResponse.json(
       { message: "Antwort gespeichert." },

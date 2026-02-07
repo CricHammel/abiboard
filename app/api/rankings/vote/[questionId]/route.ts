@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { isDeadlinePassed } from "@/lib/deadline";
+import { logStudentActivity } from "@/lib/student-activity";
 
 export async function DELETE(
   request: Request,
@@ -63,6 +64,11 @@ export async function DELETE(
       await prisma.rankingSubmission.update({
         where: { userId: session.user.id },
         data: { status: "DRAFT", submittedAt: null },
+      });
+      await logStudentActivity({
+        userId: session.user.id,
+        action: "RETRACT",
+        entity: "Rankings",
       });
     } else if (submission) {
       currentStatus = submission.status;

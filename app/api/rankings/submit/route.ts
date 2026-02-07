@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { isDeadlinePassed } from "@/lib/deadline";
+import { logStudentActivity } from "@/lib/student-activity";
 
 export async function POST() {
   try {
@@ -39,6 +40,12 @@ export async function POST() {
         status: "SUBMITTED",
         submittedAt: new Date(),
       },
+    });
+
+    await logStudentActivity({
+      userId: session.user.id,
+      action: "SUBMIT",
+      entity: "Rankings",
     });
 
     return NextResponse.json({

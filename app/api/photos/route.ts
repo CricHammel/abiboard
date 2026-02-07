@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { isDeadlinePassed } from "@/lib/deadline";
 import { validatePhotoFile, savePhotoFile } from "@/lib/file-upload";
+import { logStudentActivity } from "@/lib/student-activity";
 
 export async function GET() {
   try {
@@ -149,6 +150,13 @@ export async function POST(request: Request) {
           select: { id: true, firstName: true, lastName: true },
         },
       },
+    });
+
+    await logStudentActivity({
+      userId: session.user.id,
+      action: "CREATE",
+      entity: "Photo",
+      entityName: category.name,
     });
 
     // Auto-set as cover if no cover exists yet

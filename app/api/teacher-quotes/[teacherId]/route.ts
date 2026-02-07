@@ -3,6 +3,8 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { createTeacherQuotesSchema } from "@/lib/validation";
 import { isDeadlinePassed } from "@/lib/deadline";
+import { logStudentActivity } from "@/lib/student-activity";
+import { formatTeacherName } from "@/lib/format";
 
 export async function GET(
   request: Request,
@@ -132,6 +134,14 @@ export async function POST(
         teacherId,
         userId: session.user.id,
       })),
+    });
+
+    await logStudentActivity({
+      userId: session.user.id,
+      action: "CREATE",
+      entity: "TeacherQuote",
+      entityName: formatTeacherName(teacher, { includeSubject: false }),
+      count: createdQuotes.count,
     });
 
     return NextResponse.json(

@@ -8,6 +8,7 @@ import {
   deleteImageFile,
 } from "@/lib/file-upload";
 import { isDeadlinePassed } from "@/lib/deadline";
+import { logStudentActivity } from "@/lib/student-activity";
 import {
   createDynamicValidationSchema,
   toFieldDefinition,
@@ -322,13 +323,22 @@ export async function PATCH(request: Request) {
     );
 
     // Auto-retract: if submitted, reset to DRAFT on edit
+    const wasSubmitted = existingProfile.status === "SUBMITTED";
     await prisma.profile.update({
       where: { id: existingProfile.id },
       data: {
         updatedAt: new Date(),
-        ...(existingProfile.status === "SUBMITTED" && { status: "DRAFT" }),
+        ...(wasSubmitted && { status: "DRAFT" }),
       },
     });
+
+    if (wasSubmitted) {
+      await logStudentActivity({
+        userId: session.user.id,
+        action: "RETRACT",
+        entity: "Steckbrief",
+      });
+    }
 
     // Fetch updated values for response
     const updatedProfile = await prisma.profile.findUnique({

@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { createStudentQuotesSchema } from "@/lib/validation";
 import { isDeadlinePassed } from "@/lib/deadline";
+import { logStudentActivity } from "@/lib/student-activity";
 
 export async function GET(
   request: Request,
@@ -156,6 +157,14 @@ export async function POST(
         studentId,
         userId: session.user.id,
       })),
+    });
+
+    await logStudentActivity({
+      userId: session.user.id,
+      action: "CREATE",
+      entity: "StudentQuote",
+      entityName: `${student.firstName} ${student.lastName}`,
+      count: createdQuotes.count,
     });
 
     return NextResponse.json(
