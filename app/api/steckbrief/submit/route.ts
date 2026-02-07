@@ -3,6 +3,8 @@ import { prisma } from '@/lib/prisma';
 import { auth } from '@/lib/auth';
 import { isDeadlinePassed } from '@/lib/deadline';
 import { logStudentActivity } from '@/lib/student-activity';
+import { validateRequiredFields } from '@/lib/steckbrief-validation-dynamic';
+import { FieldType } from '@prisma/client';
 
 export async function POST(request: Request) {
   try {
@@ -39,6 +41,43 @@ export async function POST(request: Request) {
       return NextResponse.json(
         { message: 'Steckbrief ist bereits eingereicht.', profile },
         { status: 200 }
+      );
+    }
+
+    // Validate required fields before submission
+    const activeFields = await prisma.steckbriefField.findMany({
+      where: { active: true },
+      orderBy: { order: 'asc' },
+    });
+
+    const steckbriefValues = await prisma.steckbriefValue.findMany({
+      where: { profileId: profile.id },
+      include: { field: true },
+    });
+
+    // Build a values record keyed by field key
+    const valuesRecord: Record<string, unknown> = {};
+    for (const sv of steckbriefValues) {
+      switch (sv.field.type) {
+        case FieldType.TEXT:
+        case FieldType.TEXTAREA:
+        case FieldType.DATE:
+          valuesRecord[sv.field.key] = sv.textValue || '';
+          break;
+        case FieldType.SINGLE_IMAGE:
+          valuesRecord[sv.field.key] = sv.imageValue || null;
+          break;
+        case FieldType.MULTI_IMAGE:
+          valuesRecord[sv.field.key] = sv.imagesValue || [];
+          break;
+      }
+    }
+
+    const requiredErrors = validateRequiredFields(activeFields, valuesRecord);
+    if (requiredErrors.length > 0) {
+      return NextResponse.json(
+        { error: 'Bitte fülle alle Pflichtfelder aus.', details: requiredErrors },
+        { status: 400 }
       );
     }
 

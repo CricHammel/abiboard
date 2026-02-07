@@ -438,7 +438,45 @@ export function SteckbriefForm({
           {currentStatus === "DRAFT" ? (
             <Button
               type="button"
-              onClick={() => setShowSubmitDialog(true)}
+              onClick={() => {
+                // Validate required fields before opening submit dialog
+                const requiredErrors: Record<string, string> = {};
+                for (const field of fields) {
+                  if (!field.required) continue;
+                  const value = formState[field.key];
+                  switch (field.type) {
+                    case "text":
+                    case "textarea":
+                    case "date":
+                      if (!value || (typeof value === "string" && value.trim() === "")) {
+                        requiredErrors[field.key] = `${field.label} ist ein Pflichtfeld.`;
+                      }
+                      break;
+                    case "single-image": {
+                      const img = value as { preview: string | null; file: File | null };
+                      if (!img.preview && !img.file) {
+                        requiredErrors[field.key] = `${field.label} ist ein Pflichtfeld.`;
+                      }
+                      break;
+                    }
+                    case "multi-image": {
+                      const multi = value as { existing: string[]; new: File[] };
+                      if (multi.existing.length === 0 && multi.new.length === 0) {
+                        requiredErrors[field.key] = `${field.label} ist ein Pflichtfeld.`;
+                      }
+                      break;
+                    }
+                  }
+                }
+                if (Object.keys(requiredErrors).length > 0) {
+                  setErrors(requiredErrors);
+                  setGeneralError("Bitte fülle alle Pflichtfelder aus.");
+                  return;
+                }
+                setErrors({});
+                setGeneralError(null);
+                setShowSubmitDialog(true);
+              }}
               variant="primary"
               loading={isLoading}
               className="flex-1"
