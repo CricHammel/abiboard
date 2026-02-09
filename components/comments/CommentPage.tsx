@@ -21,12 +21,18 @@ interface TeacherOption {
   subject: string | null;
 }
 
+interface ReceivedAuthor {
+  firstName: string;
+  lastName: string;
+}
+
 interface CommentPageProps {
   initialComments: CommentWithTarget[];
   allStudents: StudentOption[];
   allTeachers: TeacherOption[];
   currentUserId: string;
   deadlinePassed?: boolean;
+  receivedFromAuthors?: ReceivedAuthor[];
 }
 
 export function CommentPage({
@@ -35,8 +41,10 @@ export function CommentPage({
   allTeachers,
   currentUserId,
   deadlinePassed = false,
+  receivedFromAuthors = [],
 }: CommentPageProps) {
   const [comments, setComments] = useState<CommentWithTarget[]>(initialComments);
+  const [receivedOpen, setReceivedOpen] = useState(false);
   const [isAdding, setIsAdding] = useState(false);
   const [editingComment, setEditingComment] = useState<CommentWithTarget | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -197,6 +205,47 @@ export function CommentPage({
           Neuen Kommentar schreiben
         </Button>
       )}
+
+      {/* Received Comments Disclosure */}
+      <div className="border border-gray-200 rounded-lg overflow-hidden">
+        <button
+          onClick={() => setReceivedOpen(!receivedOpen)}
+          className="w-full flex items-center justify-between px-4 py-3 bg-gray-50 hover:bg-gray-100 transition-colors min-h-[44px]"
+        >
+          <span className="text-sm font-medium text-gray-700">
+            Kommentare über mich ({receivedFromAuthors.length})
+          </span>
+          <svg
+            className={`w-5 h-5 text-gray-500 transition-transform ${receivedOpen ? "rotate-180" : ""}`}
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          </svg>
+        </button>
+
+        {receivedOpen && (
+          <div className="p-4">
+            {receivedFromAuthors.length > 0 ? (
+              <div className="flex flex-wrap gap-2">
+                {receivedFromAuthors.map((author, index) => (
+                  <span
+                    key={index}
+                    className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-blue-50 text-blue-700"
+                  >
+                    {author.firstName} {author.lastName}
+                  </span>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-gray-500">
+                Noch hat niemand einen Kommentar über dich geschrieben.
+              </p>
+            )}
+          </div>
+        )}
+      </div>
 
       {/* Comments List */}
       <div>

@@ -13,6 +13,27 @@ export default async function KommentarePage() {
     redirect("/dashboard");
   }
 
+  // Get current student for received comments lookup
+  const currentStudent = await prisma.student.findUnique({
+    where: { userId: session.user.id },
+    select: { id: true },
+  });
+
+  // Get authors who wrote comments about the current student (no text!)
+  const receivedComments = currentStudent
+    ? await prisma.comment.findMany({
+        where: { targetStudentId: currentStudent.id },
+        select: {
+          author: {
+            select: { firstName: true, lastName: true },
+          },
+        },
+        orderBy: { createdAt: "desc" },
+      })
+    : [];
+
+  const receivedFromAuthors = receivedComments.map((c) => c.author);
+
   // Get all comments written by this user
   const comments = await prisma.comment.findMany({
     where: { authorId: session.user.id },
@@ -78,6 +99,7 @@ export default async function KommentarePage() {
         allTeachers={allTeachers}
         currentUserId={session.user.id}
         deadlinePassed={deadlinePassed}
+        receivedFromAuthors={receivedFromAuthors}
       />
     </div>
   );
