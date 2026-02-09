@@ -37,13 +37,15 @@ interface RankingStatsProps {
   initialData: {
     totalStudents: number;
     submittedCount: number;
+    submitted: StudentUser[];
     notSubmitted: StudentUser[];
     questions: Question[];
   };
 }
 
 export function RankingStats({ initialData }: RankingStatsProps) {
-  const { totalStudents, submittedCount, notSubmitted, questions } = initialData;
+  const { totalStudents, submittedCount, submitted, notSubmitted, questions } = initialData;
+  const [showSubmitted, setShowSubmitted] = useState(false);
   const [showNotSubmitted, setShowNotSubmitted] = useState(false);
   const [expandedQuestion, setExpandedQuestion] = useState<string | null>(null);
   const [questionResults, setQuestionResults] = useState<Record<string, QuestionResults>>({});
@@ -120,6 +122,42 @@ export function RankingStats({ initialData }: RankingStatsProps) {
           />
         </div>
       </div>
+
+      {/* Submitted list */}
+      {submitted.length > 0 && (
+        <div className="border border-gray-200 rounded-lg overflow-hidden">
+          <button
+            onClick={() => setShowSubmitted(!showSubmitted)}
+            className="w-full flex items-center justify-between px-4 py-3 bg-gray-50 hover:bg-gray-100 transition-colors min-h-[44px]"
+          >
+            <span className="text-sm font-medium text-gray-700">
+              Abgeschickt ({submitted.length})
+            </span>
+            <svg
+              className={`w-5 h-5 text-gray-500 transition-transform ${showSubmitted ? "rotate-180" : ""}`}
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+          {showSubmitted && (
+            <div className="p-4">
+              <div className="flex flex-wrap gap-2">
+                {submitted.map((student) => (
+                  <span
+                    key={student.id}
+                    className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-green-50 text-green-700"
+                  >
+                    {student.firstName} {student.lastName}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Not submitted list */}
       {notSubmitted.length > 0 && (

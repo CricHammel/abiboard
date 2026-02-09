@@ -28,14 +28,24 @@ export default async function RankingsStatistikenPage() {
   ]);
 
   const submittedUserIds = submissions.map((s) => s.userId);
-  const notSubmitted = await prisma.user.findMany({
-    where: {
-      ...studentFilter,
-      id: { notIn: submittedUserIds },
-    },
-    select: { id: true, firstName: true, lastName: true },
-    orderBy: [{ lastName: "asc" }, { firstName: "asc" }],
-  });
+  const [submitted, notSubmitted] = await Promise.all([
+    prisma.user.findMany({
+      where: {
+        ...studentFilter,
+        id: { in: submittedUserIds },
+      },
+      select: { id: true, firstName: true, lastName: true },
+      orderBy: [{ lastName: "asc" }, { firstName: "asc" }],
+    }),
+    prisma.user.findMany({
+      where: {
+        ...studentFilter,
+        id: { notIn: submittedUserIds },
+      },
+      select: { id: true, firstName: true, lastName: true },
+      orderBy: [{ lastName: "asc" }, { firstName: "asc" }],
+    }),
+  ]);
 
   return (
     <div className="space-y-6">
@@ -48,6 +58,7 @@ export default async function RankingsStatistikenPage() {
           initialData={{
             totalStudents,
             submittedCount: submissions.length,
+            submitted,
             notSubmitted,
             questions,
           }}
