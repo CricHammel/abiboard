@@ -28,7 +28,7 @@ export async function GET(
 
   try {
     const student = await prisma.student.findFirst({
-      where: { id: studentId, active: true, NOT: { userId: null } },
+      where: { id: studentId, active: true },
       select: {
         id: true,
         firstName: true,
@@ -116,7 +116,7 @@ export async function POST(
 
   try {
     const student = await prisma.student.findFirst({
-      where: { id: studentId, active: true, NOT: { userId: null } },
+      where: { id: studentId, active: true },
     });
 
     if (!student) {
