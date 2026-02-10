@@ -31,6 +31,7 @@ function initializeFieldState(
       return {
         preview: (value as string | null) || null,
         file: null as File | null,
+        removed: false,
       };
     case "multi-image":
       return {
@@ -54,8 +55,8 @@ function hasValueChanged(
     case "date":
       return current !== saved;
     case "single-image": {
-      const curr = current as { preview: string | null; file: File | null };
-      return curr.file !== null;
+      const curr = current as { preview: string | null; file: File | null; removed: boolean };
+      return curr.file !== null || curr.removed;
     }
     case "multi-image": {
       const curr = current as { existing: string[]; new: File[] };
@@ -158,13 +159,16 @@ export function SteckbriefForm({
         case "date":
           newState[key] = value;
           break;
-        case "single-image":
-          // value is the new File or null
+        case "single-image": {
+          // value is the new File or null (null = removal)
+          const file = value as File | null;
           newState[key] = {
-            ...(prev[key] as { preview: string | null; file: File | null }),
-            file: value as File | null,
+            ...(prev[key] as { preview: string | null; file: File | null; removed: boolean }),
+            file,
+            removed: file === null,
           };
           break;
+        }
         case "multi-image":
           // value is { existing: string[], new: File[] }
           newState[key] = value;
@@ -249,9 +253,12 @@ export function SteckbriefForm({
             const imgState = value as {
               preview: string | null;
               file: File | null;
+              removed: boolean;
             };
             if (imgState.file) {
               formDataToSend.append(`image_${field.key}`, imgState.file);
+            } else if (imgState.removed) {
+              formDataToSend.append(`remove_${field.key}`, "true");
             }
             break;
           }
@@ -359,6 +366,7 @@ export function SteckbriefForm({
           newFormState[field.key] = {
             preview: (serverValue as string | null) || null,
             file: null,
+            removed: false,
           };
           newSavedState[field.key] = (serverValue as string | null) || null;
           break;
@@ -453,8 +461,8 @@ export function SteckbriefForm({
                       }
                       break;
                     case "single-image": {
-                      const img = value as { preview: string | null; file: File | null };
-                      if (!img.preview && !img.file) {
+                      const img = value as { preview: string | null; file: File | null; removed: boolean };
+                      if ((!img.preview && !img.file) || img.removed) {
                         requiredErrors[field.key] = `${field.label} ist ein Pflichtfeld.`;
                       }
                       break;

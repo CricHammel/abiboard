@@ -197,9 +197,16 @@ export async function PATCH(request: Request) {
 
         case FieldType.SINGLE_IMAGE: {
           const imageFile = formData.get(`image_${field.key}`) as File | null;
+          const removeImage = formData.get(`remove_${field.key}`) === "true";
           let newImageUrl = existingValue?.imageValue || null;
 
-          if (imageFile && imageFile.size > 0) {
+          if (removeImage && !imageFile) {
+            // User explicitly removed the image
+            if (existingValue?.imageValue) {
+              await deleteImageFile(existingValue.imageValue);
+            }
+            newImageUrl = null;
+          } else if (imageFile && imageFile.size > 0) {
             const imageValidation = validateImageFile(imageFile);
             if (!imageValidation.valid) {
               return NextResponse.json(
