@@ -48,7 +48,7 @@ export async function GET() {
       );
     }
 
-    const uploadsDir = path.join(process.cwd(), "public");
+    const uploadsDir = process.cwd();
 
     // Create archive
     const archive = archiver("zip", { zlib: { level: 5 } });

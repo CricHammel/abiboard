@@ -21,7 +21,7 @@ dist/
 .env.production
 
 # User uploads
-public/uploads/
+/uploads/
 
 # IDE
 .vscode/

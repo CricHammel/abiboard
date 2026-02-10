@@ -34,7 +34,7 @@
 - **DRAFT → SUBMITTED workflow:** Used by Steckbrief and Rankings. Auto-retract on edit after submit.
 - **Soft delete:** Users, Students, Teachers, Fields, Questions use `active: false` (never hard-delete). Inactive users can't log in.
 - **Global deadline:** Admin-configurable cutoff in `AppSettings`. After deadline, all student write endpoints return 403. Check via `lib/deadline.ts` → `isDeadlinePassed()`.
-- **File uploads:** `public/uploads/profiles/{userId}/`, max 5MB, JPG/PNG/WebP only. Utils in `lib/file-upload.ts`.
+- **File uploads:** `uploads/profiles/{userId}/` (outside `public/`, served via API route + rewrite), max 5MB, JPG/PNG/WebP only. Utils in `lib/file-upload.ts`.
 - **Dynamic fields:** Steckbrief fields are admin-configurable at runtime (SteckbriefField table). Zod schemas generated dynamically.
 - **Whitelist registration:** Students register with @lessing-ffm.net email, validated against Student table.
 

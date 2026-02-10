@@ -73,7 +73,7 @@ export async function GET() {
       },
     });
 
-    const uploadsDir = path.join(process.cwd(), "public");
+    const uploadsDir = process.cwd();
 
     // Track used folder names for duplicates
     const usedFolderNames = new Map<string, number>();
