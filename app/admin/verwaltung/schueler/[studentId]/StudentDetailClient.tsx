@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
+import { PasswordInput } from "@/components/ui/PasswordInput";
 import { ErrorMessage } from "@/components/ui/ErrorMessage";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 
@@ -64,6 +65,12 @@ export function StudentDetailClient({ student, featureData }: StudentDetailClien
     isOpen: boolean;
     action: "activate" | "deactivate";
   }>({ isOpen: false, action: "deactivate" });
+  const [isResettingPassword, setIsResettingPassword] = useState(false);
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [passwordError, setPasswordError] = useState("");
+  const [passwordSuccess, setPasswordSuccess] = useState("");
+  const [isPasswordLoading, setIsPasswordLoading] = useState(false);
 
   const handleSave = async () => {
     setErrors({});
@@ -123,6 +130,37 @@ export function StudentDetailClient({ student, featureData }: StudentDetailClien
       // Ignore
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleResetPassword = async () => {
+    setPasswordError("");
+    setPasswordSuccess("");
+    setIsPasswordLoading(true);
+
+    try {
+      const response = await fetch(`/api/admin/users/${student.user!.id}/reset-password`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ newPassword, confirmPassword }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setPasswordError(data.error || "Ein Fehler ist aufgetreten.");
+        setIsPasswordLoading(false);
+        return;
+      }
+
+      setPasswordSuccess("Passwort erfolgreich zurückgesetzt.");
+      setNewPassword("");
+      setConfirmPassword("");
+      setIsResettingPassword(false);
+    } catch {
+      setPasswordError("Ein Fehler ist aufgetreten.");
+    } finally {
+      setIsPasswordLoading(false);
     }
   };
 
@@ -277,6 +315,60 @@ export function StudentDetailClient({ student, featureData }: StudentDetailClien
               <p className="text-sm text-gray-500">Registriert am</p>
               <p className="text-gray-900">{formatDate(student.user.createdAt)}</p>
             </div>
+
+            {passwordSuccess && (
+              <div className="p-3 bg-green-50 border border-green-200 rounded-lg text-sm text-green-700">
+                {passwordSuccess}
+              </div>
+            )}
+
+            {isResettingPassword ? (
+              <div className="space-y-3 pt-2 border-t border-gray-100">
+                <p className="text-sm font-medium text-gray-700">Neues Passwort festlegen</p>
+                {passwordError && <ErrorMessage message={passwordError} />}
+                <PasswordInput
+                  label="Neues Passwort"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  disabled={isPasswordLoading}
+                />
+                <PasswordInput
+                  label="Passwort bestätigen"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  disabled={isPasswordLoading}
+                />
+                <div className="flex gap-2">
+                  <Button variant="primary" onClick={handleResetPassword} loading={isPasswordLoading}>
+                    Speichern
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    onClick={() => {
+                      setIsResettingPassword(false);
+                      setNewPassword("");
+                      setConfirmPassword("");
+                      setPasswordError("");
+                    }}
+                    disabled={isPasswordLoading}
+                  >
+                    Abbrechen
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div className="pt-2">
+                <Button
+                  variant="secondary"
+                  onClick={() => {
+                    setIsResettingPassword(true);
+                    setPasswordSuccess("");
+                  }}
+                >
+                  Passwort zurücksetzen
+                </Button>
+              </div>
+            )}
           </div>
         ) : (
           <div className="text-gray-500">

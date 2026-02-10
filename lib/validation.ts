@@ -100,6 +100,20 @@ export const changePasswordSchema = z
     path: ["confirmPassword"],
   });
 
+export const adminResetPasswordSchema = z
+  .object({
+    newPassword: z
+      .string()
+      .min(8, "Das neue Passwort muss mindestens 8 Zeichen lang sein."),
+    confirmPassword: z
+      .string()
+      .min(1, "Bitte bestätige das neue Passwort."),
+  })
+  .refine((data) => data.newPassword === data.confirmPassword, {
+    message: "Die Passwörter stimmen nicht überein.",
+    path: ["confirmPassword"],
+  });
+
 // Student Management Schemas
 export const createStudentSchema = z.object({
   firstName: z.string().min(1, "Bitte gib einen Vornamen ein."),
@@ -334,5 +348,6 @@ export type UpdateSurveyQuestionInput = z.infer<typeof updateSurveyQuestionSchem
 export type SurveyAnswerInput = z.infer<typeof surveyAnswerSchema>;
 export type CreateCommentInput = z.infer<typeof createCommentSchema>;
 export type UpdateCommentInput = z.infer<typeof updateCommentSchema>;
+export type AdminResetPasswordInput = z.infer<typeof adminResetPasswordSchema>;
 export type CreatePhotoCategoryInput = z.infer<typeof createPhotoCategorySchema>;
 export type UpdatePhotoCategoryInput = z.infer<typeof updatePhotoCategorySchema>;
