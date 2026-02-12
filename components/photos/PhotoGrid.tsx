@@ -73,7 +73,7 @@ export function PhotoGrid({
                 src={photo.imageUrl}
                 alt={photo.user ? `Foto von ${photo.user.firstName} ${photo.user.lastName}` : "Foto"}
                 fill
-                unoptimized
+                sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
                 className="object-cover transition-transform duration-200 group-hover:scale-105"
               />
               <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all duration-200 flex items-end justify-between p-2 opacity-0 group-hover:opacity-100">
