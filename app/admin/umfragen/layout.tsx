@@ -2,8 +2,8 @@ import { TabNav } from "@/components/ui/TabNav";
 import { PageHeader } from "@/components/ui/PageHeader";
 
 const tabs = [
-  { href: "/admin/umfragen/statistiken", label: "Statistiken" },
-  { href: "/admin/umfragen/fragen", label: "Fragen" },
+  { href: "/admin/umfragen/uebersicht", label: "Übersicht" },
+  { href: "/admin/umfragen/auswertung", label: "Auswertung" },
 ];
 
 export default function UmfragenLayout({

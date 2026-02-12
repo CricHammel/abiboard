@@ -35,7 +35,7 @@ const PHOTOS_PER_PAGE = 12;
 export function AdminPhotoCategoryDetail({
   category,
   initialPhotos,
-  backPath = "/admin/fotos/uebersicht",
+  backPath = "/admin/fotos/galerie",
 }: AdminPhotoCategoryDetailProps) {
   const [photos, setPhotos] = useState<Photo[]>(initialPhotos);
   const [coverImageUrl, setCoverImageUrl] = useState<string | null>(

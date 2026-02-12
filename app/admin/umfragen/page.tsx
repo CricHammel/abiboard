@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
 
 export default function UmfragenPage() {
-  redirect("/admin/umfragen/statistiken");
+  redirect("/admin/umfragen/uebersicht");
 }

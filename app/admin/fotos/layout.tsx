@@ -1,8 +1,9 @@
 import { TabNav } from "@/components/ui/TabNav";
+import { PageHeader } from "@/components/ui/PageHeader";
 
 const tabs = [
-  { href: "/admin/fotos/rubriken", label: "Rubriken" },
   { href: "/admin/fotos/uebersicht", label: "Übersicht" },
+  { href: "/admin/fotos/galerie", label: "Fotos" },
 ];
 
 export default function FotosLayout({
@@ -12,9 +13,7 @@ export default function FotosLayout({
 }) {
   return (
     <div>
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-900">Fotos</h1>
-      </div>
+      <PageHeader title="Fotos" className="mb-6" />
       <TabNav tabs={tabs} />
       {children}
     </div>

@@ -54,6 +54,7 @@ export default async function AdminPhotoCategoryDetailRoute({
     <AdminPhotoCategoryDetail
       category={category}
       initialPhotos={serializedPhotos}
+      backPath="/admin/fotos/galerie"
     />
   );
 }

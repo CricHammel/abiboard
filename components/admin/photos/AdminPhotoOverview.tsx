@@ -14,9 +14,10 @@ interface Category {
 
 interface AdminPhotoOverviewProps {
   categories: Category[];
+  basePath?: string;
 }
 
-export function AdminPhotoOverview({ categories }: AdminPhotoOverviewProps) {
+export function AdminPhotoOverview({ categories, basePath = "/admin/fotos/galerie" }: AdminPhotoOverviewProps) {
   const totalPhotos = categories.reduce((sum, cat) => sum + cat.photoCount, 0);
 
   if (categories.length === 0) {
@@ -41,7 +42,7 @@ export function AdminPhotoOverview({ categories }: AdminPhotoOverviewProps) {
           return (
             <Link
               key={category.id}
-              href={`/admin/fotos/uebersicht/${category.id}`}
+              href={`${basePath}/${category.id}`}
               className="group block"
             >
               <div className="relative aspect-[4/3] rounded-xl overflow-hidden bg-gray-100">

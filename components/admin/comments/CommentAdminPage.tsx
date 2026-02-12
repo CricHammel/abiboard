@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { StatsGrid } from "@/components/ui/StatsGrid";
+import { ProgressBar } from "@/components/ui/ProgressBar";
+import { ParticipationSection } from "@/components/ui/ParticipationSection";
 
 interface AdminComment {
   id: string;
@@ -22,13 +24,22 @@ interface AdminComment {
   } | null;
 }
 
+interface StudentUser {
+  id: string;
+  firstName: string;
+  lastName: string;
+}
+
 interface CommentAdminPageProps {
   initialComments: AdminComment[];
+  totalStudents: number;
+  commented: StudentUser[];
+  notCommented: StudentUser[];
 }
 
 const MAX_LENGTH = 500;
 
-export function CommentAdminPage({ initialComments }: CommentAdminPageProps) {
+export function CommentAdminPage({ initialComments, totalStudents, commented, notCommented }: CommentAdminPageProps) {
   const [comments, setComments] = useState<AdminComment[]>(initialComments);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editText, setEditText] = useState("");
@@ -154,11 +165,37 @@ export function CommentAdminPage({ initialComments }: CommentAdminPageProps) {
       {/* Stats */}
       <StatsGrid
         items={[
-          { label: "Gesamt", value: comments.length },
-          { label: "Über Schüler", value: comments.filter((c) => c.targetType === "STUDENT").length },
-          { label: "Über Lehrer", value: comments.filter((c) => c.targetType === "TEACHER").length },
+          { label: "Schüler gesamt", value: totalStudents },
+          { label: "Hat kommentiert", value: commented.length, color: "green" },
+          { label: "Noch keine", value: notCommented.length, color: "amber" },
         ]}
       />
+
+      <ProgressBar
+        value={commented.length}
+        max={totalStudents}
+        label="Beteiligung"
+        color="green"
+      />
+
+      <ParticipationSection
+        groups={[
+          { label: "Hat kommentiert", color: "green", items: commented },
+          { label: "Noch keine Kommentare", color: "amber", items: notCommented },
+        ]}
+      />
+
+      {/* Content stats */}
+      <div className="border-t border-gray-200 pt-6">
+        <h2 className="text-xl font-semibold text-gray-900 mb-4">
+          Kommentare verwalten
+        </h2>
+        <div className="flex flex-wrap gap-4 text-sm text-gray-600 mb-4">
+          <span>{comments.length} Kommentare gesamt</span>
+          <span>{comments.filter((c) => c.targetType === "STUDENT").length} über Schüler</span>
+          <span>{comments.filter((c) => c.targetType === "TEACHER").length} über Lehrer</span>
+        </div>
+      </div>
 
       {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-4">

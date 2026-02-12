@@ -12,21 +12,37 @@ export default async function AdminKommentarePage() {
     redirect("/admin/dashboard");
   }
 
-  // Get all comments with author and target info
-  const comments = await prisma.comment.findMany({
-    include: {
-      author: {
-        select: { id: true, firstName: true, lastName: true },
+  const studentFilter = { role: "STUDENT" as const, active: true, student: { isNot: null } };
+
+  // Get all comments and participation data in parallel
+  const [comments, allStudents, commentAuthorIds] = await Promise.all([
+    prisma.comment.findMany({
+      include: {
+        author: {
+          select: { id: true, firstName: true, lastName: true },
+        },
+        targetStudent: {
+          select: { id: true, firstName: true, lastName: true },
+        },
+        targetTeacher: {
+          select: { id: true, salutation: true, firstName: true, lastName: true },
+        },
       },
-      targetStudent: {
-        select: { id: true, firstName: true, lastName: true },
-      },
-      targetTeacher: {
-        select: { id: true, salutation: true, firstName: true, lastName: true },
-      },
-    },
-    orderBy: { createdAt: "desc" },
-  });
+      orderBy: { createdAt: "desc" },
+    }),
+    prisma.user.findMany({
+      where: studentFilter,
+      select: { id: true, firstName: true, lastName: true },
+      orderBy: [{ lastName: "asc" }, { firstName: "asc" }],
+    }),
+    prisma.comment.groupBy({
+      by: ["authorId"],
+    }),
+  ]);
+
+  const authorIdSet = new Set(commentAuthorIds.map((c) => c.authorId));
+  const commented = allStudents.filter((s) => authorIdSet.has(s.id));
+  const notCommented = allStudents.filter((s) => !authorIdSet.has(s.id));
 
   // Transform to unified format
   const transformedComments = comments.map((comment) => ({
@@ -56,11 +72,13 @@ export default async function AdminKommentarePage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title="Kommentare"
-        description="Übersicht aller Kommentare."
+      <PageHeader title="Kommentare" />
+      <CommentAdminPage
+        initialComments={transformedComments}
+        totalStudents={allStudents.length}
+        commented={commented}
+        notCommented={notCommented}
       />
-      <CommentAdminPage initialComments={transformedComments} />
     </div>
   );
 }

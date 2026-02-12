@@ -9,6 +9,7 @@ Abibuch-Verwaltung (Yearbook Management) für die Abschlussklasse. Schüler erst
 - **Zitate** — Zitate über Lehrer und Mitschüler sammeln, anonyme Anzeige, Bulk-Eingabe
 - **Umfragen** — Anonyme Multiple-Choice-Umfragen, sofortige Speicherung
 - **Kommentare** — Persönliche Kommentare über Mitschüler und Lehrer fürs Abibuch
+- **Fotos** — Foto-Upload in admin-konfigurierbare Rubriken, Cover-Auswahl, Galerie-Browser
 - **Datenexport** — TSV-Downloads und Bilder-ZIP für den Abibuch-Druck
 - **Globale Deadline** — Admin-konfigurierbare Abgabefrist, nach Ablauf keine Bearbeitung mehr
 - **Benutzerverwaltung** — Whitelist-basierte Registrierung (nur Schul-E-Mails), CSV-Import, Rollen (Schüler/Admin)
@@ -86,6 +87,7 @@ components/
 ├── student-quotes/      # Schüler-Zitate
 ├── survey/              # Umfragen
 ├── comments/            # Kommentare
+├── photos/              # Foto-Upload & Galerie
 ├── admin/               # Admin-Komponenten
 └── navigation/          # Navigation, Deadline-Anzeige
 

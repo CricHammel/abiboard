@@ -44,11 +44,27 @@ export async function GET() {
       },
     });
 
-    // Count students who answered at least one question
+    // Get students who answered at least one question
     const studentsWithAnswers = await prisma.surveyAnswer.groupBy({
       by: ["userId"],
     });
     const participatingStudents = studentsWithAnswers.length;
+    const participatedUserIds = studentsWithAnswers.map((s) => s.userId);
+
+    // Get participation lists
+    const studentFilter = { role: "STUDENT" as const, active: true, student: { isNot: null } };
+    const [participated, notParticipated] = await Promise.all([
+      prisma.user.findMany({
+        where: { ...studentFilter, id: { in: participatedUserIds } },
+        select: { id: true, firstName: true, lastName: true },
+        orderBy: [{ lastName: "asc" }, { firstName: "asc" }],
+      }),
+      prisma.user.findMany({
+        where: { ...studentFilter, id: { notIn: participatedUserIds } },
+        select: { id: true, firstName: true, lastName: true },
+        orderBy: [{ lastName: "asc" }, { firstName: "asc" }],
+      }),
+    ]);
 
     // Get answer counts per option for each question
     const answerCounts = await prisma.surveyAnswer.groupBy({
@@ -111,6 +127,8 @@ export async function GET() {
           totalStudents > 0
             ? Math.round((participatingStudents / totalStudents) * 100 * 10) / 10
             : 0,
+        participated,
+        notParticipated,
         questions: questionStats,
       },
       { status: 200 }

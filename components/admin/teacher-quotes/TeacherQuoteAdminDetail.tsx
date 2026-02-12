@@ -29,7 +29,7 @@ interface TeacherQuoteAdminDetailProps {
   backPath?: string;
 }
 
-export function TeacherQuoteAdminDetail({ teacher, initialQuotes, backPath = "/admin/zitate/lehrer" }: TeacherQuoteAdminDetailProps) {
+export function TeacherQuoteAdminDetail({ teacher, initialQuotes, backPath = "/admin/zitate" }: TeacherQuoteAdminDetailProps) {
   const [quotes, setQuotes] = useState<Quote[]>(initialQuotes);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editText, setEditText] = useState("");

@@ -50,8 +50,8 @@ export default function ImportQuestionsPage() {
   return (
     <CsvImportPage
       title="CSV Import"
-      backLink="/admin/rankings/fragen"
-      backLabel="&larr; Zurück zu den Fragen"
+      backLink="/admin/rankings/uebersicht"
+      backLabel="&larr; Zurück zur Übersicht"
       apiEndpoint="/api/admin/ranking-questions/import"
       columns={columns}
       formatInfo={formatInfo}

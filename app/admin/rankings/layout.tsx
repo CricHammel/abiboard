@@ -2,8 +2,8 @@ import { TabNav } from "@/components/ui/TabNav";
 import { PageHeader } from "@/components/ui/PageHeader";
 
 const tabs = [
-  { href: "/admin/rankings/statistiken", label: "Statistiken" },
-  { href: "/admin/rankings/fragen", label: "Fragen" },
+  { href: "/admin/rankings/uebersicht", label: "Übersicht" },
+  { href: "/admin/rankings/auswertung", label: "Auswertung" },
 ];
 
 export default function RankingsLayout({

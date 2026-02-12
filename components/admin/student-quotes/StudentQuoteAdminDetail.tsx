@@ -27,7 +27,7 @@ interface StudentQuoteAdminDetailProps {
   backPath?: string;
 }
 
-export function StudentQuoteAdminDetail({ student, initialQuotes, backPath = "/admin/zitate/schueler" }: StudentQuoteAdminDetailProps) {
+export function StudentQuoteAdminDetail({ student, initialQuotes, backPath = "/admin/zitate" }: StudentQuoteAdminDetailProps) {
   const [quotes, setQuotes] = useState<Quote[]>(initialQuotes);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editText, setEditText] = useState("");

@@ -39,7 +39,7 @@
 - **Whitelist registration:** Students register with @lessing-ffm.net email, validated against Student table.
 
 ### Features
-Steckbrief (profile), Rankings (voting), Zitate (quotes for teachers & students), Umfragen (anonymous surveys), Kommentare (comments about others), Data Export (TSV + ZIP), Global Deadline.
+Steckbrief (profile), Rankings (voting), Zitate (quotes for teachers & students), Umfragen (anonymous surveys), Kommentare (comments about others), Fotos (photo upload by category), Data Export (TSV + ZIP), Global Deadline.
 
 ## Commands
 
@@ -59,11 +59,11 @@ npx eslint .             # Run ESLint
 app/
 ├── (auth)/              # Login, Register
 ├── (student)/           # Student pages (dashboard, steckbrief, rankings, zitate, umfragen, kommentare, einstellungen)
-├── admin/               # Admin pages (dashboard, steckbrief, rankings, umfragen, zitate, kommentare, export, verwaltung, einstellungen)
+├── admin/               # Admin pages (dashboard, steckbrief, rankings, umfragen, zitate, kommentare, fotos, export, verwaltung, einstellungen)
 └── api/                 # API routes (auth, steckbrief, rankings, survey, quotes, comments, admin/*, register)
 
 components/
-├── ui/                  # Base components (Button, Card, Input, Alert, Badge, TabNav, ProgressBar, ConfirmDialog, etc.)
+├── ui/                  # Base components (Button, Card, Input, Alert, Badge, TabNav, ProgressBar, StatsGrid, ParticipationSection, ConfirmDialog, etc.)
 ├── steckbrief/          # SteckbriefForm, FieldRenderer, image uploads
 ├── rankings/            # RankingsPage, QuestionCard, PersonAutocomplete
 ├── teacher-quotes/      # TeacherQuoteList, TeacherQuoteDetail, QuoteInput
