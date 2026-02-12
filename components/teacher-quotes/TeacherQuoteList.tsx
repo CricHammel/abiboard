@@ -21,7 +21,7 @@ type SortMode = "alpha" | "quotes";
 
 export function TeacherQuoteList({ teachers, basePath = "/zitate/lehrer" }: TeacherQuoteListProps) {
   const [search, setSearch] = useState("");
-  const [sortMode, setSortMode] = useState<SortMode>("alpha");
+  const [sortMode, setSortMode] = useState<SortMode>("quotes");
 
   const filtered = useMemo(() => {
     let result = teachers;
