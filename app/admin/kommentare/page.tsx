@@ -1,8 +1,11 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { CommentAdminPage } from "@/components/admin/comments/CommentAdminPage";
 import { PageHeader } from "@/components/ui/PageHeader";
+
+export const metadata: Metadata = { title: "Kommentare" };
 import { formatTeacherName } from "@/lib/format";
 
 export default async function AdminKommentarePage() {

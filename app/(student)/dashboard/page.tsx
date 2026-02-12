@@ -1,5 +1,8 @@
+import type { Metadata } from "next";
 import { auth } from "@/lib/auth";
 import { Card } from "@/components/ui/Card";
+
+export const metadata: Metadata = { title: "Dashboard" };
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";

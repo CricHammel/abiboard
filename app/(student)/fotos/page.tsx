@@ -1,6 +1,9 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+
+export const metadata: Metadata = { title: "Fotos" };
 import { PhotoCategoryList } from "@/components/photos/PhotoCategoryList";
 import { Alert } from "@/components/ui/Alert";
 import { isDeadlinePassed } from "@/lib/deadline";

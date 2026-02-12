@@ -1,8 +1,11 @@
+import type { Metadata } from "next";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { RankingStats } from "@/components/admin/rankings/RankingStats";
+
+export const metadata: Metadata = { title: "Rankings" };
 import { QuestionManagement } from "@/components/admin/ranking-questions/QuestionManagement";
 import Link from "next/link";
 import { redirect } from "next/navigation";

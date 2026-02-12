@@ -1,6 +1,9 @@
+import type { Metadata } from "next";
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+
+export const metadata: Metadata = { title: "Steckbrief" };
 import { Card } from "@/components/ui/Card";
 import { StatsGrid } from "@/components/ui/StatsGrid";
 import { ProgressBar } from "@/components/ui/ProgressBar";

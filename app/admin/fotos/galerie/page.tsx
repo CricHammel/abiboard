@@ -1,7 +1,10 @@
+import type { Metadata } from "next";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { AdminPhotoOverview } from "@/components/admin/photos/AdminPhotoOverview";
 import { redirect } from "next/navigation";
+
+export const metadata: Metadata = { title: "Fotogalerie" };
 
 export default async function FotosGaleriePage() {
   const session = await auth();

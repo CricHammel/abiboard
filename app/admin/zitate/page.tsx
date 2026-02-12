@@ -1,8 +1,11 @@
+import type { Metadata } from "next";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import { StatsGrid } from "@/components/ui/StatsGrid";
 import { ProgressBar } from "@/components/ui/ProgressBar";
+
+export const metadata: Metadata = { title: "Zitate" };
 import { ParticipationSection } from "@/components/ui/ParticipationSection";
 import { ZitateOverview } from "@/components/admin/zitate/ZitateOverview";
 

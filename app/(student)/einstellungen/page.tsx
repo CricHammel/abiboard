@@ -1,5 +1,8 @@
+import type { Metadata } from "next";
 import { auth } from "@/lib/auth";
 import { Card } from "@/components/ui/Card";
+
+export const metadata: Metadata = { title: "Einstellungen" };
 import { PasswordChangeForm } from "@/components/settings/PasswordChangeForm";
 import { redirect } from "next/navigation";
 

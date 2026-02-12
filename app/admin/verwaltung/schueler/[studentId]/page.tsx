@@ -1,8 +1,22 @@
+import type { Metadata } from "next";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import { redirect, notFound } from "next/navigation";
 import { StudentDetailClient } from "./StudentDetailClient";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ studentId: string }>;
+}): Promise<Metadata> {
+  const { studentId } = await params;
+  const student = await prisma.student.findUnique({
+    where: { id: studentId },
+    select: { firstName: true, lastName: true },
+  });
+  return { title: student ? `${student.firstName} ${student.lastName}` : "Schülerdetails" };
+}
 
 export default async function StudentDetailPage({
   params,

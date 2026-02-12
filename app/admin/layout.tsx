@@ -1,8 +1,16 @@
+import type { Metadata } from "next";
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { LogoutButton } from "@/components/auth/LogoutButton";
 import { AdminNav } from "@/components/navigation/AdminNav";
 import { AdminAliasModal } from "@/components/admin/AdminAliasModal";
+
+export const metadata: Metadata = {
+  title: {
+    default: "AbiBoard Admin",
+    template: "%s - AbiBoard Admin",
+  },
+};
 
 export default async function AdminLayout({
   children,

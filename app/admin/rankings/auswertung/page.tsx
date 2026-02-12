@@ -1,8 +1,11 @@
+import type { Metadata } from "next";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { Card } from "@/components/ui/Card";
 import { RankingResults } from "@/components/admin/rankings/RankingResults";
 import { redirect } from "next/navigation";
+
+export const metadata: Metadata = { title: "Rankings Auswertung" };
 
 export default async function RankingsAuswertungPage() {
   const session = await auth();

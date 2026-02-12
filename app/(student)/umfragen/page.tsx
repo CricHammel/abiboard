@@ -1,6 +1,9 @@
+import type { Metadata } from "next";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { SurveyPage } from "@/components/survey/SurveyPage";
+
+export const metadata: Metadata = { title: "Umfragen" };
 import { redirect } from "next/navigation";
 import { Alert } from "@/components/ui/Alert";
 import { PageHeader } from "@/components/ui/PageHeader";

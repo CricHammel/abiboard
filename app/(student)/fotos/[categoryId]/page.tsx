@@ -1,9 +1,23 @@
+import type { Metadata } from "next";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { redirect, notFound } from "next/navigation";
 import { PhotoCategoryDetail } from "@/components/photos/PhotoCategoryDetail";
 import { Alert } from "@/components/ui/Alert";
 import { isDeadlinePassed } from "@/lib/deadline";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ categoryId: string }>;
+}): Promise<Metadata> {
+  const { categoryId } = await params;
+  const category = await prisma.photoCategory.findUnique({
+    where: { id: categoryId },
+    select: { name: true },
+  });
+  return { title: category?.name ?? "Fotos" };
+}
 
 export default async function PhotoCategoryDetailRoute({
   params,

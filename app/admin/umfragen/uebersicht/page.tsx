@@ -1,8 +1,11 @@
+import type { Metadata } from "next";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { Card } from "@/components/ui/Card";
 import { SurveyStats } from "@/components/admin/survey/SurveyStats";
 import { SurveyManagement } from "@/components/admin/survey/SurveyManagement";
+
+export const metadata: Metadata = { title: "Umfragen" };
 import { redirect } from "next/navigation";
 
 export default async function UmfragenUebersichtPage() {

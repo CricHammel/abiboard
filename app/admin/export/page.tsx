@@ -1,7 +1,10 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { ExportPage } from "@/components/admin/export/ExportPage";
 import { getDeadline } from "@/lib/deadline";
+
+export const metadata: Metadata = { title: "Datenexport" };
 
 export default async function AdminExportPage() {
   const session = await auth();

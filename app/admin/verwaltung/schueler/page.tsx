@@ -1,8 +1,11 @@
+import type { Metadata } from "next";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { StudentManagement } from "@/components/admin/StudentManagement";
+
+export const metadata: Metadata = { title: "Schülerverwaltung" };
 import Link from "next/link";
 import { redirect } from "next/navigation";
 

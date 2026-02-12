@@ -1,8 +1,11 @@
+import type { Metadata } from "next";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { Card } from "@/components/ui/Card";
 import { StatsGrid } from "@/components/ui/StatsGrid";
 import { ProgressBar } from "@/components/ui/ProgressBar";
+
+export const metadata: Metadata = { title: "Fotos" };
 import { ParticipationSection } from "@/components/ui/ParticipationSection";
 import { PhotoCategoryManagement } from "@/components/admin/photos/PhotoCategoryManagement";
 import { redirect } from "next/navigation";

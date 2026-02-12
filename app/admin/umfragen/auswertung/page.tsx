@@ -1,7 +1,10 @@
+import type { Metadata } from "next";
 import { auth } from "@/lib/auth";
 import { Card } from "@/components/ui/Card";
 import { SurveyResults } from "@/components/admin/survey/SurveyResults";
 import { redirect } from "next/navigation";
+
+export const metadata: Metadata = { title: "Umfragen Auswertung" };
 
 export default async function UmfragenAuswertungPage() {
   const session = await auth();

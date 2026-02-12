@@ -1,7 +1,10 @@
+import type { Metadata } from "next";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import { RankingsPage } from "@/components/rankings/RankingsPage";
+
+export const metadata: Metadata = { title: "Rankings" };
 import { Alert } from "@/components/ui/Alert";
 import { isDeadlinePassed } from "@/lib/deadline";
 

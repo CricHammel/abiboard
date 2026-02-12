@@ -1,7 +1,22 @@
+import type { Metadata } from "next";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { redirect, notFound } from "next/navigation";
 import { TeacherQuoteAdminDetail } from "@/components/admin/teacher-quotes/TeacherQuoteAdminDetail";
+import { formatTeacherName } from "@/lib/format";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ teacherId: string }>;
+}): Promise<Metadata> {
+  const { teacherId } = await params;
+  const teacher = await prisma.teacher.findUnique({
+    where: { id: teacherId },
+    select: { salutation: true, firstName: true, lastName: true, subject: true },
+  });
+  return { title: teacher ? `Zitate von ${formatTeacherName(teacher, { includeSubject: false })}` : "Lehrerzitate" };
+}
 
 export default async function AdminTeacherQuoteDetailRoute({
   params,

@@ -3,7 +3,10 @@ import "./globals.css";
 import { SessionProvider } from "@/components/providers/SessionProvider";
 
 export const metadata: Metadata = {
-  title: "AbiBoard",
+  title: {
+    default: "AbiBoard",
+    template: "%s - AbiBoard",
+  },
   description: "AbiBoard - Abibuch-Verwaltung für eure Abschlussklasse",
 };
 

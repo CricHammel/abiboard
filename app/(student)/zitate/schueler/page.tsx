@@ -1,7 +1,10 @@
+import type { Metadata } from "next";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import { StudentQuoteList } from "@/components/student-quotes/StudentQuoteList";
+
+export const metadata: Metadata = { title: "Schülerzitate" };
 
 export default async function SchuelerzitateRoute() {
   const session = await auth();

@@ -1,6 +1,9 @@
+import type { Metadata } from "next";
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+
+export const metadata: Metadata = { title: "Steckbrief" };
 import { FieldType } from "@prisma/client";
 import { SteckbriefForm } from "@/components/steckbrief/SteckbriefForm";
 import { ContactInfoForm } from "@/components/steckbrief/ContactInfoForm";
