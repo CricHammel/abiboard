@@ -80,9 +80,14 @@ export function RankingsPage({ initialData, deadlinePassed = false }: RankingsPa
 
   const isSubmitted = status === "SUBMITTED";
 
-  // Count answered questions
+  // Count answer slots for a set of questions
+  const countSlots = (qs: Question[]) =>
+    qs.reduce((acc, q) => acc + (q.answerMode === "GENDER_SPECIFIC" ? 2 : 1), 0);
+
   const answeredCount = new Set(votes.map((v) => `${v.questionId}-${v.genderTarget}`)).size;
-  const totalSlots = questions.reduce((acc, q) => acc + (q.answerMode === "GENDER_SPECIFIC" ? 2 : 1), 0);
+  const studentSlots = countSlots(studentQuestions);
+  const teacherSlots = countSlots(teacherQuestions);
+  const totalSlots = studentSlots + teacherSlots;
 
   const handleVote = async (
     questionId: string,
@@ -289,8 +294,8 @@ export function RankingsPage({ initialData, deadlinePassed = false }: RankingsPa
         <>
           <TabNav
             tabs={[
-              { id: "student", label: `Schüler (${studentQuestions.length})` },
-              { id: "teacher", label: `Lehrer (${teacherQuestions.length})` },
+              { id: "student", label: `Schüler (${studentSlots})` },
+              { id: "teacher", label: `Lehrer (${teacherSlots})` },
             ]}
             activeTab={activeTab}
             onTabChange={(tab) => setActiveTab(tab as "student" | "teacher")}
