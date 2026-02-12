@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { CommentAdminPage } from "@/components/admin/comments/CommentAdminPage";
+import { PageHeader } from "@/components/ui/PageHeader";
 import { formatTeacherName } from "@/lib/format";
 
 export default async function AdminKommentarePage() {
@@ -55,7 +56,10 @@ export default async function AdminKommentarePage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold text-gray-900">Kommentare</h1>
+      <PageHeader
+        title="Kommentare"
+        description="Übersicht aller Kommentare."
+      />
       <CommentAdminPage initialComments={transformedComments} />
     </div>
   );

@@ -1,4 +1,5 @@
 import { TabNav } from "@/components/ui/TabNav";
+import { PageHeader } from "@/components/ui/PageHeader";
 
 const tabs = [
   { href: "/admin/umfragen/statistiken", label: "Statistiken" },
@@ -12,9 +13,7 @@ export default function UmfragenLayout({
 }) {
   return (
     <div>
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-900">Umfragen</h1>
-      </div>
+      <PageHeader title="Umfragen" className="mb-6" />
       <TabNav tabs={tabs} />
       {children}
     </div>

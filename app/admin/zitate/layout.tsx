@@ -1,4 +1,5 @@
 import { TabNav } from "@/components/ui/TabNav";
+import { PageHeader } from "@/components/ui/PageHeader";
 
 const tabs = [
   { href: "/admin/zitate/schueler", label: "Schüler" },
@@ -12,9 +13,7 @@ export default function AdminZitateLayout({
 }) {
   return (
     <div>
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-900">Zitate</h1>
-      </div>
+      <PageHeader title="Zitate" className="mb-6" />
       <TabNav tabs={tabs} />
       {children}
     </div>

@@ -1,4 +1,5 @@
 import { TabNav } from "@/components/ui/TabNav";
+import { PageHeader } from "@/components/ui/PageHeader";
 
 const tabs = [
   { href: "/zitate/schueler", label: "Schüler" },
@@ -12,9 +13,11 @@ export default function ZitateLayout({
 }) {
   return (
     <div>
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Zitate</h1>
-      </div>
+      <PageHeader
+        title="Zitate"
+        description="Sammle lustige Zitate von Mitschülern und Lehrern."
+        className="mb-6"
+      />
       <TabNav tabs={tabs} />
       {children}
     </div>

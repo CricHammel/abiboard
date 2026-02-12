@@ -2,6 +2,7 @@ import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { Card } from "@/components/ui/Card";
+import { ProgressBar } from "@/components/ui/ProgressBar";
 import { SteckbriefeOverview } from "@/components/admin/steckbriefe/SteckbriefeOverview";
 
 export default async function SteckbriefUebersichtPage() {
@@ -39,24 +40,12 @@ export default async function SteckbriefUebersichtPage() {
       </p>
 
       <Card>
-        <div className="flex justify-between text-sm mb-2">
-          <span className="text-gray-600">Eingereicht</span>
-          <span className="font-medium">
-            {submittedCount}/{totalRegistered}
-          </span>
-        </div>
-        <div className="w-full bg-gray-200 rounded-full h-3">
-          <div
-            className="bg-green-600 h-3 rounded-full transition-all"
-            style={{
-              width: `${
-                totalRegistered > 0
-                  ? (submittedCount / totalRegistered) * 100
-                  : 0
-              }%`,
-            }}
-          />
-        </div>
+        <ProgressBar
+          value={submittedCount}
+          max={totalRegistered}
+          label="Eingereicht"
+          color="green"
+        />
       </Card>
 
       <Card>

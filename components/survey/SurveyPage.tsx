@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { SurveyQuestionCard } from "./SurveyQuestionCard";
 import { ErrorMessage } from "@/components/ui/ErrorMessage";
+import { Alert } from "@/components/ui/Alert";
+import { ProgressBar } from "@/components/ui/ProgressBar";
 
 interface SurveyOption {
   id: string;
@@ -33,7 +35,6 @@ export function SurveyPage({
 
   const answeredCount = Object.keys(answers).length;
   const totalCount = initialQuestions.length;
-  const progressPercent = totalCount > 0 ? (answeredCount / totalCount) * 100 : 0;
 
   const handleAnswer = async (
     questionId: string,
@@ -79,46 +80,16 @@ export function SurveyPage({
     <div className="space-y-6">
       {/* Progress Bar */}
       <div className="bg-white border border-gray-200 rounded-lg p-4">
-        <div className="flex justify-between items-center mb-2">
-          <span className="text-sm font-medium text-gray-700">
-            Fortschritt
-          </span>
-          <span className="text-sm text-gray-600">
-            {answeredCount} von {totalCount} beantwortet
-          </span>
-        </div>
-        <div className="w-full bg-gray-200 rounded-full h-2.5">
-          <div
-            className="bg-primary h-2.5 rounded-full transition-all duration-300"
-            style={{ width: `${progressPercent}%` }}
-          />
-        </div>
+        <ProgressBar value={answeredCount} max={totalCount} label="Fortschritt" />
       </div>
 
       {error && <ErrorMessage message={error} />}
 
       {/* Info Box */}
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm text-blue-800">
-        <div className="flex items-start gap-2">
-          <svg
-            className="w-5 h-5 flex-shrink-0 mt-0.5"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-            />
-          </svg>
-          <p>
-            Deine Antworten werden automatisch und <strong>anonym</strong> gespeichert.
-            Du kannst deine Antworten jederzeit ändern.
-          </p>
-        </div>
-      </div>
+      <Alert variant="info">
+        Deine Antworten werden automatisch und <strong>anonym</strong> gespeichert.
+        Du kannst deine Antworten jederzeit ändern.
+      </Alert>
 
       {/* Questions */}
       <div className="space-y-4">

@@ -6,6 +6,7 @@ import { SteckbriefForm } from "@/components/steckbrief/SteckbriefForm";
 import { ContactInfoForm } from "@/components/steckbrief/ContactInfoForm";
 import { Card } from "@/components/ui/Card";
 import { Alert } from "@/components/ui/Alert";
+import { PageHeader } from "@/components/ui/PageHeader";
 import { toFieldDefinition } from "@/lib/steckbrief-validation-dynamic";
 import { isDeadlinePassed } from "@/lib/deadline";
 
@@ -75,13 +76,11 @@ export default async function SteckbriefPage() {
 
   return (
     <div className="max-w-3xl">
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-900">Mein Steckbrief</h1>
-        <p className="mt-2 text-gray-600">
-          Fülle deine Informationen für das Abibuch aus. Du kannst deine Angaben
-          jederzeit als Entwurf speichern und später weiter bearbeiten.
-        </p>
-      </div>
+      <PageHeader
+        title="Mein Steckbrief"
+        description="Fülle deine Informationen für das Abibuch aus. Du kannst deine Angaben jederzeit als Entwurf speichern und später weiter bearbeiten."
+        className="mb-6"
+      />
 
       {deadlinePassed && (
         <div className="mb-6">

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { StatsGrid } from "@/components/ui/StatsGrid";
 
 interface AdminComment {
   id: string;
@@ -151,24 +152,13 @@ export function CommentAdminPage({ initialComments }: CommentAdminPageProps) {
   return (
     <div className="space-y-6">
       {/* Stats */}
-      <div className="grid grid-cols-3 gap-4">
-        <div className="bg-white border border-gray-200 rounded-lg p-4 text-center">
-          <div className="text-2xl font-bold text-gray-900">{comments.length}</div>
-          <div className="text-sm text-gray-500">Gesamt</div>
-        </div>
-        <div className="bg-white border border-gray-200 rounded-lg p-4 text-center">
-          <div className="text-2xl font-bold text-gray-900">
-            {comments.filter((c) => c.targetType === "STUDENT").length}
-          </div>
-          <div className="text-sm text-gray-500">Über Schüler</div>
-        </div>
-        <div className="bg-white border border-gray-200 rounded-lg p-4 text-center">
-          <div className="text-2xl font-bold text-gray-900">
-            {comments.filter((c) => c.targetType === "TEACHER").length}
-          </div>
-          <div className="text-sm text-gray-500">Über Lehrer</div>
-        </div>
-      </div>
+      <StatsGrid
+        items={[
+          { label: "Gesamt", value: comments.length },
+          { label: "Über Schüler", value: comments.filter((c) => c.targetType === "STUDENT").length },
+          { label: "Über Lehrer", value: comments.filter((c) => c.targetType === "TEACHER").length },
+        ]}
+      />
 
       {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-4">

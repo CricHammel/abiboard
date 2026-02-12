@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import { ProgressBar } from "@/components/ui/ProgressBar";
+import { StatsGrid } from "@/components/ui/StatsGrid";
 
 type AnswerMode = "SINGLE" | "GENDER_SPECIFIC" | "DUO";
 
@@ -87,41 +89,25 @@ export function RankingStats({ initialData }: RankingStatsProps) {
     }
   };
 
-  const participationRate = totalStudents > 0
-    ? Math.round((submittedCount / totalStudents) * 100)
-    : 0;
-
   return (
     <div className="space-y-6">
       {/* Overview cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="border border-gray-200 rounded-lg p-4 text-center">
-          <p className="text-3xl font-bold text-gray-900">{totalStudents}</p>
-          <p className="text-sm text-gray-600 mt-1">Schüler gesamt</p>
-        </div>
-        <div className="border border-gray-200 rounded-lg p-4 text-center">
-          <p className="text-3xl font-bold text-green-600">{submittedCount}</p>
-          <p className="text-sm text-gray-600 mt-1">Abgeschickt</p>
-        </div>
-        <div className="border border-gray-200 rounded-lg p-4 text-center">
-          <p className="text-3xl font-bold text-amber-600">{notSubmitted.length}</p>
-          <p className="text-sm text-gray-600 mt-1">Noch offen</p>
-        </div>
-      </div>
+      <StatsGrid
+        items={[
+          { label: "Schüler gesamt", value: totalStudents },
+          { label: "Abgeschickt", value: submittedCount, color: "green" },
+          { label: "Noch offen", value: notSubmitted.length, color: "amber" },
+        ]}
+      />
 
       {/* Progress bar */}
-      <div>
-        <div className="flex justify-between text-sm text-gray-600 mb-1">
-          <span>Teilnahme</span>
-          <span>{participationRate}%</span>
-        </div>
-        <div className="w-full bg-gray-200 rounded-full h-2">
-          <div
-            className="bg-green-500 h-2 rounded-full transition-all"
-            style={{ width: `${participationRate}%` }}
-          />
-        </div>
-      </div>
+      <ProgressBar
+        value={submittedCount}
+        max={totalStudents}
+        label="Teilnahme"
+        color="green"
+        size="sm"
+      />
 
       {/* Submitted list */}
       {submitted.length > 0 && (

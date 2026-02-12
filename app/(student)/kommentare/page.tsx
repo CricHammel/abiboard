@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { CommentPage } from "@/components/comments/CommentPage";
 import { Alert } from "@/components/ui/Alert";
+import { PageHeader } from "@/components/ui/PageHeader";
 import { isDeadlinePassed } from "@/lib/deadline";
 import { formatTeacherName } from "@/lib/format";
 
@@ -87,7 +88,10 @@ export default async function KommentarePage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold text-gray-900">Kommentare</h1>
+      <PageHeader
+        title="Kommentare"
+        description="Schreibe Kommentare über Mitschüler und Lehrer für das Abibuch."
+      />
       {deadlinePassed && (
         <Alert variant="info">
           Die Abgabefrist ist abgelaufen. Inhalte können nicht mehr bearbeitet werden.

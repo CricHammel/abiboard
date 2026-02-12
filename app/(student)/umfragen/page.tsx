@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { SurveyPage } from "@/components/survey/SurveyPage";
 import { redirect } from "next/navigation";
 import { Alert } from "@/components/ui/Alert";
+import { PageHeader } from "@/components/ui/PageHeader";
 import { isDeadlinePassed } from "@/lib/deadline";
 
 export default async function StudentSurveyPage() {
@@ -47,12 +48,10 @@ export default async function StudentSurveyPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-gray-900">Umfragen</h1>
-        <p className="text-gray-600 mt-2">
-          Beantworte die Fragen für das Abibuch.
-        </p>
-      </div>
+      <PageHeader
+        title="Umfragen"
+        description="Beantworte die Fragen für das Abibuch."
+      />
 
       {deadlinePassed && (
         <Alert variant="info">

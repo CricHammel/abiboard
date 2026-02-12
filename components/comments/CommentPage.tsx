@@ -152,12 +152,6 @@ export function CommentPage({
 
   return (
     <div className="space-y-6">
-      {/* Info Box */}
-      <Alert variant="info">
-        Schreibe nette Kommentare über deine Mitschüler und Lehrer für das Abibuch.
-        Du kannst für jede Person einen Kommentar schreiben.
-      </Alert>
-
       {/* Messages */}
       {error && <Alert variant="error">{error}</Alert>}
       {success && <Alert variant="success">{success}</Alert>}

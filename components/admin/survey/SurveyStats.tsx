@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { ErrorMessage } from "@/components/ui/ErrorMessage";
+import { ProgressBar } from "@/components/ui/ProgressBar";
+import { StatsGrid } from "@/components/ui/StatsGrid";
 
 interface OptionStat {
   id: string;
@@ -90,43 +92,21 @@ export function SurveyStats() {
   return (
     <div className="space-y-6">
       {/* Overview Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="bg-white border border-gray-200 rounded-lg p-4">
-          <p className="text-sm text-gray-600">Gesamt Schüler</p>
-          <p className="text-2xl font-bold text-gray-900">
-            {stats.totalStudents}
-          </p>
-        </div>
-        <div className="bg-white border border-gray-200 rounded-lg p-4">
-          <p className="text-sm text-gray-600">Teilgenommen</p>
-          <p className="text-2xl font-bold text-gray-900">
-            {stats.participatingStudents}
-          </p>
-        </div>
-        <div className="bg-white border border-gray-200 rounded-lg p-4">
-          <p className="text-sm text-gray-600">Teilnahmequote</p>
-          <p className="text-2xl font-bold text-primary">
-            {stats.participationRate}%
-          </p>
-        </div>
-      </div>
+      <StatsGrid
+        items={[
+          { label: "Gesamt Schüler", value: stats.totalStudents },
+          { label: "Teilgenommen", value: stats.participatingStudents },
+          { label: "Teilnahmequote", value: `${stats.participationRate}%`, color: "primary" },
+        ]}
+      />
 
       {/* Participation Progress Bar */}
       <div className="bg-white border border-gray-200 rounded-lg p-4">
-        <div className="flex justify-between items-center mb-2">
-          <span className="text-sm font-medium text-gray-700">
-            Teilnahme-Fortschritt
-          </span>
-          <span className="text-sm text-gray-600">
-            {stats.participatingStudents} von {stats.totalStudents}
-          </span>
-        </div>
-        <div className="w-full bg-gray-200 rounded-full h-3">
-          <div
-            className="bg-primary h-3 rounded-full transition-all duration-300"
-            style={{ width: `${stats.participationRate}%` }}
-          />
-        </div>
+        <ProgressBar
+          value={stats.participatingStudents}
+          max={stats.totalStudents}
+          label="Teilnahme-Fortschritt"
+        />
       </div>
 
       {/* Questions */}

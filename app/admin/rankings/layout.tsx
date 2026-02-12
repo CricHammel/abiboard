@@ -1,4 +1,5 @@
 import { TabNav } from "@/components/ui/TabNav";
+import { PageHeader } from "@/components/ui/PageHeader";
 
 const tabs = [
   { href: "/admin/rankings/statistiken", label: "Statistiken" },
@@ -12,9 +13,7 @@ export default function RankingsLayout({
 }) {
   return (
     <div>
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-900">Rankings</h1>
-      </div>
+      <PageHeader title="Rankings" className="mb-6" />
       <TabNav tabs={tabs} />
       {children}
     </div>

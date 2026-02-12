@@ -7,6 +7,7 @@ import { Alert } from "@/components/ui/Alert";
 import { Badge } from "@/components/ui/Badge";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { TabNav } from "@/components/ui/TabNav";
+import { ProgressBar } from "@/components/ui/ProgressBar";
 import { CandidateList } from "./CandidateList";
 import { QuestionCard } from "./QuestionCard";
 
@@ -269,12 +270,7 @@ export function RankingsPage({ initialData, deadlinePassed = false }: RankingsPa
       </div>
 
       {/* Progress bar */}
-      <div className="w-full bg-gray-200 rounded-full h-2">
-        <div
-          className="bg-primary h-2 rounded-full transition-all"
-          style={{ width: `${totalSlots > 0 ? (answeredCount / totalSlots) * 100 : 0}%` }}
-        />
-      </div>
+      <ProgressBar value={answeredCount} max={totalSlots} showFraction={false} size="sm" />
 
       <Alert variant="info">
         Tippe einen Namen ein und wähle die Person aus der Vorschlagsliste aus. Nur ausgewählte Einträge werden als Stimme gezählt.
