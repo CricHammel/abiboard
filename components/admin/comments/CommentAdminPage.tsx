@@ -38,6 +38,7 @@ interface CommentAdminPageProps {
 }
 
 const MAX_LENGTH = 500;
+const PAGE_SIZE = 25;
 
 export function CommentAdminPage({ initialComments, totalStudents, commented, notCommented }: CommentAdminPageProps) {
   const [comments, setComments] = useState<AdminComment[]>(initialComments);
@@ -47,6 +48,7 @@ export function CommentAdminPage({ initialComments, totalStudents, commented, no
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [displayCount, setDisplayCount] = useState(PAGE_SIZE);
 
   // Filters
   const [filterTargetType, setFilterTargetType] = useState<"ALL" | "STUDENT" | "TEACHER">("ALL");
@@ -203,14 +205,14 @@ export function CommentAdminPage({ initialComments, totalStudents, commented, no
           <input
             type="text"
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={(e) => { setSearchQuery(e.target.value); setDisplayCount(PAGE_SIZE); }}
             placeholder="Suchen (Autor, Ziel, Text)..."
             className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-light min-h-[44px]"
           />
         </div>
         <select
           value={filterTargetType}
-          onChange={(e) => setFilterTargetType(e.target.value as "ALL" | "STUDENT" | "TEACHER")}
+          onChange={(e) => { setFilterTargetType(e.target.value as "ALL" | "STUDENT" | "TEACHER"); setDisplayCount(PAGE_SIZE); }}
           className="px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-light min-h-[44px]"
         >
           <option value="ALL">Alle Ziele</option>
@@ -240,7 +242,7 @@ export function CommentAdminPage({ initialComments, totalStudents, commented, no
               : "Keine Kommentare gefunden."}
           </p>
         ) : (
-          filteredComments.map((comment) => (
+          filteredComments.slice(0, displayCount).map((comment) => (
             <div
               key={comment.id}
               className="bg-white border border-gray-200 rounded-lg p-4"
@@ -322,6 +324,20 @@ export function CommentAdminPage({ initialComments, totalStudents, commented, no
           ))
         )}
       </div>
+
+      {filteredComments.length > displayCount && (
+        <div className="flex flex-col items-center gap-1">
+          <span className="text-xs text-gray-400">
+            {displayCount} von {filteredComments.length} angezeigt
+          </span>
+          <button
+            onClick={() => setDisplayCount((prev) => prev + PAGE_SIZE)}
+            className="px-4 py-2 text-sm font-medium text-primary-dark hover:text-primary-darker border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors min-h-[44px]"
+          >
+            Mehr anzeigen
+          </button>
+        </div>
+      )}
 
       <ConfirmDialog
         isOpen={!!deleteId}
