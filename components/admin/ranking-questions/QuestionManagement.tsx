@@ -4,6 +4,7 @@ import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/Button";
 import { ErrorMessage } from "@/components/ui/ErrorMessage";
 import { Alert } from "@/components/ui/Alert";
+import { TabNav } from "@/components/ui/TabNav";
 import { QuestionList } from "./QuestionList";
 import { QuestionForm } from "./QuestionForm";
 
@@ -30,24 +31,27 @@ export function QuestionManagement({ initialQuestions }: QuestionManagementProps
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
-  // Search and filter state
+  // Tab and filter state
+  const [activeTab, setActiveTab] = useState<"STUDENT" | "TEACHER">("STUDENT");
   const [searchTerm, setSearchTerm] = useState("");
-  const [typeFilter, setTypeFilter] = useState<"ALL" | "STUDENT" | "TEACHER">("ALL");
   const [statusFilter, setStatusFilter] = useState<"ALL" | "ACTIVE" | "INACTIVE">("ALL");
 
   const filteredQuestions = useMemo(() => {
     return questions.filter((q) => {
+      const matchesType = q.type === activeTab;
       const matchesSearch = q.text.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesType = typeFilter === "ALL" || q.type === typeFilter;
       const matchesStatus =
         statusFilter === "ALL" ||
         (statusFilter === "ACTIVE" && q.active) ||
         (statusFilter === "INACTIVE" && !q.active);
-      return matchesSearch && matchesType && matchesStatus;
+      return matchesType && matchesSearch && matchesStatus;
     });
-  }, [questions, searchTerm, typeFilter, statusFilter]);
+  }, [questions, activeTab, searchTerm, statusFilter]);
 
-  const isFiltered = searchTerm !== "" || typeFilter !== "ALL" || statusFilter !== "ALL";
+  const isFiltered = searchTerm !== "" || statusFilter !== "ALL";
+
+  const studentCount = questions.filter((q) => q.type === "STUDENT").length;
+  const teacherCount = questions.filter((q) => q.type === "TEACHER").length;
 
   const handleCreate = async (data: {
     text: string;
@@ -189,8 +193,17 @@ export function QuestionManagement({ initialQuestions }: QuestionManagementProps
         return;
       }
 
-      setQuestions(
-        reorderedQuestions.map((q, index) => ({ ...q, order: index + 1 }))
+      const reorderedMap = new Map(
+        reorderedQuestions.map((q, index) => [q.id, index + 1])
+      );
+      setQuestions((prev) =>
+        prev
+          .map((q) =>
+            reorderedMap.has(q.id)
+              ? { ...q, order: reorderedMap.get(q.id)! }
+              : q
+          )
+          .sort((a, b) => a.order - b.order)
       );
       setSuccessMessage("Reihenfolge aktualisiert.");
     } catch {
@@ -208,6 +221,15 @@ export function QuestionManagement({ initialQuestions }: QuestionManagementProps
         <Alert variant="success">{successMessage}</Alert>
       )}
 
+      <TabNav
+        tabs={[
+          { id: "STUDENT", label: `Schüler (${studentCount})` },
+          { id: "TEACHER", label: `Lehrer (${teacherCount})` },
+        ]}
+        activeTab={activeTab}
+        onTabChange={(id) => setActiveTab(id as "STUDENT" | "TEACHER")}
+      />
+
       {/* Search and filters */}
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="flex-1">
@@ -219,15 +241,6 @@ export function QuestionManagement({ initialQuestions }: QuestionManagementProps
             className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-light min-h-[44px]"
           />
         </div>
-        <select
-          value={typeFilter}
-          onChange={(e) => setTypeFilter(e.target.value as "ALL" | "STUDENT" | "TEACHER")}
-          className="px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-light min-h-[44px]"
-        >
-          <option value="ALL">Alle Typen</option>
-          <option value="STUDENT">Schüler</option>
-          <option value="TEACHER">Lehrer</option>
-        </select>
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value as "ALL" | "ACTIVE" | "INACTIVE")}
@@ -242,8 +255,8 @@ export function QuestionManagement({ initialQuestions }: QuestionManagementProps
       <div className="flex justify-between items-center">
         <h2 className="text-lg font-semibold text-gray-900">
           {isFiltered
-            ? `${filteredQuestions.length} von ${questions.length} Fragen`
-            : `${questions.length} Fragen`}
+            ? `${filteredQuestions.length} von ${activeTab === "STUDENT" ? studentCount : teacherCount} Fragen`
+            : `${filteredQuestions.length} Fragen`}
         </h2>
         <Button
           onClick={() => {
@@ -265,6 +278,7 @@ export function QuestionManagement({ initialQuestions }: QuestionManagementProps
             Neue Frage erstellen
           </h3>
           <QuestionForm
+            defaultType={activeTab}
             onSubmit={handleCreate}
             onCancel={() => setIsCreating(false)}
             isLoading={isLoading}

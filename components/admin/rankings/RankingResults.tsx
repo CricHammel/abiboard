@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import { TabNav } from "@/components/ui/TabNav";
 
 type AnswerMode = "SINGLE" | "GENDER_SPECIFIC" | "DUO";
 
@@ -35,18 +36,21 @@ export function RankingResults({ questions }: RankingResultsProps) {
   const [expandedQuestion, setExpandedQuestion] = useState<string | null>(null);
   const [questionResults, setQuestionResults] = useState<Record<string, QuestionResults>>({});
   const [loadingQuestion, setLoadingQuestion] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<"STUDENT" | "TEACHER">("STUDENT");
   const [searchTerm, setSearchTerm] = useState("");
-  const [typeFilter, setTypeFilter] = useState<"ALL" | "STUDENT" | "TEACHER">("ALL");
+
+  const studentCount = questions.filter((q) => q.type === "STUDENT").length;
+  const teacherCount = questions.filter((q) => q.type === "TEACHER").length;
 
   const filteredQuestions = useMemo(() => {
     return questions.filter((q) => {
+      const matchesType = q.type === activeTab;
       const matchesSearch = q.text.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesType = typeFilter === "ALL" || q.type === typeFilter;
-      return matchesSearch && matchesType;
+      return matchesType && matchesSearch;
     });
-  }, [questions, searchTerm, typeFilter]);
+  }, [questions, activeTab, searchTerm]);
 
-  const isFiltered = searchTerm !== "" || typeFilter !== "ALL";
+  const isFiltered = searchTerm !== "";
 
   const toggleQuestion = async (questionId: string) => {
     if (expandedQuestion === questionId) {
@@ -80,31 +84,29 @@ export function RankingResults({ questions }: RankingResultsProps) {
 
   return (
     <div className="space-y-4">
-      {/* Search and filters */}
-      <div className="flex flex-col sm:flex-row gap-3">
-        <div className="flex-1">
-          <input
-            type="text"
-            placeholder="Fragen durchsuchen..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-light min-h-[44px]"
-          />
-        </div>
-        <select
-          value={typeFilter}
-          onChange={(e) => setTypeFilter(e.target.value as "ALL" | "STUDENT" | "TEACHER")}
-          className="px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-light min-h-[44px]"
-        >
-          <option value="ALL">Alle Typen</option>
-          <option value="STUDENT">Schüler</option>
-          <option value="TEACHER">Lehrer</option>
-        </select>
+      <TabNav
+        tabs={[
+          { id: "STUDENT", label: `Schüler (${studentCount})` },
+          { id: "TEACHER", label: `Lehrer (${teacherCount})` },
+        ]}
+        activeTab={activeTab}
+        onTabChange={(id) => setActiveTab(id as "STUDENT" | "TEACHER")}
+      />
+
+      {/* Search */}
+      <div>
+        <input
+          type="text"
+          placeholder="Fragen durchsuchen..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-light min-h-[44px]"
+        />
       </div>
 
       {isFiltered && (
         <p className="text-sm text-gray-500">
-          {filteredQuestions.length} von {questions.length} Fragen
+          {filteredQuestions.length} von {activeTab === "STUDENT" ? studentCount : teacherCount} Fragen
         </p>
       )}
 
@@ -122,13 +124,6 @@ export function RankingResults({ questions }: RankingResultsProps) {
           >
             <div className="flex items-center gap-2 text-left">
               <span className="text-sm font-medium text-gray-900">{question.text}</span>
-              <span className={`text-xs px-1.5 py-0.5 rounded ${
-                question.type === "STUDENT"
-                  ? "bg-blue-50 text-blue-600"
-                  : "bg-purple-50 text-purple-600"
-              }`}>
-                {question.type === "STUDENT" ? "Schüler" : "Lehrer"}
-              </span>
               {question.answerMode === "GENDER_SPECIFIC" && (
                 <span className="text-xs px-1.5 py-0.5 rounded bg-pink-50 text-pink-600">
                   m/w

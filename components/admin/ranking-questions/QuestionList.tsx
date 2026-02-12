@@ -131,13 +131,6 @@ export function QuestionList({
                 {question.text}
               </p>
               <div className="flex gap-2 mt-1">
-                <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
-                  question.type === "STUDENT"
-                    ? "bg-blue-100 text-blue-700"
-                    : "bg-purple-100 text-purple-700"
-                }`}>
-                  {question.type === "STUDENT" ? "Schüler" : "Lehrer"}
-                </span>
                 {question.answerMode === "GENDER_SPECIFIC" && (
                   <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-pink-100 text-pink-700">
                     m/w
@@ -230,13 +223,6 @@ export function QuestionList({
 
             {/* Badges */}
             <div className="flex flex-wrap gap-2">
-              <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
-                question.type === "STUDENT"
-                  ? "bg-blue-100 text-blue-700"
-                  : "bg-purple-100 text-purple-700"
-              }`}>
-                {question.type === "STUDENT" ? "Schüler" : "Lehrer"}
-              </span>
               {question.answerMode === "GENDER_SPECIFIC" && (
                 <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-pink-100 text-pink-700">
                   m/w

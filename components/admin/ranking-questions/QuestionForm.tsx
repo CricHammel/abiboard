@@ -17,6 +17,7 @@ interface Question {
 
 interface QuestionFormProps {
   question?: Question;
+  defaultType?: "STUDENT" | "TEACHER";
   onSubmit: (data: {
     text: string;
     type: "STUDENT" | "TEACHER";
@@ -28,13 +29,14 @@ interface QuestionFormProps {
 
 export function QuestionForm({
   question,
+  defaultType,
   onSubmit,
   onCancel,
   isLoading,
 }: QuestionFormProps) {
   const [text, setText] = useState(question?.text || "");
   const [type, setType] = useState<"STUDENT" | "TEACHER">(
-    question?.type || "STUDENT"
+    question?.type || defaultType || "STUDENT"
   );
   const [answerMode, setAnswerMode] = useState<AnswerMode>(
     question?.answerMode ?? "SINGLE"
