@@ -59,6 +59,19 @@ export default async function KommentarePage() {
     orderBy: [{ firstName: "asc" }, { lastName: "asc" }],
   });
 
+  // Get all active students with received comment counts for the overview
+  const studentsWithCommentCounts = await prisma.student.findMany({
+    where: { active: true },
+    select: {
+      id: true,
+      firstName: true,
+      lastName: true,
+      gender: true,
+      _count: { select: { commentsReceived: true } },
+    },
+    orderBy: [{ firstName: "asc" }, { lastName: "asc" }],
+  });
+
   // Get all active teachers for autocomplete
   const allTeachers = await prisma.teacher.findMany({
     where: { active: true },
@@ -105,8 +118,10 @@ export default async function KommentarePage() {
         allStudents={allStudents}
         allTeachers={allTeachers}
         currentUserId={session.user.id}
+        currentStudentId={currentStudent?.id}
         deadlinePassed={deadlinePassed}
         receivedFromAuthors={receivedFromAuthors}
+        studentsWithCommentCounts={studentsWithCommentCounts}
       />
     </div>
   );

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/Button";
 import { Alert } from "@/components/ui/Alert";
 import { CommentForm } from "./CommentForm";
@@ -26,13 +26,23 @@ interface ReceivedAuthor {
   lastName: string;
 }
 
+interface StudentWithCount {
+  id: string;
+  firstName: string;
+  lastName: string;
+  gender: "MALE" | "FEMALE" | null;
+  _count: { commentsReceived: number };
+}
+
 interface CommentPageProps {
   initialComments: CommentWithTarget[];
   allStudents: StudentOption[];
   allTeachers: TeacherOption[];
   currentUserId: string;
+  currentStudentId?: string;
   deadlinePassed?: boolean;
   receivedFromAuthors?: ReceivedAuthor[];
+  studentsWithCommentCounts?: StudentWithCount[];
 }
 
 export function CommentPage({
@@ -40,16 +50,35 @@ export function CommentPage({
   allStudents,
   allTeachers,
   currentUserId,
+  currentStudentId,
   deadlinePassed = false,
   receivedFromAuthors = [],
+  studentsWithCommentCounts = [],
 }: CommentPageProps) {
   const [comments, setComments] = useState<CommentWithTarget[]>(initialComments);
   const [receivedOpen, setReceivedOpen] = useState(false);
+  const [classOverviewOpen, setClassOverviewOpen] = useState(false);
   const [isAdding, setIsAdding] = useState(false);
+  const [preselectedStudent, setPreselectedStudent] = useState<{ type: "student"; data: StudentOption } | null>(null);
   const [editingComment, setEditingComment] = useState<CommentWithTarget | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+
+  const sortedStudents = useMemo(
+    () =>
+      studentsWithCommentCounts
+        .filter((s) => s.id !== currentStudentId)
+        .sort((a, b) => a._count.commentsReceived - b._count.commentsReceived),
+    [studentsWithCommentCounts, currentStudentId]
+  );
+
+  const handleSelectFromOverview = (student: StudentWithCount) => {
+    setPreselectedStudent({ type: "student", data: student });
+    setEditingComment(null);
+    setIsAdding(true);
+    setClassOverviewOpen(false);
+  };
 
   const handleCreate = async (data: { text: string; targetType: "STUDENT" | "TEACHER"; targetId: string }) => {
     setIsLoading(true);
@@ -78,6 +107,7 @@ export function CommentPage({
       }
 
       setIsAdding(false);
+      setPreselectedStudent(null);
       setSuccess("Kommentar hinzugefügt.");
       setTimeout(() => setSuccess(null), 3000);
     } catch (err) {
@@ -163,11 +193,13 @@ export function CommentPage({
             Neuen Kommentar schreiben
           </h2>
           <CommentForm
+            key={preselectedStudent?.data.id ?? "new"}
             allStudents={allStudents}
             allTeachers={allTeachers}
             excludeUserId={currentUserId}
+            initialPerson={preselectedStudent ?? undefined}
             onSubmit={handleCreate}
-            onCancel={() => setIsAdding(false)}
+            onCancel={() => { setIsAdding(false); setPreselectedStudent(null); }}
             isLoading={isLoading}
           />
         </div>
@@ -198,6 +230,62 @@ export function CommentPage({
           </svg>
           Neuen Kommentar schreiben
         </Button>
+      )}
+
+      {/* Class Overview Disclosure */}
+      {sortedStudents.length > 0 && (
+        <div className="border border-gray-200 rounded-lg overflow-hidden">
+          <button
+            onClick={() => setClassOverviewOpen(!classOverviewOpen)}
+            className="w-full flex items-center justify-between px-4 py-3 bg-gray-50 hover:bg-gray-100 transition-colors min-h-[44px]"
+          >
+            <span className="text-sm font-medium text-gray-700">
+              Klassenübersicht ({sortedStudents.length})
+            </span>
+            <svg
+              className={`w-5 h-5 text-gray-500 transition-transform ${classOverviewOpen ? "rotate-180" : ""}`}
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+          {classOverviewOpen && (
+            <div className="divide-y divide-gray-100">
+              {sortedStudents.map((student) =>
+                !deadlinePassed ? (
+                  <button
+                    key={student.id}
+                    onClick={() => handleSelectFromOverview(student)}
+                    className="w-full flex items-center justify-between px-4 py-2.5 hover:bg-gray-50 transition-colors text-left"
+                  >
+                    <span className="text-sm text-gray-900">
+                      {student.firstName} {student.lastName}
+                    </span>
+                    <span className="text-sm text-gray-500 shrink-0 ml-4">
+                      {student._count.commentsReceived}{" "}
+                      {student._count.commentsReceived === 1 ? "Kommentar" : "Kommentare"}
+                    </span>
+                  </button>
+                ) : (
+                  <div
+                    key={student.id}
+                    className="flex items-center justify-between px-4 py-2.5"
+                  >
+                    <span className="text-sm text-gray-900">
+                      {student.firstName} {student.lastName}
+                    </span>
+                    <span className="text-sm text-gray-500 shrink-0 ml-4">
+                      {student._count.commentsReceived}{" "}
+                      {student._count.commentsReceived === 1 ? "Kommentar" : "Kommentare"}
+                    </span>
+                  </div>
+                )
+              )}
+            </div>
+          )}
+        </div>
       )}
 
       {/* Received Comments Disclosure */}

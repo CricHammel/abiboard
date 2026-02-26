@@ -29,6 +29,7 @@ interface CommentFormProps {
   allStudents?: StudentOption[];
   allTeachers?: TeacherOption[];
   excludeUserId?: string;
+  initialPerson?: { type: "student"; data: StudentOption };
   onSubmit: (data: { text: string; targetType: "STUDENT" | "TEACHER"; targetId: string }) => Promise<void>;
   onCancel: () => void;
   isLoading?: boolean;
@@ -45,6 +46,7 @@ export function CommentForm({
   allStudents,
   allTeachers,
   excludeUserId,
+  initialPerson,
   onSubmit,
   onCancel,
   isLoading,
@@ -56,7 +58,7 @@ export function CommentForm({
   const [targetType, setTargetType] = useState<"STUDENT" | "TEACHER">(
     initialTargetType || "STUDENT"
   );
-  const [selectedPerson, setSelectedPerson] = useState<PersonOption | null>(null);
+  const [selectedPerson, setSelectedPerson] = useState<PersonOption | null>(initialPerson ?? null);
   const [text, setText] = useState(initialText);
   const [error, setError] = useState<string | null>(null);
 
