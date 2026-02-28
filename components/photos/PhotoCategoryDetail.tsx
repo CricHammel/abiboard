@@ -53,29 +53,24 @@ export function PhotoCategoryDetail({
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const [lightboxPhotos, setLightboxPhotos] = useState<Photo[]>([]);
   const [visibleOtherCount, setVisibleOtherCount] = useState(PHOTOS_PER_PAGE);
+  const [isDragOver, setIsDragOver] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const ownPhotos = photos.filter((p) => p.isOwn);
   const otherPhotos = photos.filter((p) => !p.isOwn);
   const canUpload = !deadlinePassed && userPhotoCount < category.maxPerUser;
 
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    // Client-side validation
+  const uploadFile = async (file: File) => {
     const maxSize = 10 * 1024 * 1024; // 10MB
     const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
 
     if (file.size > maxSize) {
       setError('Die Datei ist zu groß. Maximal 10 MB erlaubt.');
-      if (fileInputRef.current) fileInputRef.current.value = '';
       return;
     }
 
     if (!allowedTypes.includes(file.type)) {
       setError('Ungültiger Dateityp. Nur JPG, PNG und WebP sind erlaubt.');
-      if (fileInputRef.current) fileInputRef.current.value = '';
       return;
     }
 
@@ -119,6 +114,34 @@ export function PhotoCategoryDetail({
       setIsUploading(false);
       if (fileInputRef.current) fileInputRef.current.value = "";
     }
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    await uploadFile(file);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    if (!canUpload || isUploading) return;
+    e.preventDefault();
+    setIsDragOver(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    // Only clear if leaving the card entirely (not entering a child element)
+    if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+      setIsDragOver(false);
+    }
+  };
+
+  const handleDrop = async (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(false);
+    if (!canUpload || isUploading) return;
+    const file = e.dataTransfer.files[0];
+    if (file) await uploadFile(file);
   };
 
   const handleDelete = async () => {
@@ -198,7 +221,23 @@ export function PhotoCategoryDetail({
       )}
 
       {/* Own photos section */}
-      <div className="bg-white border border-gray-200 rounded-xl p-4 md:p-6 space-y-4">
+      <div
+        className={`bg-white border rounded-xl p-4 md:p-6 space-y-4 relative transition-colors duration-150 ${
+          isDragOver
+            ? "border-primary bg-primary/5"
+            : "border-gray-200"
+        }`}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
+      >
+        {/* Drop overlay when dragging over existing grid */}
+        {isDragOver && ownPhotos.length > 0 && (
+          <div className="absolute inset-0 rounded-xl border-2 border-dashed border-primary bg-primary/10 flex items-center justify-center z-10 pointer-events-none">
+            <p className="text-primary font-semibold text-lg">Foto hier ablegen</p>
+          </div>
+        )}
+
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-semibold text-gray-900">
             Meine Fotos ({ownPhotos.length})
@@ -213,35 +252,69 @@ export function PhotoCategoryDetail({
                 className="hidden"
                 id="photo-upload"
               />
-              <Button
-                variant="secondary"
-                onClick={() => fileInputRef.current?.click()}
-                loading={isUploading}
-                disabled={isUploading}
-              >
-                <svg
-                  className="w-5 h-5 mr-1"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
+              {ownPhotos.length > 0 && (
+                <Button
+                  variant="secondary"
+                  onClick={() => fileInputRef.current?.click()}
+                  loading={isUploading}
+                  disabled={isUploading}
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 4v16m8-8H4"
-                  />
-                </svg>
-                Hochladen
-              </Button>
+                  <svg
+                    className="w-5 h-5 mr-1"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 4v16m8-8H4"
+                    />
+                  </svg>
+                  Hochladen
+                </Button>
+              )}
             </>
           )}
         </div>
 
         {ownPhotos.length === 0 ? (
-          <p className="text-gray-500 text-sm">
-            Du hast noch keine Fotos in dieser Rubrik hochgeladen.
-          </p>
+          canUpload ? (
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isUploading}
+              className={`w-full border-2 border-dashed rounded-lg p-8 flex flex-col items-center gap-3 transition-colors duration-150 ${
+                isDragOver
+                  ? "border-primary bg-primary/5"
+                  : "border-gray-300 hover:border-primary hover:bg-gray-50"
+              } disabled:opacity-50 disabled:cursor-not-allowed`}
+            >
+              <svg
+                className={`w-10 h-10 ${isDragOver ? "text-primary" : "text-gray-400"}`}
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={1.5}
+                  d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"
+                />
+              </svg>
+              <div className="text-center">
+                <p className={`font-medium ${isDragOver ? "text-primary" : "text-gray-700"}`}>
+                  {isUploading ? "Wird hochgeladen…" : "Foto hochladen oder hierher ziehen"}
+                </p>
+                <p className="text-sm text-gray-400 mt-1">JPG, PNG oder WebP · max. 10 MB</p>
+              </div>
+            </button>
+          ) : (
+            <p className="text-gray-500 text-sm">
+              Du hast noch keine Fotos in dieser Rubrik hochgeladen.
+            </p>
+          )
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
             {ownPhotos.map((photo, index) => (
