@@ -18,7 +18,7 @@ export default async function AdminKommentarePage() {
   const studentFilter = { role: "STUDENT" as const, active: true, student: { isNot: null } };
 
   // Get all comments and participation data in parallel
-  const [comments, allStudents, commentAuthorIds] = await Promise.all([
+  const [comments, allStudents, commentAuthorIds, studentsWithCommentCounts] = await Promise.all([
     prisma.comment.findMany({
       include: {
         author: {
@@ -40,6 +40,16 @@ export default async function AdminKommentarePage() {
     }),
     prisma.comment.groupBy({
       by: ["authorId"],
+    }),
+    prisma.student.findMany({
+      where: { active: true },
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        _count: { select: { commentsReceived: true } },
+      },
+      orderBy: [{ firstName: "asc" }, { lastName: "asc" }],
     }),
   ]);
 
@@ -81,6 +91,7 @@ export default async function AdminKommentarePage() {
         totalStudents={allStudents.length}
         commented={commented}
         notCommented={notCommented}
+        studentsWithCommentCounts={studentsWithCommentCounts}
       />
     </div>
   );

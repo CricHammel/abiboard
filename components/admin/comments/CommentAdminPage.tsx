@@ -30,17 +30,27 @@ interface StudentUser {
   lastName: string;
 }
 
+interface StudentWithCount {
+  id: string;
+  firstName: string;
+  lastName: string;
+  _count: { commentsReceived: number };
+}
+
 interface CommentAdminPageProps {
   initialComments: AdminComment[];
   totalStudents: number;
   commented: StudentUser[];
   notCommented: StudentUser[];
+  studentsWithCommentCounts: StudentWithCount[];
 }
 
 const MAX_LENGTH = 500;
 const PAGE_SIZE = 25;
 
-export function CommentAdminPage({ initialComments, totalStudents, commented, notCommented }: CommentAdminPageProps) {
+type SearchScope = "ALL" | "AUTHOR" | "TARGET" | "TEXT";
+
+export function CommentAdminPage({ initialComments, totalStudents, commented, notCommented, studentsWithCommentCounts }: CommentAdminPageProps) {
   const [comments, setComments] = useState<AdminComment[]>(initialComments);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editText, setEditText] = useState("");
@@ -49,10 +59,24 @@ export function CommentAdminPage({ initialComments, totalStudents, commented, no
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [displayCount, setDisplayCount] = useState(PAGE_SIZE);
+  const [classOverviewOpen, setClassOverviewOpen] = useState(false);
 
   // Filters
   const [filterTargetType, setFilterTargetType] = useState<"ALL" | "STUDENT" | "TEACHER">("ALL");
   const [searchQuery, setSearchQuery] = useState("");
+  const [searchScope, setSearchScope] = useState<SearchScope>("ALL");
+
+  const sortedStudents = [...studentsWithCommentCounts].sort(
+    (a, b) => a._count.commentsReceived - b._count.commentsReceived
+  );
+
+  const handleSelectFromOverview = (student: StudentWithCount) => {
+    setSearchQuery(`${student.firstName} ${student.lastName}`);
+    setSearchScope("TARGET");
+    setFilterTargetType("ALL");
+    setDisplayCount(PAGE_SIZE);
+    setClassOverviewOpen(false);
+  };
 
   const filteredComments = comments.filter((comment) => {
     // Filter by target type
@@ -60,16 +84,20 @@ export function CommentAdminPage({ initialComments, totalStudents, commented, no
       return false;
     }
 
-    // Search in author name, target name, and comment text
+    // Search with scope
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
       const authorName = `${comment.author.firstName} ${comment.author.lastName}`.toLowerCase();
       const targetName = comment.target?.name.toLowerCase() || "";
       const text = comment.text.toLowerCase();
 
-      if (!authorName.includes(query) && !targetName.includes(query) && !text.includes(query)) {
-        return false;
-      }
+      const matches =
+        searchScope === "AUTHOR" ? authorName.includes(query) :
+        searchScope === "TARGET" ? targetName.includes(query) :
+        searchScope === "TEXT"   ? text.includes(query) :
+        authorName.includes(query) || targetName.includes(query) || text.includes(query);
+
+      if (!matches) return false;
     }
 
     return true;
@@ -199,16 +227,81 @@ export function CommentAdminPage({ initialComments, totalStudents, commented, no
         </div>
       </div>
 
+      {/* Klassenübersicht */}
+      {sortedStudents.length > 0 && (
+        <div className="border border-gray-200 rounded-lg overflow-hidden">
+          <button
+            onClick={() => setClassOverviewOpen(!classOverviewOpen)}
+            className="w-full flex items-center justify-between px-4 py-3 bg-gray-50 hover:bg-gray-100 transition-colors min-h-[44px]"
+          >
+            <span className="text-sm font-medium text-gray-700">
+              Klassenübersicht ({sortedStudents.length})
+            </span>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-gray-400">Klicken zum Filtern</span>
+              <svg
+                className={`w-5 h-5 text-gray-500 transition-transform ${classOverviewOpen ? "rotate-180" : ""}`}
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </div>
+          </button>
+          {classOverviewOpen && (
+            <div className="divide-y divide-gray-100">
+              {sortedStudents.map((student) => (
+                <button
+                  key={student.id}
+                  onClick={() => handleSelectFromOverview(student)}
+                  className="w-full flex items-center justify-between px-4 py-2.5 hover:bg-gray-50 transition-colors text-left"
+                >
+                  <span className="text-sm text-gray-900">
+                    {student.firstName} {student.lastName}
+                  </span>
+                  <span className="text-sm text-gray-500 shrink-0 ml-4">
+                    {student._count.commentsReceived}{" "}
+                    {student._count.commentsReceived === 1 ? "Kommentar" : "Kommentare"}
+                  </span>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-4">
-        <div className="flex-1">
+        <div className="flex flex-1 border border-gray-200 rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-primary-light">
+          <select
+            value={searchScope}
+            onChange={(e) => { setSearchScope(e.target.value as SearchScope); setDisplayCount(PAGE_SIZE); }}
+            className="px-3 py-2 bg-gray-50 border-r border-gray-200 text-sm text-gray-700 focus:outline-none min-h-[44px]"
+          >
+            <option value="ALL">Alles</option>
+            <option value="AUTHOR">Sender</option>
+            <option value="TARGET">Empfänger</option>
+            <option value="TEXT">Inhalt</option>
+          </select>
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => { setSearchQuery(e.target.value); setDisplayCount(PAGE_SIZE); }}
-            placeholder="Suchen (Autor, Ziel, Text)..."
-            className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-light min-h-[44px]"
+            placeholder="Suchen..."
+            className="flex-1 px-3 py-2 focus:outline-none min-h-[44px]"
           />
+          {searchQuery && (
+            <button
+              onClick={() => { setSearchQuery(""); setSearchScope("ALL"); setDisplayCount(PAGE_SIZE); }}
+              className="px-3 text-gray-400 hover:text-gray-600"
+              title="Suche zurücksetzen"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          )}
         </div>
         <select
           value={filterTargetType}
