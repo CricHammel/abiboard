@@ -142,6 +142,14 @@ export async function PATCH(
       }
     }
 
+    // Cascade active state to linked user account
+    if (active !== undefined && existingStudent.userId) {
+      await prisma.user.update({
+        where: { id: existingStudent.userId },
+        data: { active },
+      });
+    }
+
     const updatedStudent = await prisma.student.update({
       where: { id: studentId },
       data: {

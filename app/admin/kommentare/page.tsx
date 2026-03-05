@@ -15,7 +15,7 @@ export default async function AdminKommentarePage() {
     redirect("/admin/dashboard");
   }
 
-  const studentFilter = { role: "STUDENT" as const, active: true, student: { isNot: null } };
+  const studentFilter = { role: "STUDENT" as const, active: true, student: { active: true } };
 
   // Get all comments and participation data in parallel
   const [comments, allStudents, commentAuthorIds, studentsWithCommentCounts] = await Promise.all([

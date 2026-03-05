@@ -41,6 +41,7 @@ export async function GET() {
       where: {
         role: "STUDENT",
         active: true,
+        student: { active: true },
       },
     });
 
@@ -52,7 +53,7 @@ export async function GET() {
     const participatedUserIds = studentsWithAnswers.map((s) => s.userId);
 
     // Get participation lists
-    const studentFilter = { role: "STUDENT" as const, active: true, student: { isNot: null } };
+    const studentFilter = { role: "STUDENT" as const, active: true, student: { active: true } };
     const [participated, notParticipated] = await Promise.all([
       prisma.user.findMany({
         where: { ...studentFilter, id: { in: participatedUserIds } },

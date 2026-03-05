@@ -25,6 +25,7 @@ export async function GET() {
       where: {
         role: "STUDENT",
         active: true,
+        student: { active: true },
         profile: {
           OR: [
             { contactEmail: { not: null } },

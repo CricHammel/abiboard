@@ -32,7 +32,7 @@ export default async function AdminDashboard() {
     return null;
   }
 
-  const studentFilter = { role: "STUDENT" as const, active: true, student: { isNot: null } };
+  const studentFilter = { role: "STUDENT" as const, active: true, student: { active: true } };
 
   const [
     totalRegistered,

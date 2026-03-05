@@ -21,7 +21,7 @@ export async function GET() {
     }
 
     // Only count users with a linked Student entry (registered via whitelist)
-    const studentFilter = { role: "STUDENT" as const, active: true, student: { isNot: null } };
+    const studentFilter = { role: "STUDENT" as const, active: true, student: { active: true } };
 
     const [totalStudents, submissions, questions] = await Promise.all([
       prisma.user.count({

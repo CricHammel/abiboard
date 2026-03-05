@@ -17,7 +17,7 @@ export default async function FotosUebersichtPage() {
     redirect("/admin/dashboard");
   }
 
-  const studentFilter = { role: "STUDENT" as const, active: true, student: { isNot: null } };
+  const studentFilter = { role: "STUDENT" as const, active: true, student: { active: true } };
 
   const [categories, allStudents, uploaderIds] = await Promise.all([
     prisma.photoCategory.findMany({
