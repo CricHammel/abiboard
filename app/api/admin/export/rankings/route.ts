@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
-import { buildTsv, tsvResponse } from "@/lib/tsv-export";
+import { buildCsv, csvResponse } from "@/lib/csv-export";
 import { NextResponse } from "next/server";
 import { isDeadlinePassed } from "@/lib/deadline";
 import { formatTeacherName } from "@/lib/format";
@@ -44,11 +44,11 @@ export async function GET() {
     const totalVoters = voterIds.length;
 
     if (totalVoters === 0) {
-      const tsv = buildTsv(
+      const csv = buildCsv(
         ["Frage", "Kategorie", "Platz", "Name", "Stimmen", "Prozent"],
         []
       );
-      return tsvResponse(tsv, "rankings.tsv");
+      return csvResponse(csv, "rankings.csv");
     }
 
     // Get all votes from relevant users
@@ -152,8 +152,8 @@ export async function GET() {
       }
     }
 
-    const tsv = buildTsv(headers, rows);
-    return tsvResponse(tsv, "rankings.tsv");
+    const csv = buildCsv(headers, rows);
+    return csvResponse(csv, "rankings.csv");
   } catch (error) {
     console.error("Export rankings error:", error);
     return NextResponse.json({ error: "Ein Fehler ist aufgetreten." }, { status: 500 });

@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
-import { sanitizeFilename } from "@/lib/tsv-export";
+import { sanitizeFilename } from "@/lib/csv-export";
 import { NextResponse } from "next/server";
 import archiver from "archiver";
 import fs from "fs";

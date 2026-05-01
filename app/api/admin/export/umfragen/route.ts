@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
-import { buildTsv, tsvResponse } from "@/lib/tsv-export";
+import { buildCsv, csvResponse } from "@/lib/csv-export";
 import { NextResponse } from "next/server";
 
 export async function GET() {
@@ -66,8 +66,8 @@ export async function GET() {
       }
     }
 
-    const tsv = buildTsv(headers, rows);
-    return tsvResponse(tsv, "umfragen.tsv");
+    const csv = buildCsv(headers, rows);
+    return csvResponse(csv, "umfragen.csv");
   } catch (error) {
     console.error("Export surveys error:", error);
     return NextResponse.json({ error: "Ein Fehler ist aufgetreten." }, { status: 500 });

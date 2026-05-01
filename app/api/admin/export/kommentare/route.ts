@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
-import { buildTsv, tsvResponse } from "@/lib/tsv-export";
+import { buildCsv, csvResponse } from "@/lib/csv-export";
 import { NextResponse } from "next/server";
 import { formatTeacherName } from "@/lib/format";
 
@@ -59,8 +59,8 @@ export async function GET() {
     // Sort by recipient name
     rows.sort((a, b) => a[1].localeCompare(b[1], "de"));
 
-    const tsv = buildTsv(headers, rows);
-    return tsvResponse(tsv, "kommentare.tsv");
+    const csv = buildCsv(headers, rows);
+    return csvResponse(csv, "kommentare.csv");
   } catch (error) {
     console.error("Export comments error:", error);
     return NextResponse.json({ error: "Ein Fehler ist aufgetreten." }, { status: 500 });

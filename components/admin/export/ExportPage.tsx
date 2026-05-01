@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Alert } from "@/components/ui/Alert";
@@ -69,6 +69,8 @@ function toLocalDatetimeValue(isoString: string): string {
   return local.toISOString().slice(0, 16);
 }
 
+const IMAGE_PREFIX_STORAGE_KEY = "abiboard.export.imagePrefix";
+
 export function ExportPage({ initialDeadline }: ExportPageProps) {
   const { download, getState } = useDownload();
   const [deadline, setDeadline] = useState<string | null>(initialDeadline);
@@ -78,6 +80,20 @@ export function ExportPage({ initialDeadline }: ExportPageProps) {
   const [deadlineLoading, setDeadlineLoading] = useState(false);
   const [deadlineError, setDeadlineError] = useState<string | null>(null);
   const [deadlineSuccess, setDeadlineSuccess] = useState<string | null>(null);
+  const [imagePrefix, setImagePrefix] = useState("");
+
+  useEffect(() => {
+    const stored = localStorage.getItem(IMAGE_PREFIX_STORAGE_KEY);
+    if (stored) setImagePrefix(stored);
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem(IMAGE_PREFIX_STORAGE_KEY, imagePrefix);
+  }, [imagePrefix]);
+
+  const steckbriefeCsvUrl = imagePrefix.trim()
+    ? `/api/admin/export/steckbriefe?imagePrefix=${encodeURIComponent(imagePrefix.trim())}`
+    : "/api/admin/export/steckbriefe";
 
   const isPassed = deadline ? new Date(deadline) < new Date() : false;
 
@@ -146,13 +162,13 @@ export function ExportPage({ initialDeadline }: ExportPageProps) {
   const sections = [
     {
       title: "Steckbriefe",
-      description: "Alle Steckbrief-Daten inkl. Bildpfade als TSV und Bilder als ZIP.",
+      description: "Alle Steckbrief-Daten inkl. Bildpfade als CSV und Bilder als ZIP.",
       buttons: [
         {
-          key: "steckbriefe-tsv",
-          label: "TSV herunterladen",
-          url: "/api/admin/export/steckbriefe",
-          filename: "steckbriefe.tsv",
+          key: "steckbriefe-csv",
+          label: "CSV herunterladen",
+          url: steckbriefeCsvUrl,
+          filename: "steckbriefe.csv",
         },
         {
           key: "steckbriefe-zip",
@@ -168,9 +184,9 @@ export function ExportPage({ initialDeadline }: ExportPageProps) {
       buttons: [
         {
           key: "rankings",
-          label: "TSV herunterladen",
+          label: "CSV herunterladen",
           url: "/api/admin/export/rankings",
-          filename: "rankings.tsv",
+          filename: "rankings.csv",
         },
       ],
     },
@@ -180,9 +196,9 @@ export function ExportPage({ initialDeadline }: ExportPageProps) {
       buttons: [
         {
           key: "zitate-lehrer",
-          label: "TSV herunterladen",
+          label: "CSV herunterladen",
           url: "/api/admin/export/zitate?type=lehrer",
-          filename: "zitate_lehrer.tsv",
+          filename: "zitate_lehrer.csv",
         },
       ],
     },
@@ -192,9 +208,9 @@ export function ExportPage({ initialDeadline }: ExportPageProps) {
       buttons: [
         {
           key: "zitate-schueler",
-          label: "TSV herunterladen",
+          label: "CSV herunterladen",
           url: "/api/admin/export/zitate?type=schueler",
-          filename: "zitate_schueler.tsv",
+          filename: "zitate_schueler.csv",
         },
       ],
     },
@@ -204,9 +220,9 @@ export function ExportPage({ initialDeadline }: ExportPageProps) {
       buttons: [
         {
           key: "umfragen",
-          label: "TSV herunterladen",
+          label: "CSV herunterladen",
           url: "/api/admin/export/umfragen",
-          filename: "umfragen.tsv",
+          filename: "umfragen.csv",
         },
       ],
     },
@@ -216,9 +232,9 @@ export function ExportPage({ initialDeadline }: ExportPageProps) {
       buttons: [
         {
           key: "kommentare",
-          label: "TSV herunterladen",
+          label: "CSV herunterladen",
           url: "/api/admin/export/kommentare",
-          filename: "kommentare.tsv",
+          filename: "kommentare.csv",
         },
       ],
     },
@@ -240,9 +256,9 @@ export function ExportPage({ initialDeadline }: ExportPageProps) {
       buttons: [
         {
           key: "kontaktdaten",
-          label: "TSV herunterladen",
+          label: "CSV herunterladen",
           url: "/api/admin/export/kontaktdaten",
-          filename: "kontaktdaten.tsv",
+          filename: "kontaktdaten.csv",
         },
       ],
     },
@@ -315,6 +331,22 @@ export function ExportPage({ initialDeadline }: ExportPageProps) {
             )}
           </div>
         </div>
+      </Card>
+
+      {/* Image path prefix */}
+      <Card>
+        <h2 className="text-lg font-semibold text-gray-900">Bildpfad-Präfix</h2>
+        <p className="text-sm text-gray-600 mt-1">
+          Wird beim Steckbriefe-CSV vor jeden Bildpfad gehängt (z.B. <code className="px-1 py-0.5 bg-gray-100 rounded text-xs">Links/</code>).
+          Leer lassen für relative Pfade. Wird im Browser gespeichert.
+        </p>
+        <input
+          type="text"
+          value={imagePrefix}
+          onChange={(e) => setImagePrefix(e.target.value)}
+          placeholder="z.B. Links/ oder /Users/name/Bilder/"
+          className="mt-3 w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+        />
       </Card>
 
       {/* Download sections */}

@@ -20,7 +20,7 @@ export default async function AdminExportPage() {
       <div>
         <h1 className="text-2xl font-bold text-gray-900">Datenexport</h1>
         <p className="text-gray-600 mt-1">
-          Daten als TSV-Dateien für den Abibuch-Druck herunterladen.
+          Daten als CSV-Dateien für den Abibuch-Druck herunterladen.
         </p>
       </div>
       <ExportPage initialDeadline={deadline?.toISOString() ?? null} />

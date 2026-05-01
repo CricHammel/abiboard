@@ -1,10 +1,10 @@
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
-import { buildTsv, tsvResponse, sanitizeFilename } from "@/lib/tsv-export";
+import { buildCsv, csvResponse, sanitizeFilename } from "@/lib/csv-export";
 import { NextResponse } from "next/server";
 import path from "path";
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
     const session = await auth();
 
@@ -14,6 +14,14 @@ export async function GET() {
     if (session.user.role !== "ADMIN") {
       return NextResponse.json({ error: "Nur für Admins zugänglich." }, { status: 403 });
     }
+
+    const { searchParams } = new URL(request.url);
+    const rawPrefix = searchParams.get("imagePrefix") ?? "";
+    const imagePrefix = rawPrefix
+      ? rawPrefix.endsWith("/")
+        ? rawPrefix
+        : `${rawPrefix}/`
+      : "";
 
     // Get active fields ordered
     const fields = await prisma.steckbriefField.findMany({
@@ -98,7 +106,7 @@ export async function GET() {
         } else if (field.type === "SINGLE_IMAGE") {
           if (value?.imageValue) {
             const ext = path.extname(value.imageValue) || ".jpg";
-            row.push(`steckbrief_bilder/${folderName}/${sanitizeFilename(field.key)}${ext}`);
+            row.push(`${imagePrefix}steckbrief_bilder/${folderName}/${sanitizeFilename(field.key)}${ext}`);
           } else {
             row.push("");
           }
@@ -108,7 +116,7 @@ export async function GET() {
           for (let i = 0; i < maxFiles; i++) {
             if (i < images.length) {
               const ext = path.extname(images[i]) || ".jpg";
-              row.push(`steckbrief_bilder/${folderName}/${sanitizeFilename(field.key)}_${i + 1}${ext}`);
+              row.push(`${imagePrefix}steckbrief_bilder/${folderName}/${sanitizeFilename(field.key)}_${i + 1}${ext}`);
             } else {
               row.push("");
             }
@@ -119,8 +127,8 @@ export async function GET() {
       rows.push(row);
     }
 
-    const tsv = buildTsv(headers, rows);
-    return tsvResponse(tsv, "steckbriefe.tsv");
+    const csv = buildCsv(headers, rows);
+    return csvResponse(csv, "steckbriefe.csv");
   } catch (error) {
     console.error("Export steckbriefe error:", error);
     return NextResponse.json({ error: "Ein Fehler ist aufgetreten." }, { status: 500 });

@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
-import { buildTsv, tsvResponse } from "@/lib/tsv-export";
+import { buildCsv, csvResponse } from "@/lib/csv-export";
 import { NextResponse } from "next/server";
 import { formatTeacherName } from "@/lib/format";
 
@@ -55,8 +55,8 @@ async function exportTeacherQuotes(): Promise<Response> {
     return [formatTeacherName(q.teacher), q.text];
   });
 
-  const tsv = buildTsv(headers, rows);
-  return tsvResponse(tsv, "zitate_lehrer.tsv");
+  const csv = buildCsv(headers, rows);
+  return csvResponse(csv, "zitate_lehrer.csv");
 }
 
 async function exportStudentQuotes(): Promise<Response> {
@@ -82,6 +82,6 @@ async function exportStudentQuotes(): Promise<Response> {
     q.text,
   ]);
 
-  const tsv = buildTsv(headers, rows);
-  return tsvResponse(tsv, "zitate_schueler.tsv");
+  const csv = buildCsv(headers, rows);
+  return csvResponse(csv, "zitate_schueler.csv");
 }
