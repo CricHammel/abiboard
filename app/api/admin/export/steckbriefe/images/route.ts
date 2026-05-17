@@ -73,7 +73,14 @@ export async function GET() {
       },
     });
 
-    const uploadsDir = process.cwd();
+    const uploadsDir = path.join(process.cwd(), "uploads");
+
+    const resolveUploadPath = (storedPath: string): string | null => {
+      const relative = storedPath.replace(/^\/+uploads\/+/, "");
+      const resolved = path.resolve(uploadsDir, relative);
+      if (!resolved.startsWith(uploadsDir)) return null;
+      return resolved;
+    };
 
     // Track used folder names for duplicates
     const usedFolderNames = new Map<string, number>();
@@ -97,21 +104,21 @@ export async function GET() {
         const field = value.field;
 
         if (field.type === "SINGLE_IMAGE" && value.imageValue) {
-          const sourcePath = path.join(uploadsDir, value.imageValue);
+          const sourcePath = resolveUploadPath(value.imageValue);
           const ext = path.extname(value.imageValue) || ".jpg";
           const zipPath = `steckbrief_bilder/${folderName}/${sanitizeFilename(field.key)}${ext}`;
 
-          if (fs.existsSync(sourcePath)) {
+          if (sourcePath && fs.existsSync(sourcePath)) {
             archive.file(sourcePath, { name: zipPath });
           }
         } else if (field.type === "MULTI_IMAGE" && value.imagesValue.length > 0) {
           for (let i = 0; i < value.imagesValue.length; i++) {
             const imgPath = value.imagesValue[i];
-            const sourcePath = path.join(uploadsDir, imgPath);
+            const sourcePath = resolveUploadPath(imgPath);
             const ext = path.extname(imgPath) || ".jpg";
             const zipPath = `steckbrief_bilder/${folderName}/${sanitizeFilename(field.key)}_${i + 1}${ext}`;
 
-            if (fs.existsSync(sourcePath)) {
+            if (sourcePath && fs.existsSync(sourcePath)) {
               archive.file(sourcePath, { name: zipPath });
             }
           }

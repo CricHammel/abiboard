@@ -48,7 +48,14 @@ export async function GET() {
       );
     }
 
-    const uploadsDir = process.cwd();
+    const uploadsDir = path.join(process.cwd(), "uploads");
+
+    const resolveUploadPath = (storedPath: string): string | null => {
+      const relative = storedPath.replace(/^\/+uploads\/+/, "");
+      const resolved = path.resolve(uploadsDir, relative);
+      if (!resolved.startsWith(uploadsDir)) return null;
+      return resolved;
+    };
 
     // Create archive
     const archive = archiver("zip", { zlib: { level: 5 } });
@@ -64,8 +71,8 @@ export async function GET() {
       const usedNames = new Map<string, number>();
 
       for (const photo of category.photos) {
-        const sourcePath = path.join(uploadsDir, photo.imageUrl);
-        if (!fs.existsSync(sourcePath)) continue;
+        const sourcePath = resolveUploadPath(photo.imageUrl);
+        if (!sourcePath || !fs.existsSync(sourcePath)) continue;
 
         const ext = path.extname(photo.imageUrl) || ".jpg";
         const baseName = sanitizeFilename(

@@ -4,10 +4,8 @@ import crypto from 'crypto';
 
 export const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 export const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
-export const UPLOAD_DIR = 'uploads/profiles';
 
 export const MAX_PHOTO_FILE_SIZE = 10 * 1024 * 1024; // 10MB
-export const PHOTO_UPLOAD_DIR = 'uploads/photos';
 
 export interface FileValidationResult {
   valid: boolean;
@@ -46,8 +44,8 @@ export async function saveImageFile(
   userId: string,
   fieldName: string
 ): Promise<string> {
-  const userDir = path.join(process.cwd(), UPLOAD_DIR, userId);
-  
+  const userDir = path.join(process.cwd(), "uploads", "profiles", userId);
+
   // Create directory if it doesn't exist
   await fs.mkdir(userDir, { recursive: true });
 
@@ -85,7 +83,7 @@ export async function savePhotoFile(
   userId: string,
   categoryId: string
 ): Promise<string> {
-  const userDir = path.join(process.cwd(), PHOTO_UPLOAD_DIR, userId);
+  const userDir = path.join(process.cwd(), "uploads", "photos", userId);
 
   await fs.mkdir(userDir, { recursive: true });
 
@@ -101,7 +99,10 @@ export async function savePhotoFile(
 
 export async function deleteImageFile(imagePath: string): Promise<void> {
   try {
-    const fullPath = path.join(process.cwd(), imagePath);
+    const uploadsDir = path.join(process.cwd(), "uploads");
+    const relative = imagePath.replace(/^\/+uploads\/+/, "");
+    const fullPath = path.resolve(uploadsDir, relative);
+    if (!fullPath.startsWith(uploadsDir)) return;
     await fs.unlink(fullPath);
   } catch (error) {
     console.error('Error deleting file:', error);
