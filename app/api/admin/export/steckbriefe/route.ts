@@ -16,11 +16,15 @@ export async function GET(request: Request) {
     }
 
     const { searchParams } = new URL(request.url);
+    const pathStyle = searchParams.get("pathStyle") === "windows" ? "windows" : "unix";
+    const sep = pathStyle === "windows" ? "\\" : "/";
+
     const rawPrefix = searchParams.get("imagePrefix") ?? "";
-    const imagePrefix = rawPrefix
-      ? rawPrefix.endsWith("/")
-        ? rawPrefix
-        : `${rawPrefix}/`
+    const normalizedPrefix = rawPrefix.replace(/[\\/]/g, sep);
+    const imagePrefix = normalizedPrefix
+      ? normalizedPrefix.endsWith(sep)
+        ? normalizedPrefix
+        : `${normalizedPrefix}${sep}`
       : "";
 
     // Get active fields ordered
@@ -106,7 +110,7 @@ export async function GET(request: Request) {
         } else if (field.type === "SINGLE_IMAGE") {
           if (value?.imageValue) {
             const ext = path.extname(value.imageValue) || ".jpg";
-            row.push(`${imagePrefix}steckbrief_bilder/${folderName}/${sanitizeFilename(field.key)}${ext}`);
+            row.push(`${imagePrefix}steckbrief_bilder${sep}${folderName}${sep}${sanitizeFilename(field.key)}${ext}`);
           } else {
             row.push("");
           }
@@ -116,7 +120,7 @@ export async function GET(request: Request) {
           for (let i = 0; i < maxFiles; i++) {
             if (i < images.length) {
               const ext = path.extname(images[i]) || ".jpg";
-              row.push(`${imagePrefix}steckbrief_bilder/${folderName}/${sanitizeFilename(field.key)}_${i + 1}${ext}`);
+              row.push(`${imagePrefix}steckbrief_bilder${sep}${folderName}${sep}${sanitizeFilename(field.key)}_${i + 1}${ext}`);
             } else {
               row.push("");
             }

@@ -70,6 +70,9 @@ function toLocalDatetimeValue(isoString: string): string {
 }
 
 const IMAGE_PREFIX_STORAGE_KEY = "abiboard.export.imagePrefix";
+const PATH_STYLE_STORAGE_KEY = "abiboard.export.pathStyle";
+
+type PathStyle = "unix" | "windows";
 
 export function ExportPage({ initialDeadline }: ExportPageProps) {
   const { download, getState } = useDownload();
@@ -81,19 +84,34 @@ export function ExportPage({ initialDeadline }: ExportPageProps) {
   const [deadlineError, setDeadlineError] = useState<string | null>(null);
   const [deadlineSuccess, setDeadlineSuccess] = useState<string | null>(null);
   const [imagePrefix, setImagePrefix] = useState("");
+  const [pathStyle, setPathStyle] = useState<PathStyle>("unix");
 
   useEffect(() => {
-    const stored = localStorage.getItem(IMAGE_PREFIX_STORAGE_KEY);
-    if (stored) setImagePrefix(stored);
+    const storedPrefix = localStorage.getItem(IMAGE_PREFIX_STORAGE_KEY);
+    if (storedPrefix) setImagePrefix(storedPrefix);
+    const storedStyle = localStorage.getItem(PATH_STYLE_STORAGE_KEY);
+    if (storedStyle === "windows" || storedStyle === "unix") {
+      setPathStyle(storedStyle);
+    }
   }, []);
 
   useEffect(() => {
     localStorage.setItem(IMAGE_PREFIX_STORAGE_KEY, imagePrefix);
   }, [imagePrefix]);
 
-  const steckbriefeCsvUrl = imagePrefix.trim()
-    ? `/api/admin/export/steckbriefe?imagePrefix=${encodeURIComponent(imagePrefix.trim())}`
-    : "/api/admin/export/steckbriefe";
+  useEffect(() => {
+    localStorage.setItem(PATH_STYLE_STORAGE_KEY, pathStyle);
+  }, [pathStyle]);
+
+  const steckbriefeCsvUrl = (() => {
+    const params = new URLSearchParams();
+    if (imagePrefix.trim()) params.set("imagePrefix", imagePrefix.trim());
+    if (pathStyle === "windows") params.set("pathStyle", "windows");
+    const qs = params.toString();
+    return qs
+      ? `/api/admin/export/steckbriefe?${qs}`
+      : "/api/admin/export/steckbriefe";
+  })();
 
   const isPassed = deadline ? new Date(deadline) < new Date() : false;
 
@@ -335,18 +353,40 @@ export function ExportPage({ initialDeadline }: ExportPageProps) {
 
       {/* Image path prefix */}
       <Card>
-        <h2 className="text-lg font-semibold text-gray-900">Bildpfad-Präfix</h2>
+        <h2 className="text-lg font-semibold text-gray-900">Bildpfade (Steckbriefe-CSV)</h2>
         <p className="text-sm text-gray-600 mt-1">
-          Wird beim Steckbriefe-CSV vor jeden Bildpfad gehängt (z.B. <code className="px-1 py-0.5 bg-gray-100 rounded text-xs">Links/</code>).
-          Leer lassen für relative Pfade. Wird im Browser gespeichert.
+          Präfix wird vor jeden Bildpfad gehängt. Pfadtrenner bestimmt den Stil
+          für Präfix und Ordnertrenner. Wird im Browser gespeichert.
         </p>
-        <input
-          type="text"
-          value={imagePrefix}
-          onChange={(e) => setImagePrefix(e.target.value)}
-          placeholder="z.B. Links/ oder /Users/name/Bilder/"
-          className="mt-3 w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-        />
+        <div className="mt-3 flex flex-col sm:flex-row gap-3">
+          <input
+            type="text"
+            value={imagePrefix}
+            onChange={(e) => setImagePrefix(e.target.value)}
+            placeholder={pathStyle === "windows" ? "z.B. Links\\ oder C:\\Bilder\\" : "z.B. Links/ oder /Users/name/Bilder/"}
+            className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+          />
+          <select
+            value={pathStyle}
+            onChange={(e) => {
+              const next = e.target.value as PathStyle;
+              setPathStyle(next);
+              const sep = next === "windows" ? "\\" : "/";
+              setImagePrefix((prev) => prev.replace(/[\\/]/g, sep));
+            }}
+            className="px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+            aria-label="Pfadtrenner"
+          >
+            <option value="unix">/ (macOS/Linux)</option>
+            <option value="windows">\ (Windows)</option>
+          </select>
+        </div>
+        <p className="text-xs text-gray-500 mt-2">
+          Beispiel: <code className="px-1 py-0.5 bg-gray-100 rounded">
+            {imagePrefix.trim() ? imagePrefix.trim().replace(/[\\/]+$/, "") + (pathStyle === "windows" ? "\\" : "/") : ""}
+            steckbrief_bilder{pathStyle === "windows" ? "\\" : "/"}mueller_max{pathStyle === "windows" ? "\\" : "/"}portraet.jpg
+          </code>
+        </p>
       </Card>
 
       {/* Download sections */}
