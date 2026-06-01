@@ -5,15 +5,14 @@ const SEPARATOR = ",";
 
 /**
  * Escape a value for CSV format per RFC 4180.
- * Embedded line breaks (CR/LF/CRLF) are replaced with U+2028 (LINE SEPARATOR)
- * because InDesign Data Merge cannot parse quoted fields with real newlines —
- * it treats every \n as end-of-record and rejects the file. U+2028 is rendered
- * as a soft line break in placed text, so multi-line content stays readable.
+ * Embedded line breaks (CR/LF/CRLF) are collapsed to a single space because
+ * InDesign Data Merge cannot parse quoted fields with real newlines — it
+ * treats every \n as end-of-record and rejects the file.
  * Wraps in quotes if value contains separator or quotes. Doubles internal quotes.
  */
 export function escapeCsvValue(value: string | null | undefined): string {
   if (value == null) return "";
-  const str = String(value).replace(/\r\n|\r|\n/g, " ");
+  const str = String(value).replace(/(?:\r\n|\r|\n)+/g, " ");
   if (str.includes(SEPARATOR) || str.includes('"')) {
     return `"${str.replace(/"/g, '""')}"`;
   }
