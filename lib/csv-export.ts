@@ -31,11 +31,16 @@ export function buildCsv(headers: string[], rows: string[][]): string {
 
 /**
  * Create a Response object for CSV file download.
+ * Encodes as UTF-16 LE with BOM. This is the only encoding InDesign Data
+ * Merge reliably recognizes as Unicode — UTF-8 (with or without BOM) is
+ * misread as MacRoman/Windows-1252, breaking umlauts and other non-ASCII
+ * characters in placed text.
  */
 export function csvResponse(content: string, filename: string): Response {
-  return new Response(content, {
+  const bytes = Buffer.from("﻿" + content, "utf16le");
+  return new Response(bytes, {
     headers: {
-      "Content-Type": "text/csv; charset=utf-8",
+      "Content-Type": "text/csv; charset=utf-16le",
       "Content-Disposition": `attachment; filename="${filename}"`,
     },
   });
