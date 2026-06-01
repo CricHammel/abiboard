@@ -1,6 +1,5 @@
 // CSV export utilities (RFC 4180) for InDesign Data Merge compatible files
 
-const BOM = "\uFEFF";
 const SEPARATOR = ",";
 
 /**
@@ -21,12 +20,13 @@ export function escapeCsvValue(value: string | null | undefined): string {
 
 /**
  * Build a CSV string from headers and rows.
- * Uses CRLF line endings per RFC 4180. Prepends UTF-8 BOM for Excel compatibility.
+ * Uses CRLF line endings per RFC 4180. No BOM is emitted because InDesign
+ * Data Merge fails to parse UTF-8 files that start with one.
  */
 export function buildCsv(headers: string[], rows: string[][]): string {
   const headerLine = headers.map(escapeCsvValue).join(SEPARATOR);
   const dataLines = rows.map((row) => row.map(escapeCsvValue).join(SEPARATOR));
-  return BOM + [headerLine, ...dataLines].join("\r\n");
+  return [headerLine, ...dataLines].join("\r\n");
 }
 
 /**
