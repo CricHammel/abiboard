@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useMemo } from "react";
 import { Button } from "@/components/ui/Button";
+import { usePersistentState } from "@/hooks/usePersistentState";
 
 interface Student {
   id: string;
@@ -36,11 +37,11 @@ export function StudentList({
   onEdit,
   onToggleActive,
 }: StudentListProps) {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [registrationFilter, setRegistrationFilter] = useState<
+  const [searchTerm, setSearchTerm] = usePersistentState("schueler:search", "");
+  const [registrationFilter, setRegistrationFilter] = usePersistentState<
     "ALL" | "REGISTERED" | "NOT_REGISTERED"
-  >("ALL");
-  const [hideInactive, setHideInactive] = useState(false);
+  >("schueler:registrationFilter", "ALL");
+  const [hideInactive, setHideInactive] = usePersistentState("schueler:hideInactive", false);
 
   const filteredStudents = useMemo(() => {
     return students.filter((student) => {

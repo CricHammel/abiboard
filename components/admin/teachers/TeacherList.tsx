@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useMemo } from "react";
 import { Button } from "@/components/ui/Button";
 import { formatTeacherName } from "@/lib/format";
+import { usePersistentState } from "@/hooks/usePersistentState";
 
 interface Teacher {
   id: string;
@@ -26,8 +27,8 @@ export function TeacherList({
   onToggleActive,
   disabled,
 }: TeacherListProps) {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [hideInactive, setHideInactive] = useState(false);
+  const [searchTerm, setSearchTerm] = usePersistentState("lehrer:search", "");
+  const [hideInactive, setHideInactive] = usePersistentState("lehrer:hideInactive", false);
 
   const filteredTeachers = useMemo(() => {
     return teachers.filter((teacher) => {

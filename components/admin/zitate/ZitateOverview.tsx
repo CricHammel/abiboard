@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
 import { TabNav } from "@/components/ui/TabNav";
 import { StudentQuoteList } from "@/components/student-quotes/StudentQuoteList";
 import { TeacherQuoteList } from "@/components/teacher-quotes/TeacherQuoteList";
+import { usePersistentState } from "@/hooks/usePersistentState";
 
 interface Student {
   id: string;
@@ -26,7 +26,7 @@ interface ZitateOverviewProps {
 }
 
 export function ZitateOverview({ students, teachers }: ZitateOverviewProps) {
-  const [activeTab, setActiveTab] = useState("schueler");
+  const [activeTab, setActiveTab] = usePersistentState("zitate:tab", "schueler");
 
   return (
     <div className="space-y-4">

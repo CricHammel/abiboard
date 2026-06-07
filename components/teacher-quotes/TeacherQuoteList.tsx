@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useMemo } from "react";
 import Link from "next/link";
 import { formatTeacherName } from "@/lib/format";
+import { usePersistentState } from "@/hooks/usePersistentState";
 
 interface Teacher {
   id: string;
@@ -20,8 +21,8 @@ interface TeacherQuoteListProps {
 type SortMode = "alpha" | "quotes";
 
 export function TeacherQuoteList({ teachers, basePath = "/zitate/lehrer" }: TeacherQuoteListProps) {
-  const [search, setSearch] = useState("");
-  const [sortMode, setSortMode] = useState<SortMode>("quotes");
+  const [search, setSearch] = usePersistentState(`${basePath}:quote-search`, "");
+  const [sortMode, setSortMode] = usePersistentState<SortMode>(`${basePath}:quote-sort`, "quotes");
 
   const filtered = useMemo(() => {
     let result = teachers;

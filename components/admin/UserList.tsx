@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useMemo } from "react";
 import { Button } from "@/components/ui/Button";
 import { Role, ProfileStatus } from "@prisma/client";
+import { usePersistentState } from "@/hooks/usePersistentState";
 
 interface User {
   id: string;
@@ -22,12 +23,15 @@ interface UserListProps {
 }
 
 export function UserList({ users, onEdit, onToggleActive }: UserListProps) {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [roleFilter, setRoleFilter] = useState<"ALL" | Role>("ALL");
-  const [statusFilter, setStatusFilter] = useState<"ALL" | "ACTIVE" | "INACTIVE">(
+  const [searchTerm, setSearchTerm] = usePersistentState("benutzer:search", "");
+  const [roleFilter, setRoleFilter] = usePersistentState<"ALL" | Role>(
+    "benutzer:roleFilter",
     "ALL"
   );
-  const [hideInactive, setHideInactive] = useState(false);
+  const [statusFilter, setStatusFilter] = usePersistentState<
+    "ALL" | "ACTIVE" | "INACTIVE"
+  >("benutzer:statusFilter", "ALL");
+  const [hideInactive, setHideInactive] = usePersistentState("benutzer:hideInactive", false);
 
   // Filter and search users
   const filteredUsers = useMemo(() => {

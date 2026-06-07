@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/Button";
 import { ErrorMessage } from "@/components/ui/ErrorMessage";
 import { Alert } from "@/components/ui/Alert";
 import { TabNav } from "@/components/ui/TabNav";
+import { usePersistentState } from "@/hooks/usePersistentState";
 import { QuestionList } from "./QuestionList";
 import { QuestionForm } from "./QuestionForm";
 
@@ -32,9 +33,14 @@ export function QuestionManagement({ initialQuestions }: QuestionManagementProps
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   // Tab and filter state
-  const [activeTab, setActiveTab] = useState<"STUDENT" | "TEACHER">("STUDENT");
-  const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState<"ALL" | "ACTIVE" | "INACTIVE">("ALL");
+  const [activeTab, setActiveTab] = usePersistentState<"STUDENT" | "TEACHER">(
+    "ranking-questions:tab",
+    "STUDENT"
+  );
+  const [searchTerm, setSearchTerm] = usePersistentState("ranking-questions:search", "");
+  const [statusFilter, setStatusFilter] = usePersistentState<
+    "ALL" | "ACTIVE" | "INACTIVE"
+  >("ranking-questions:statusFilter", "ALL");
 
   const filteredQuestions = useMemo(() => {
     return questions.filter((q) => {

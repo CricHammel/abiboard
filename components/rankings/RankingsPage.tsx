@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { usePersistentState } from "@/hooks/usePersistentState";
 import { Button } from "@/components/ui/Button";
 import { ErrorMessage } from "@/components/ui/ErrorMessage";
 import { Alert } from "@/components/ui/Alert";
@@ -72,7 +73,10 @@ export function RankingsPage({ initialData, deadlinePassed = false }: RankingsPa
     isOpen: boolean;
     action: "submit" | "retract";
   }>({ isOpen: false, action: "submit" });
-  const [activeTab, setActiveTab] = useState<"student" | "teacher">("student");
+  const [activeTab, setActiveTab] = usePersistentState<"student" | "teacher">(
+    "rankings:tab",
+    "student"
+  );
 
   const { questions, students, teachers } = initialData;
   const studentQuestions = questions.filter((q) => q.type === "STUDENT");

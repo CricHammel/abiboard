@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from "react";
 import { TabNav } from "@/components/ui/TabNav";
+import { usePersistentState } from "@/hooks/usePersistentState";
 
 type AnswerMode = "SINGLE" | "GENDER_SPECIFIC" | "DUO";
 
@@ -36,8 +37,11 @@ export function RankingResults({ questions }: RankingResultsProps) {
   const [expandedQuestion, setExpandedQuestion] = useState<string | null>(null);
   const [questionResults, setQuestionResults] = useState<Record<string, QuestionResults>>({});
   const [loadingQuestion, setLoadingQuestion] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<"STUDENT" | "TEACHER">("STUDENT");
-  const [searchTerm, setSearchTerm] = useState("");
+  const [activeTab, setActiveTab] = usePersistentState<"STUDENT" | "TEACHER">(
+    "ranking-results:tab",
+    "STUDENT"
+  );
+  const [searchTerm, setSearchTerm] = usePersistentState("ranking-results:search", "");
 
   const studentCount = questions.filter((q) => q.type === "STUDENT").length;
   const teacherCount = questions.filter((q) => q.type === "TEACHER").length;
