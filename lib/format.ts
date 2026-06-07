@@ -39,3 +39,44 @@ export function formatTeacherName(
 
   return name;
 }
+
+type StudentForFormat = {
+  firstName: string;
+  lastName: string;
+};
+
+/**
+ * Builds the set of first names that are shared by more than one student.
+ * Pass it to {@link formatStudentName} to decide when a last name must be
+ * appended for disambiguation. Computing it once for a whole list keeps the
+ * naming stable and avoids O(n²) lookups during bulk formatting.
+ */
+export function getDuplicateFirstNames(
+  students: { firstName: string }[]
+): Set<string> {
+  const counts = new Map<string, number>();
+  for (const student of students) {
+    counts.set(student.firstName, (counts.get(student.firstName) ?? 0) + 1);
+  }
+  const duplicates = new Set<string>();
+  for (const [firstName, count] of counts) {
+    if (count > 1) duplicates.add(firstName);
+  }
+  return duplicates;
+}
+
+/**
+ * Formats a student's name as the first name only, falling back to
+ * "Vorname Nachname" when another student shares the same first name.
+ *
+ * @param student - Student with firstName and lastName
+ * @param duplicateFirstNames - Set from {@link getDuplicateFirstNames}
+ */
+export function formatStudentName(
+  student: StudentForFormat,
+  duplicateFirstNames: Set<string>
+): string {
+  return duplicateFirstNames.has(student.firstName)
+    ? `${student.firstName} ${student.lastName}`
+    : student.firstName;
+}

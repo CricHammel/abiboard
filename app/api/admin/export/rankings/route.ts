@@ -3,7 +3,7 @@ import { auth } from "@/lib/auth";
 import { buildCsv, csvResponse } from "@/lib/csv-export";
 import { NextResponse } from "next/server";
 import { isDeadlinePassed } from "@/lib/deadline";
-import { formatTeacherName } from "@/lib/format";
+import { formatTeacherName, formatStudentName, getDuplicateFirstNames } from "@/lib/format";
 import type { RankingQuestionType } from "@prisma/client";
 
 const HEADERS = [
@@ -90,6 +90,11 @@ export async function GET(request: Request) {
       votesByQuestion[vote.questionId].push(vote);
     }
 
+    // Student names are shown by first name only, disambiguated against the
+    // whole class so the same person always renders identically.
+    const allStudents = await prisma.student.findMany({ select: { firstName: true } });
+    const duplicateFirstNames = getDuplicateFirstNames(allStudents);
+
     // Build one row with the top 3 places spread across the place columns.
     const buildRow = (
       questionText: string,
@@ -126,7 +131,7 @@ export async function GET(request: Request) {
           // Duo mode: create key from both IDs
           if (vote.student && vote.student2) {
             key = `${vote.studentId}-${vote.studentId2}-${vote.genderTarget}`;
-            name = `${vote.student.firstName} ${vote.student.lastName} & ${vote.student2.firstName} ${vote.student2.lastName}`;
+            name = `${formatStudentName(vote.student, duplicateFirstNames)} & ${formatStudentName(vote.student2, duplicateFirstNames)}`;
           } else if (vote.teacher && vote.teacher2) {
             key = `${vote.teacherId}-${vote.teacherId2}-${vote.genderTarget}`;
             name = `${formatTeacherName(vote.teacher, { includeSubject: false })} & ${formatTeacherName(vote.teacher2, { includeSubject: false })}`;
@@ -139,7 +144,7 @@ export async function GET(request: Request) {
           key = `${personId}-${vote.genderTarget}`;
 
           if (vote.student) {
-            name = `${vote.student.firstName} ${vote.student.lastName}`;
+            name = formatStudentName(vote.student, duplicateFirstNames);
           } else if (vote.teacher) {
             name = formatTeacherName(vote.teacher, { includeSubject: false });
           }

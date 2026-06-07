@@ -2,7 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { buildCsv, csvResponse } from "@/lib/csv-export";
 import { NextResponse } from "next/server";
-import { formatTeacherName } from "@/lib/format";
+import { formatTeacherName, formatStudentName, getDuplicateFirstNames } from "@/lib/format";
 
 export async function GET() {
   try {
@@ -36,28 +36,39 @@ export async function GET() {
       orderBy: { createdAt: "asc" },
     });
 
+    // Students (recipients and authors) are shown by first name only,
+    // disambiguated against the whole class.
+    const allStudents = await prisma.student.findMany({ select: { firstName: true } });
+    const duplicateFirstNames = getDuplicateFirstNames(allStudents);
+
     const headers = ["Typ", "Empfänger", "Autor", "Kommentar"];
-    const rows = comments.map((comment) => {
+    const entries = comments.map((comment) => {
       let typ: string;
       let recipient: string;
+      // Last name of the recipient, used as a stable sort key.
+      let recipientSortKey: string;
 
       if (comment.targetStudent) {
         typ = "Schüler/in";
-        recipient = `${comment.targetStudent.firstName} ${comment.targetStudent.lastName}`;
+        recipient = formatStudentName(comment.targetStudent, duplicateFirstNames);
+        recipientSortKey = comment.targetStudent.lastName;
       } else if (comment.targetTeacher) {
         typ = "Lehrer/in";
         recipient = formatTeacherName(comment.targetTeacher, { includeSubject: false });
+        recipientSortKey = comment.targetTeacher.lastName;
       } else {
         typ = "Unbekannt";
         recipient = "";
+        recipientSortKey = "";
       }
 
-      const author = `${comment.author.firstName} ${comment.author.lastName}`;
-      return [typ, recipient, author, comment.text];
+      const author = formatStudentName(comment.author, duplicateFirstNames);
+      return { row: [typ, recipient, author, comment.text], recipientSortKey };
     });
 
-    // Sort by recipient name
-    rows.sort((a, b) => a[1].localeCompare(b[1], "de"));
+    // Sort by recipient last name
+    entries.sort((a, b) => a.recipientSortKey.localeCompare(b.recipientSortKey, "de"));
+    const rows = entries.map((e) => e.row);
 
     const csv = buildCsv(headers, rows);
     return csvResponse(csv, "kommentare.csv");

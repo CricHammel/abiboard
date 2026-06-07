@@ -2,7 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { buildCsv, csvResponse } from "@/lib/csv-export";
 import { NextResponse } from "next/server";
-import { formatTeacherName } from "@/lib/format";
+import { formatTeacherName, formatStudentName, getDuplicateFirstNames } from "@/lib/format";
 
 export async function GET(request: Request) {
   try {
@@ -75,10 +75,13 @@ async function exportStudentQuotes(): Promise<Response> {
     ],
   });
 
-  const headers = ["Vorname", "Nachname", "Zitat"];
+  // First name only, disambiguated against the whole class.
+  const allStudents = await prisma.student.findMany({ select: { firstName: true } });
+  const duplicateFirstNames = getDuplicateFirstNames(allStudents);
+
+  const headers = ["Schüler", "Zitat"];
   const rows = quotes.map((q) => [
-    q.student.firstName,
-    q.student.lastName,
+    formatStudentName(q.student, duplicateFirstNames),
     q.text,
   ]);
 
