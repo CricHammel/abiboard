@@ -34,6 +34,47 @@ export async function GET(request: Request) {
   }
 }
 
+// Quotation marks (straight/curly doubles and guillemets) that some students
+// wrap their quote in. Removed so quotes look consistent. Single quotes /
+// apostrophes are kept on purpose (they occur inside words like "geht's").
+const QUOTE_CHARS = /["“”„‟«»‹›]/g;
+
+function stripQuoteMarks(text: string): string {
+  return text.replace(QUOTE_CHARS, "").trim();
+}
+
+/**
+ * Builds a CSV grouped into one "block" per person, as InDesign needs it:
+ * a heading row repeating the name in both columns, then one row per quote,
+ * then a blank separator row. Blocks follow the input order (sorted by last
+ * name); quotes keep their order within each block.
+ */
+function buildBlockedQuoteCsv(
+  nameHeader: string,
+  quotes: { personId: string; name: string; text: string }[]
+): string {
+  const groups = new Map<string, { name: string; texts: string[] }>();
+  for (const quote of quotes) {
+    let group = groups.get(quote.personId);
+    if (!group) {
+      group = { name: quote.name, texts: [] };
+      groups.set(quote.personId, group);
+    }
+    group.texts.push(quote.text);
+  }
+
+  const rows: string[][] = [];
+  for (const group of groups.values()) {
+    rows.push([group.name, group.name]); // heading row: name in both columns
+    for (const text of group.texts) {
+      rows.push([group.name, text]);
+    }
+    rows.push(["", ""]); // blank separator line after each block
+  }
+
+  return buildCsv([nameHeader, "Zitat"], rows);
+}
+
 async function exportTeacherQuotes(): Promise<Response> {
   const quotes = await prisma.teacherQuote.findMany({
     where: {
@@ -50,12 +91,14 @@ async function exportTeacherQuotes(): Promise<Response> {
     ],
   });
 
-  const headers = ["Lehrer", "Zitat"];
-  const rows = quotes.map((q) => {
-    return [formatTeacherName(q.teacher, { includeSubject: false }), q.text];
-  });
-
-  const csv = buildCsv(headers, rows);
+  const csv = buildBlockedQuoteCsv(
+    "Lehrer",
+    quotes.map((q) => ({
+      personId: q.teacherId,
+      name: formatTeacherName(q.teacher, { includeSubject: false }),
+      text: stripQuoteMarks(q.text),
+    }))
+  );
   return csvResponse(csv, "zitate_lehrer.csv");
 }
 
@@ -79,12 +122,13 @@ async function exportStudentQuotes(): Promise<Response> {
   const allStudents = await prisma.student.findMany({ select: { firstName: true } });
   const duplicateFirstNames = getDuplicateFirstNames(allStudents);
 
-  const headers = ["Schüler", "Zitat"];
-  const rows = quotes.map((q) => [
-    formatStudentName(q.student, duplicateFirstNames),
-    q.text,
-  ]);
-
-  const csv = buildCsv(headers, rows);
+  const csv = buildBlockedQuoteCsv(
+    "Schüler",
+    quotes.map((q) => ({
+      personId: q.studentId,
+      name: formatStudentName(q.student, duplicateFirstNames),
+      text: stripQuoteMarks(q.text),
+    }))
+  );
   return csvResponse(csv, "zitate_schueler.csv");
 }
