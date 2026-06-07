@@ -4,8 +4,19 @@ import { buildCsv, csvResponse } from "@/lib/csv-export";
 import { NextResponse } from "next/server";
 import { isDeadlinePassed } from "@/lib/deadline";
 import { formatTeacherName } from "@/lib/format";
+import type { RankingQuestionType } from "@prisma/client";
 
-export async function GET() {
+const HEADERS = [
+  "Frage",
+  "Name 1. Platz",
+  "Prozent 1. Platz",
+  "Name 2. Platz",
+  "Prozent 2. Platz",
+  "Name 3. Platz",
+  "Prozent 3. Platz",
+];
+
+export async function GET(request: Request) {
   try {
     const session = await auth();
 
@@ -16,11 +27,22 @@ export async function GET() {
       return NextResponse.json({ error: "Nur für Admins zugänglich." }, { status: 403 });
     }
 
-    // Get all active questions
+    const typeParam = new URL(request.url).searchParams.get("type");
+    const questionType: RankingQuestionType =
+      typeParam === "lehrer" ? "TEACHER" : "STUDENT";
+    const filename =
+      questionType === "TEACHER" ? "rankings_lehrer.csv" : "rankings_schueler.csv";
+
+    // Get all active questions of the requested type. DUO questions are moved
+    // to the end while the existing order is otherwise preserved.
     const questions = await prisma.rankingQuestion.findMany({
-      where: { active: true },
+      where: { active: true, type: questionType },
       orderBy: { order: "asc" },
     });
+    const orderedQuestions = [
+      ...questions.filter((q) => q.answerMode !== "DUO"),
+      ...questions.filter((q) => q.answerMode === "DUO"),
+    ];
 
     // After deadline: include all votes, not just submitted
     const deadlinePassed = await isDeadlinePassed();
@@ -44,18 +66,14 @@ export async function GET() {
     const totalVoters = voterIds.length;
 
     if (totalVoters === 0) {
-      const csv = buildCsv(
-        ["Frage", "Kategorie", "Platz", "Name", "Stimmen", "Prozent"],
-        []
-      );
-      return csvResponse(csv, "rankings.csv");
+      return csvResponse(buildCsv(HEADERS, []), filename);
     }
 
-    // Get all votes from relevant users
+    // Get all votes from relevant users for the requested question type
     const votes = await prisma.rankingVote.findMany({
       where: {
         voterId: { in: voterIds },
-        question: { active: true },
+        question: { active: true, type: questionType },
       },
       include: {
         student: { select: { firstName: true, lastName: true } },
@@ -72,10 +90,27 @@ export async function GET() {
       votesByQuestion[vote.questionId].push(vote);
     }
 
-    const headers = ["Frage", "Kategorie", "Platz", "Name", "Stimmen", "Prozent"];
+    // Build one row with the top 3 places spread across the place columns.
+    const buildRow = (
+      questionText: string,
+      results: { name: string; count: number }[]
+    ): string[] => {
+      const row = [questionText];
+      for (let i = 0; i < 3; i++) {
+        const r = results[i];
+        if (r) {
+          const pct = Math.round((r.count / totalVoters) * 100);
+          row.push(r.name, `${pct}%`);
+        } else {
+          row.push("", "");
+        }
+      }
+      return row;
+    };
+
     const rows: string[][] = [];
 
-    for (const question of questions) {
+    for (const question of orderedQuestions) {
       const questionVotes = votesByQuestion[question.id] || [];
 
       // Aggregate by person/pair + genderTarget
@@ -119,41 +154,19 @@ export async function GET() {
       const results = Object.values(aggregated).sort((a, b) => b.count - a.count);
 
       if (question.answerMode === "GENDER_SPECIFIC") {
-        // Male results
-        const maleResults = results.filter((r) => r.genderTarget === "MALE").slice(0, 5);
-        for (let i = 0; i < maleResults.length; i++) {
-          const r = maleResults[i];
-          const pct = Math.round((r.count / totalVoters) * 1000) / 10;
-          rows.push([question.text, "Männlich", String(i + 1), r.name, String(r.count), `${pct}%`]);
-        }
-        // Female results
-        const femaleResults = results.filter((r) => r.genderTarget === "FEMALE").slice(0, 5);
-        for (let i = 0; i < femaleResults.length; i++) {
-          const r = femaleResults[i];
-          const pct = Math.round((r.count / totalVoters) * 1000) / 10;
-          rows.push([question.text, "Weiblich", String(i + 1), r.name, String(r.count), `${pct}%`]);
-        }
-      } else if (question.answerMode === "DUO") {
-        // Duo results
-        const duoResults = results.filter((r) => r.genderTarget === "ALL").slice(0, 5);
-        for (let i = 0; i < duoResults.length; i++) {
-          const r = duoResults[i];
-          const pct = Math.round((r.count / totalVoters) * 1000) / 10;
-          rows.push([question.text, "Duo", String(i + 1), r.name, String(r.count), `${pct}%`]);
-        }
+        // Two rows without label (male first, then female) — annotated manually.
+        const maleResults = results.filter((r) => r.genderTarget === "MALE");
+        const femaleResults = results.filter((r) => r.genderTarget === "FEMALE");
+        rows.push(buildRow(question.text, maleResults));
+        rows.push(buildRow(question.text, femaleResults));
       } else {
-        // Single results
-        const allResults = results.filter((r) => r.genderTarget === "ALL").slice(0, 5);
-        for (let i = 0; i < allResults.length; i++) {
-          const r = allResults[i];
-          const pct = Math.round((r.count / totalVoters) * 1000) / 10;
-          rows.push([question.text, "Einzeln", String(i + 1), r.name, String(r.count), `${pct}%`]);
-        }
+        // SINGLE and DUO both produce a single ALL ranking row.
+        const allResults = results.filter((r) => r.genderTarget === "ALL");
+        rows.push(buildRow(question.text, allResults));
       }
     }
 
-    const csv = buildCsv(headers, rows);
-    return csvResponse(csv, "rankings.csv");
+    return csvResponse(buildCsv(HEADERS, rows), filename);
   } catch (error) {
     console.error("Export rankings error:", error);
     return NextResponse.json({ error: "Ein Fehler ist aufgetreten." }, { status: 500 });

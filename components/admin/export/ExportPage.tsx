@@ -197,14 +197,26 @@ export function ExportPage({ initialDeadline }: ExportPageProps) {
       ],
     },
     {
-      title: "Rankings",
-      description: "Top 5 pro Frage mit Stimmenanzahl und Prozent.",
+      title: "Rankings - Schüler",
+      description: "Top 3 pro Schüler-Frage mit gerundetem Prozentwert (Duo-Fragen am Ende).",
       buttons: [
         {
-          key: "rankings",
+          key: "rankings-schueler",
           label: "CSV herunterladen",
-          url: "/api/admin/export/rankings",
-          filename: "rankings.csv",
+          url: "/api/admin/export/rankings?type=schueler",
+          filename: "rankings_schueler.csv",
+        },
+      ],
+    },
+    {
+      title: "Rankings - Lehrer",
+      description: "Top 3 pro Lehrer-Frage mit gerundetem Prozentwert (Duo-Fragen am Ende).",
+      buttons: [
+        {
+          key: "rankings-lehrer",
+          label: "CSV herunterladen",
+          url: "/api/admin/export/rankings?type=lehrer",
+          filename: "rankings_lehrer.csv",
         },
       ],
     },
