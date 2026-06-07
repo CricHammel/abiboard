@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useRef, useEffect, useCallback } from "react";
-import { formatTeacherName } from "@/lib/format";
+import { useState, useRef, useEffect, useCallback, useMemo } from "react";
+import { formatTeacherName, formatStudentName, getDuplicateFirstNames } from "@/lib/format";
 
 interface StudentOption {
   id: string;
@@ -35,21 +35,6 @@ interface PersonAutocompleteProps {
   placeholder?: string;
 }
 
-function getStudentDisplayName(student: StudentOption, allStudents?: StudentOption[]): string {
-  // Check for duplicate first names - show full last name if duplicates exist
-  const duplicates = allStudents?.filter(
-    (s) => s.firstName === student.firstName && s.id !== student.id
-  );
-  if (duplicates && duplicates.length > 0) {
-    return `${student.firstName} ${student.lastName}`;
-  }
-  return student.firstName;
-}
-
-function getTeacherDisplayName(teacher: TeacherOption): string {
-  return formatTeacherName(teacher);
-}
-
 export function PersonAutocomplete({
   personType,
   gender,
@@ -68,6 +53,10 @@ export function PersonAutocomplete({
   const [isSearching, setIsSearching] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
+  const duplicateFirstNames = useMemo(
+    () => getDuplicateFirstNames(allStudents ?? []),
+    [allStudents]
+  );
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -154,9 +143,9 @@ export function PersonAutocomplete({
 
   const getDisplayName = (person: PersonOption): string => {
     if (person.type === "student") {
-      return getStudentDisplayName(person.data, allStudents);
+      return formatStudentName(person.data, duplicateFirstNames);
     }
-    return getTeacherDisplayName(person.data);
+    return formatTeacherName(person.data);
   };
 
   // If a person is selected, show it

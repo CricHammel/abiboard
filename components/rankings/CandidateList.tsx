@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { formatTeacherName } from "@/lib/format";
+import { useState, useMemo } from "react";
+import { formatTeacherName, formatStudentName, getDuplicateFirstNames } from "@/lib/format";
 
 interface StudentCandidate {
   id: string;
@@ -24,19 +24,9 @@ interface CandidateListProps {
   teachers?: TeacherCandidate[];
 }
 
-function getStudentDisplayName(student: StudentCandidate, allStudents: StudentCandidate[]): string {
-  // Check for duplicate first names - show full last name if duplicates exist
-  const duplicates = allStudents.filter(
-    (s) => s.firstName === student.firstName && s.id !== student.id
-  );
-  if (duplicates.length > 0) {
-    return `${student.firstName} ${student.lastName}`;
-  }
-  return student.firstName;
-}
-
 export function CandidateList({ type, students = [], teachers = [] }: CandidateListProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const duplicateFirstNames = useMemo(() => getDuplicateFirstNames(students), [students]);
 
   const count = type === "student" ? students.length : teachers.length;
   const label = type === "student" ? "Schüler" : "Lehrer";
@@ -69,7 +59,7 @@ export function CandidateList({ type, students = [], teachers = [] }: CandidateL
                   key={student.id}
                   className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-blue-50 text-blue-700"
                 >
-                  {getStudentDisplayName(student, students)}
+                  {formatStudentName(student, duplicateFirstNames)}
                 </span>
               ))}
             {type === "teacher" &&
