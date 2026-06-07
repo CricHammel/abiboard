@@ -257,14 +257,26 @@ export function ExportPage({ initialDeadline }: ExportPageProps) {
       ],
     },
     {
-      title: "Kommentare",
-      description: "Alle Kommentare sortiert nach Empfänger.",
+      title: "Kommentare - Schüler",
+      description: "Kommentare über Schüler, eine Zeile pro Empfänger (Autor in Klammern).",
       buttons: [
         {
-          key: "kommentare",
+          key: "kommentare-schueler",
           label: "CSV herunterladen",
-          url: "/api/admin/export/kommentare",
-          filename: "kommentare.csv",
+          url: "/api/admin/export/kommentare?type=schueler",
+          filename: "kommentare_schueler.csv",
+        },
+      ],
+    },
+    {
+      title: "Kommentare - Lehrer",
+      description: "Kommentare über Lehrer, eine Zeile pro Empfänger (Autor in Klammern).",
+      buttons: [
+        {
+          key: "kommentare-lehrer",
+          label: "CSV herunterladen",
+          url: "/api/admin/export/kommentare?type=lehrer",
+          filename: "kommentare_lehrer.csv",
         },
       ],
     },
