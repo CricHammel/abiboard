@@ -52,7 +52,7 @@ async function exportTeacherQuotes(): Promise<Response> {
 
   const headers = ["Lehrer", "Zitat"];
   const rows = quotes.map((q) => {
-    return [formatTeacherName(q.teacher), q.text];
+    return [formatTeacherName(q.teacher, { includeSubject: false }), q.text];
   });
 
   const csv = buildCsv(headers, rows);

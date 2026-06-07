@@ -129,7 +129,7 @@ export async function GET(request: Request) {
             name = `${vote.student.firstName} ${vote.student.lastName} & ${vote.student2.firstName} ${vote.student2.lastName}`;
           } else if (vote.teacher && vote.teacher2) {
             key = `${vote.teacherId}-${vote.teacherId2}-${vote.genderTarget}`;
-            name = `${formatTeacherName(vote.teacher)} & ${formatTeacherName(vote.teacher2)}`;
+            name = `${formatTeacherName(vote.teacher, { includeSubject: false })} & ${formatTeacherName(vote.teacher2, { includeSubject: false })}`;
           } else {
             continue;
           }
@@ -141,7 +141,7 @@ export async function GET(request: Request) {
           if (vote.student) {
             name = `${vote.student.firstName} ${vote.student.lastName}`;
           } else if (vote.teacher) {
-            name = formatTeacherName(vote.teacher);
+            name = formatTeacherName(vote.teacher, { includeSubject: false });
           }
         }
 

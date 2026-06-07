@@ -46,7 +46,7 @@ export async function GET() {
         recipient = `${comment.targetStudent.firstName} ${comment.targetStudent.lastName}`;
       } else if (comment.targetTeacher) {
         typ = "Lehrer/in";
-        recipient = formatTeacherName(comment.targetTeacher);
+        recipient = formatTeacherName(comment.targetTeacher, { includeSubject: false });
       } else {
         typ = "Unbekannt";
         recipient = "";
