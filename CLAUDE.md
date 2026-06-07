@@ -39,7 +39,7 @@
 - **Whitelist registration:** Students register with @lessing-ffm.net email, validated against Student table.
 
 ### Features
-Steckbrief (profile), Rankings (voting), Zitate (quotes for teachers & students), Umfragen (anonymous surveys), Kommentare (comments about others), Fotos (photo upload by category), Data Export (TSV + ZIP), Global Deadline.
+Steckbrief (profile), Rankings (voting), Zitate (quotes for teachers & students), Umfragen (anonymous surveys), Kommentare (comments about others), Fotos (photo upload by category), Data Export (CSV + ZIP), Global Deadline.
 
 ## Commands
 
@@ -74,7 +74,7 @@ components/
 ├── navigation/          # StudentNav, AdminNav, DeadlineIndicator
 └── auth/, settings/, dashboard/, providers/
 
-lib/                     # prisma.ts, auth.ts, validation.ts, file-upload.ts, deadline.ts, tsv-export.ts, csv-parse.ts, steckbrief-validation-dynamic.ts
+lib/                     # prisma.ts, auth.ts, validation.ts, file-upload.ts, deadline.ts, csv-export.ts, csv-parse.ts, format.ts, steckbrief-validation-dynamic.ts
 prisma/                  # schema.prisma, seed.ts, migrations/
 ```
 
