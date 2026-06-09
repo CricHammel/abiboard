@@ -103,15 +103,18 @@ export function ExportPage({ initialDeadline }: ExportPageProps) {
     localStorage.setItem(PATH_STYLE_STORAGE_KEY, pathStyle);
   }, [pathStyle]);
 
-  const steckbriefeCsvUrl = (() => {
+  const imagePathQuery = (() => {
     const params = new URLSearchParams();
     if (imagePrefix.trim()) params.set("imagePrefix", imagePrefix.trim());
     if (pathStyle === "windows") params.set("pathStyle", "windows");
-    const qs = params.toString();
-    return qs
-      ? `/api/admin/export/steckbriefe?${qs}`
-      : "/api/admin/export/steckbriefe";
+    return params.toString();
   })();
+
+  const withImagePathQuery = (base: string) =>
+    imagePathQuery ? `${base}?${imagePathQuery}` : base;
+
+  const steckbriefeCsvUrl = withImagePathQuery("/api/admin/export/steckbriefe");
+  const fotosZipUrl = withImagePathQuery("/api/admin/export/fotos");
 
   const isPassed = deadline ? new Date(deadline) < new Date() : false;
 
@@ -282,12 +285,13 @@ export function ExportPage({ initialDeadline }: ExportPageProps) {
     },
     {
       title: "Fotos",
-      description: "Alle Fotos nach Rubriken sortiert als ZIP.",
+      description:
+        "Alle Fotos nach Rubriken als ZIP, je Rubrik mit einer @Bild-CSV (Pfade vom Root mit Präfix) für den InDesign-Import.",
       buttons: [
         {
           key: "fotos-zip",
           label: "ZIP herunterladen",
-          url: "/api/admin/export/fotos",
+          url: fotosZipUrl,
           filename: "fotos.zip",
         },
       ],
@@ -377,10 +381,11 @@ export function ExportPage({ initialDeadline }: ExportPageProps) {
 
       {/* Image path prefix */}
       <Card>
-        <h2 className="text-lg font-semibold text-gray-900">Bildpfade (Steckbriefe-CSV)</h2>
+        <h2 className="text-lg font-semibold text-gray-900">Bildpfade (Steckbriefe- & Fotos-CSV)</h2>
         <p className="text-sm text-gray-600 mt-1">
-          Präfix wird vor jeden Bildpfad gehängt. Pfadtrenner bestimmt den Stil
-          für Präfix und Ordnertrenner. Wird im Browser gespeichert.
+          Präfix wird vor jeden Bildpfad gehängt (Steckbriefe-CSV und die @Bild-CSVs
+          im Fotos-ZIP). Pfadtrenner bestimmt den Stil für Präfix und Ordnertrenner.
+          Wird im Browser gespeichert.
         </p>
         <div className="mt-3 flex flex-col sm:flex-row gap-3">
           <input

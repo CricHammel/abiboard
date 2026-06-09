@@ -1,15 +1,14 @@
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
-import { sanitizeFilename } from "@/lib/csv-export";
+import { sanitizeFilename, buildCsv, csvBuffer } from "@/lib/csv-export";
+import { resolveCategoryPhotoFiles } from "@/lib/photo-export";
 import { NextResponse } from "next/server";
 import archiver from "archiver";
-import fs from "fs";
-import path from "path";
 import { PassThrough } from "stream";
 
 export const maxDuration = 60;
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
     const session = await auth();
 
@@ -19,6 +18,18 @@ export async function GET() {
     if (session.user.role !== "ADMIN") {
       return NextResponse.json({ error: "Nur für Admins zugänglich." }, { status: 403 });
     }
+
+    // Image path options, mirroring the Steckbriefe CSV export.
+    const { searchParams } = new URL(request.url);
+    const pathStyle = searchParams.get("pathStyle") === "windows" ? "windows" : "unix";
+    const sep = pathStyle === "windows" ? "\\" : "/";
+    const rawPrefix = searchParams.get("imagePrefix") ?? "";
+    const normalizedPrefix = rawPrefix.replace(/[\\/]/g, sep);
+    const imagePrefix = normalizedPrefix
+      ? normalizedPrefix.endsWith(sep)
+        ? normalizedPrefix
+        : `${normalizedPrefix}${sep}`
+      : "";
 
     // Get active categories with their photos
     const categories = await prisma.photoCategory.findMany({
@@ -48,15 +59,6 @@ export async function GET() {
       );
     }
 
-    const uploadsDir = path.join(process.cwd(), "uploads");
-
-    const resolveUploadPath = (storedPath: string): string | null => {
-      const relative = storedPath.replace(/^\/+uploads\/+/, "");
-      const resolved = path.resolve(uploadsDir, relative);
-      if (!resolved.startsWith(uploadsDir)) return null;
-      return resolved;
-    };
-
     // Create archive
     const archive = archiver("zip", { zlib: { level: 5 } });
     const passthrough = new PassThrough();
@@ -66,27 +68,22 @@ export async function GET() {
       if (category.photos.length === 0) continue;
 
       const categoryFolder = sanitizeFilename(category.name);
+      const files = resolveCategoryPhotoFiles(category.photos);
+      if (files.length === 0) continue;
 
-      // Track used filenames within category for duplicates
-      const usedNames = new Map<string, number>();
-
-      for (const photo of category.photos) {
-        const sourcePath = resolveUploadPath(photo.imageUrl);
-        if (!sourcePath || !fs.existsSync(sourcePath)) continue;
-
-        const ext = path.extname(photo.imageUrl) || ".jpg";
-        const baseName = sanitizeFilename(
-          `${photo.user.lastName}_${photo.user.firstName}`
-        );
-
-        const count = usedNames.get(baseName) || 0;
-        usedNames.set(baseName, count + 1);
-        const fileName =
-          count > 0 ? `${baseName}_${count + 1}${ext}` : `${baseName}${ext}`;
-
-        const zipPath = `fotos/${categoryFolder}/${fileName}`;
-        archive.file(sourcePath, { name: zipPath });
+      // Paths in the CSV always start from the root with the prefix, even
+      // though the CSV itself sits inside the category folder.
+      const csvRows: string[][] = [];
+      for (const { sourcePath, fileName } of files) {
+        archive.file(sourcePath, { name: `fotos/${categoryFolder}/${fileName}` });
+        csvRows.push([`${imagePrefix}fotos${sep}${categoryFolder}${sep}${fileName}`]);
       }
+
+      // One single-column "@Bild" CSV per category for InDesign Data Merge.
+      const csv = buildCsv(["@Bild"], csvRows);
+      archive.append(csvBuffer(csv), {
+        name: `fotos/${categoryFolder}/${categoryFolder}.csv`,
+      });
     }
 
     archive.finalize();
